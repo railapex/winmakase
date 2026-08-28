@@ -1,0 +1,16 @@
+;; Winsome spike — caps mode
+;; tap  = Alt+Space (launcher; matches Chris's existing KBM Caps binding)
+;; hold = WM chord (Ctrl+Alt+Win). Shift deliberately NOT included:
+;;   Ctrl+Alt+Shift+Win is the Office key (Office+W = Word etc.), and the
+;;   grammar needs Shift free to distinguish mod+X from mod+Shift+X.
+(defcfg
+  process-unmapped-keys yes
+)
+
+(defsrc caps)
+
+(deflayer base @cap)
+
+(defalias
+  cap (tap-hold-press 200 200 A-spc (multi lctl lalt lmet))
+)

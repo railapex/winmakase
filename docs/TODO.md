@@ -8,16 +8,16 @@ Conventions: `[v]` needs verification on the real rig before checking · items r
 
 Everything console-mode / temporary. No scheduled tasks, no installs to Startup, Chris's live PowerToys config untouched.
 
-- [ ] kanata console-mode: caps tap-hold config — tap emits PowerToys Run hotkey, hold emits hyper chord. Verify tap latency feels right (tune tap-timeout/hold-timeout)
-- [ ] kanata `apps` mode variant: VK_APPS tap = context menu, hold = hyper
-- [ ] kanata elevated (manual `Run as administrator` console): confirm hyper chord works while an **admin** Windows Terminal has focus `[v]`
-- [ ] GlazeWM installed (pinned release): minimal config, hyper-chord bindings for a grammar subset (W/F/T, arrows, workspaces 1-4) — confirm hyper chords bind cleanly in GlazeWM YAML `[v]`
-- [ ] `hide_title_bar` window effect (Win11): enable on a test app, note stability/glitches — decides default-on vs per-app opt-in `[v]`
-- [ ] GlazeWM IPC capability pass: enumerate query/command/subscribe surface; document what komorebic has that it lacks (matters for agent features + UAT harness design)
-- [ ] Chrome `BrowserThemeColor` policy: HKCU registry write → does Chrome tint? Document result either way
-- [ ] Triple-monitor behavior: workspaces per monitor, focus crossing monitor boundaries, DPI sanity check across the three displays `[v]`
-- [ ] Monitor-set change via the real workflow (teleprompter display toggled on/off): confirm glazewm#1233 symptom on re-add, GlazeWM restart heals, daily three don't reshuffle (supervisor requirement + occasional-display exclusion validated) `[v]`
-- [ ] Spike retro → update DESIGN.md with findings; anything invalidated gets redesigned before M1
+- [x] kanata console-mode caps tap-hold: works at 200/200; latency "a smidge," livable — tuning stays open by daily use (fallback: drop tap, launcher on chord+Space). NOTE: WM chord corrected to **Ctrl+Alt+Win** — Ctrl+Alt+Shift+Win is the Office key and Shift must stay free for the grammar
+- [ ] kanata `apps` mode variant: VK_APPS tap = context menu, hold = WM chord — config written (`spike/apps.kbd`, validates), not yet live-tested
+- [x] kanata elevated: chords verified landing while an admin window has focus (LLHOOK, no driver) `[v]`
+- [x] GlazeWM 3.10.1: grammar subset bound on lwin+ctrl+alt chords, full 60-second run clean across all three monitors `[v]`
+- [x] `hide_title_bar`: works — classic-chrome charmap shaved clean, modern apps unaffected (own chrome). Default-on with per-app opt-out `[v]`
+- [x] GlazeWM IPC capability pass: query/command/sub all present (16 event types incl. monitor_*; built-in pause) — UAT harness + agent surface fully covered; see spike/NOTES.md
+- [x] Chrome `BrowserThemeColor`: HKCU Policies ACL-locked on this box → HKLM via elevated batch works, BUT user-installed profile themes override the policy (no visible tint on either of Chris's themed profiles). Partial win; per-profile generated themes = arc
+- [x] Triple-monitor behavior: per-monitor workspaces, focus crosses boundaries, uniform dpi 96 / scale 1.0 across all three (mixed-DPI risk absent on this rig) `[v]`
+- [x] Monitor-set change via the real workflow: full teleprompter add→remove→re-add cycle CLEAN on 3.10.1 — workspace 4 auto-activates on it, daily three never reshuffle, **#1233 did not reproduce**. Supervisor display-watch demoted to insurance; crash-restart remains core `[v]`
+- [x] Spike retro → DESIGN.md updated (titlebars solved, Chrome tint partial, #1233 not reproduced, WM chord = Ctrl+Alt+Win). Remaining M0 stragglers: apps-mode live test, timing tune by daily use
 
 ## M1 — Core stack
 
@@ -43,6 +43,7 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 ## M3 — Install / update / uninstall
 
 - [ ] winsome scoop bucket, exact versions pinned for every tool
+- [ ] Adoption story (spike finding): mid-day first start tiles EVERY open window into mosaics — installer ships default float rules for non-curated apps and/or first-run-at-login guidance
 - [ ] install.ps1: prereqs → scoop → bucket installs → clone → render → single elevation prompt → tasks registered. Idempotent (second run = no-op), backs up files it replaces, writes install manifest
 - [ ] Bootstrap disables PowerToys KBM module + FancyZones (and records prior state in manifest)
 - [ ] `winsome update`: pull (refuse dirty), re-render, restart stack

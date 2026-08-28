@@ -1,0 +1,15 @@
+;; Winsome spike — apps mode (context-menu key as WM modifier)
+;; tap  = context menu (native behavior preserved)
+;; hold = WM chord (Ctrl+Alt+Win — no Shift; see caps.kbd for why)
+;; Caps untouched in this mode (keeps omarchy's emoji-layer position free)
+(defcfg
+  process-unmapped-keys yes
+)
+
+(defsrc menu)
+
+(deflayer base @app)
+
+(defalias
+  app (tap-hold-press 200 200 menu (multi lctl lalt lmet))
+)
