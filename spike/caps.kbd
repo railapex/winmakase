@@ -1,66 +1,13 @@
-;; Winsome spike — caps mode, v5 (DIRECT-DRIVE: kanata runs glazewm commands itself)
-;; tap caps = Alt+Space (launcher — tap is BACK: grammar keys are in defsrc, so
-;;   tap-hold-press sees the interrupting key and decides instantly, no race)
-;; hold caps = wm layer: each key EXECUTES a glazewm CLI command (~20ms warm).
-;;   Zero synthesized chords -> GlazeWM keybindings are EMPTY, nothing consumed,
-;;   the two-hooks desync class is structurally gone. Physical Win key = 100% native.
-;; shift variants via fork (real shift key state). scrlk = real CapsLock hatch.
-;; Panic: caps+shift+q (schtasks WinsomePanic) · Ctrl+Space+Esc kills kanata.
-;; REQUIRES the cmd_allowed kanata build; config lives in an ACL'd path at install.
+;; Winsome spike — caps mode, v4 RESTORED (holding state while keybinding architecture is reviewed)
+;; caps = Win key, pure modifier. Launcher = Caps+Space (PT Run activation = Win+Space).
+;; scrlk = real CapsLock (escape hatch). Bare caps tap = Start menu (native).
+;; 0ms chord path: GlazeWM binds real lwin chords; kanata synthesizes ONLY the modifier.
+;; v5 direct-drive parked: kanata cmd broke on spaced paths + console flash; wscript
+;; shim fixed both but costs 60-100ms/press — rejected. See spike/NOTES.md.
 (defcfg
-  danger-enable-cmd yes
   process-unmapped-keys no
 )
 
-(defsrc caps slck lsft rsft w e f t j r q 1 2 3 4 5 6 - = spc ret left rght up down)
+(defsrc caps slck)
 
-(deflayer base @cap caps _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _)
-
-(deflayer wm XX caps _ _ @w @e @f @t @j @r @q @w1 @w2 @w3 @w4 @w5 @w6 @min @eql A-spc @ret @left @rght @up @down)
-
-(defalias
-  cap (tap-hold-press 200 200 A-spc (layer-while-held wm))
-
-  w (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "close")
-  f (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "toggle-fullscreen")
-  t (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "toggle-floating" "--centered")
-  j (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "toggle-tiling-direction")
-  e (fork XX (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "wm-exit") (lsft rsft))
-  r (fork XX (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "wm-reload-config") (lsft rsft))
-  q (fork XX (cmd "schtasks" "/run" "/tn" "WinsomePanic") (lsft rsft))
-
-  left (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--direction" "left")
-             (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--direction" "left") (lsft rsft))
-  rght (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--direction" "right")
-             (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--direction" "right") (lsft rsft))
-  up (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--direction" "up")
-           (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--direction" "up") (lsft rsft))
-  down (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--direction" "down")
-             (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--direction" "down") (lsft rsft))
-
-  w1 (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "1")
-           (multi (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--workspace" "1")
-                  (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "1")) (lsft rsft))
-  w2 (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "2")
-           (multi (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--workspace" "2")
-                  (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "2")) (lsft rsft))
-  w3 (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "3")
-           (multi (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--workspace" "3")
-                  (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "3")) (lsft rsft))
-  w4 (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "4")
-           (multi (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--workspace" "4")
-                  (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "4")) (lsft rsft))
-  w5 (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "5")
-           (multi (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--workspace" "5")
-                  (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "5")) (lsft rsft))
-  w6 (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "6")
-           (multi (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "move" "--workspace" "6")
-                  (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "focus" "--workspace" "6")) (lsft rsft))
-
-  eql (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "resize" "--width" "+2%")
-            (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "resize" "--height" "+2%") (lsft rsft))
-  min (fork (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "resize" "--width" "-2%")
-            (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "resize" "--height" "-2%") (lsft rsft))
-
-  ret (cmd "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe" "command" "shell-exec" "wt")
-)
+(deflayer base lmet caps)
