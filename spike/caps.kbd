@@ -1,16 +1,25 @@
-;; Winsome spike — caps mode
-;; tap  = Alt+Space (launcher; matches Chris's existing KBM Caps binding)
-;; hold = WM chord (Ctrl+Alt+Win). Shift deliberately NOT included:
-;;   Ctrl+Alt+Shift+Win is the Office key (Office+W = Word etc.), and the
-;;   grammar needs Shift free to distinguish mod+X from mod+Shift+X.
+;; Winsome spike — caps mode, v2 (output-chord layer)
+;; tap  = Alt+Space (launcher) · hold = wm layer: each key emits a full
+;; Ctrl+Alt+Win chord per press (v1's (multi lctl lalt lmet) held-modifier
+;; approach fired bindings only on the FIRST keypress of a hold — repeated
+;; presses were eaten; per-press output chords are stateless and repeat).
+;; Physical Shift passes through and combines: caps+shift+arrow = C-A-M-S-arrow.
 (defcfg
   process-unmapped-keys yes
 )
 
-(defsrc caps)
+(defsrc
+  caps w e f t j r 1 2 3 4 5 6 - = spc ret left rght up down
+)
 
-(deflayer base @cap)
+(deflayer base
+  @cap _ _ _ _ _ _ _ _ _ _ _ _ _ _ _   _   _    _    _  _
+)
+
+(deflayer wm
+  XX   C-A-M-w C-A-M-e C-A-M-f C-A-M-t C-A-M-j C-A-M-r C-A-M-1 C-A-M-2 C-A-M-3 C-A-M-4 C-A-M-5 C-A-M-6 C-A-M-- C-A-M-= A-spc C-A-M-ret C-A-M-left C-A-M-rght C-A-M-up C-A-M-down
+)
 
 (defalias
-  cap (tap-hold-press 200 200 A-spc (multi lctl lalt lmet))
+  cap (tap-hold-press 200 200 A-spc (layer-while-held wm))
 )
