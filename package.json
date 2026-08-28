@@ -1,0 +1,17 @@
+{
+  "name": "winsome",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Omakase omarchy-style desktop environment for Windows 11.",
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "smol-toml": "^1.3.1",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11"
+  }
+}
