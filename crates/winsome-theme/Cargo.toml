@@ -1,0 +1,16 @@
+[package]
+name = "winsome-theme"
+version = "0.1.0"
+edition = "2021"
+description = "Rust port of the winsome omarchy theme adapter: palette parsing, light/dark resolution, and terminal scheme rendering."
+license = "MIT"
+publish = false
+
+# Standalone crate, not a workspace member. This opts it out of being auto-captured if a
+# root workspace Cargo.toml appears later (owned by a different agent).
+[workspace]
+
+[dependencies]
+toml = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
