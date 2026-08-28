@@ -33,13 +33,25 @@ export interface WindowsTerminalScheme {
  * Render an omarchy Palette (v4.0.1 schema — see palette.ts) to a Windows Terminal scheme.
  *
  * The v4.0.1 palette has no color0-15 ANSI slots to map 1:1 (that was the v3.7.0 shape).
- * The mapping below is not invented — it's omarchy's own color0-15 legacy-alias table,
- * taken verbatim from `omarchy-theme-color`'s `ansi_alias` map (the canonical resolver
- * every omarchy template, including their ghostty.conf.tpl terminal template, is built
- * from): color0=background, 1=red, 2=green, 3=yellow, 4=blue, 5=magenta, 6=cyan,
- * 7=foreground, 8=muted, 9=bright_red, 10=bright_green, 11=bright_yellow, 12=bright_blue,
- * 13=bright_magenta, 14=bright_cyan, 15=bright_foreground. cursor is always
- * bright_foreground (unconditional in that same resolver, not a fallback).
+ * The mapping below mirrors omarchy's own terminal template exactly, not an invented
+ * convention — verbatim from `default/themed/ghostty.conf.tpl` at the v4.0.1 tag
+ * (https://raw.githubusercontent.com/basecamp/omarchy/v4.0.1/default/themed/ghostty.conf.tpl):
+ *   palette 0=background, 1=red, 2=green, 3=yellow, 4=blue, 5=magenta, 6=cyan, 7=foreground,
+ *   8=muted, 9=bright_red, 10=bright_green, 11=bright_yellow, 12=bright_blue,
+ *   13=bright_magenta, 14=bright_cyan, 15=bright_foreground; cursor-color=bright_foreground.
+ * (`bin/omarchy-theme-color`'s `ansi_alias` table — the resolver that template is generated
+ * from — carries the identical mapping, confirming it's not a ghostty-only quirk.)
+ *
+ * `orange` and `brown` are unused here by design — they don't feed the terminal palette,
+ * only later non-terminal render targets.
+ *
+ * selectionBackground: the tpl also references `{{ selection_background }}` /
+ * `{{ selection_foreground }}`, neither a colors.toml key. Per `omarchy-theme-color`'s
+ * resolver (called from `bin/omarchy-theme-set-templates`, which is what actually expands
+ * these templates): `selection_background` falls back to `selection` when unset, and every
+ * v4.0.1 theme leaves it unset — so `selection` is the real value, not a provisional guess.
+ * (`selection_foreground` likewise falls back to `bright_foreground`; WT's scheme format has
+ * no selectionForeground field, so that one has nowhere to go yet.)
  */
 export function renderWindowsTerminalScheme(name: string, palette: Palette): WindowsTerminalScheme {
   return {

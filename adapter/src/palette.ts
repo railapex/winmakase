@@ -6,20 +6,13 @@ import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 
 /**
- * Palette shape for an omarchy theme's colors.toml, as shipped by omarchy v4.0.1
- * (verified against tokyo-night, catppuccin, nord, gruvbox, rose-pine, kanagawa,
- * everforest — schema is uniform, no variants seen).
- *
- * NOTE: this is NOT the schema described in DESIGN.md (accent, cursor, foreground,
- * background, selection_foreground, selection_background, color0-15). That was the
- * omarchy v3.7.0 colors.toml shape. Omarchy redesigned the palette format before v4.0.0
- * shipped — cursor and the color0-15 ANSI slots are gone, selection_foreground/
- * selection_background collapsed to one `selection` key, and `mode` (dark|light) was
- * added directly to the file. DESIGN.md's "format verified identical across v3.7.0 and
- * v4.0.1" is stale. Parsing against the v3.7.0 shape here would throw "missing key" on
- * every real v4.0.1 theme, including both fixtures this adapter ships with — so this
- * module targets the real, current format instead. Flagged to team-lead; DESIGN.md
- * correction is out of this task's footprint (docs/ is off-limits).
+ * Palette shape for an omarchy theme's colors.toml, as shipped by omarchy v4.0.1 (the
+ * "Quattro" palette redesign) and documented in DESIGN.md's theme-adapter section.
+ * Verified directly against the raw v4.0.1 colors.toml for tokyo-night, catppuccin, nord,
+ * gruvbox, rose-pine, kanagawa, and everforest — schema is uniform, no variants seen. This
+ * superseded the v3.7.0 shape (accent, cursor, foreground, background,
+ * selection_foreground, selection_background, color0-15), which DESIGN.md briefly and
+ * incorrectly described as identical to v4.0.1 before that was corrected.
  */
 export interface Palette {
   mode: 'dark' | 'light';

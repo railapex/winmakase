@@ -1,5 +1,3 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Palette } from './palette.js';
 
 /**
@@ -23,19 +21,21 @@ const LUMINANCE_LIGHT_THRESHOLD = 0.5;
 /**
  * Decide whether a theme should drive Windows light mode.
  *
- * Precedence matches omarchy's own resolver (`omarchy-theme-color`'s `resolve_theme_mode`):
- * `palette.mode` — present on every omarchy v4.0.1 theme — is authoritative and short-
- * circuits everything else. Only when it's absent (older schema, hand-built palette) does
- * a `light.mode` marker file in the theme directory apply. Relative-luminance-of-background
- * is the last resort. In practice, since parsePalette requires `mode`, the marker-file and
- * luminance branches only fire for palettes built outside the normal load path.
+ * `palette.mode` — present on every omarchy v4.0.1 theme, required by parsePalette — is
+ * authoritative, per DESIGN.md and omarchy's own resolver (`omarchy-theme-color`'s
+ * `resolve_theme_mode`: `mode` short-circuits before anything else is even checked).
+ * Relative-luminance-of-background is a legacy-only fallback for a palette built without
+ * a `mode` (older schema, hand-built test fixtures) — with parsePalette in place, that
+ * path never fires for a real theme; it exists so this function never has to guess from
+ * nothing. No `light.mode` marker-file check: DESIGN.md's parenthetical mentioning one
+ * predates the schema correction — mode already carries that signal directly now.
+ *
+ * `themeDir` isn't used by this function; kept to match the deliverable's given signature
+ * (`isLightTheme(themeDir, palette)`) for callers that may want it later.
  */
-export function isLightTheme(themeDir: string, palette: Palette): boolean {
+export function isLightTheme(_themeDir: string, palette: Palette): boolean {
   if (palette.mode === 'light' || palette.mode === 'dark') {
     return palette.mode === 'light';
-  }
-  if (existsSync(join(themeDir, 'light.mode'))) {
-    return true;
   }
   return relativeLuminance(palette.background) >= LUMINANCE_LIGHT_THRESHOLD;
 }
