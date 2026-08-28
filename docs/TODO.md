@@ -25,6 +25,7 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 - [ ] kanata config templates rendered from mode setting (`caps` | `apps`), game-foreground auto-suspend included
 - [ ] winsome-helper: taskbar hide/restore, per-monitor wallpaper (IDesktopWallpaper), Windows light/dark flip, audio output switch
 - [ ] Supervisor: start order kanata→GlazeWM→Zebar, restart-on-exit with backoff, display-change event → GlazeWM bounce, state file for health
+- [ ] Logging (foundational — DESIGN § Logging): supervisor captures all component output to rolling `~/.winsome/logs/`, components headless (no kanata log window), `winsome logs <component>` tail, debug-mode flag flip
 - [ ] Zebar config: workspaces, clock, health dot (reads supervisor state), per-monitor
 - [ ] Scheduled-task registration scripts (kanata elevated + supervisor at logon) with removal counterparts
 - [ ] kanata config lands in ACL-protected path; verify a non-admin write fails `[v]`
