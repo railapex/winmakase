@@ -13,7 +13,7 @@ Omakase omarchy-style desktop environment for Windows 11. Public repo (railapex/
 - **Never** install components as scheduled tasks / startup, enable kanata beyond console-mode, or modify Chris's live PowerToys/taskbar config unless the TODO item explicitly says so and the milestone is past M0. Spike work is console-mode and reversible by closing the console.
 - All tool versions are pinned (scoop bucket). Never install "latest" of kanata/GlazeWM/Zebar; bump pins deliberately in their own commit.
 - The keymap mapping file is omarchy-grammar-verbatim. Deviations require a DESIGN.md edit explaining why, in the same commit.
-- Theme adapter: alacritty.toml is the sole palette source. Unknown schema = loud failure, never a silent wrong palette. No parsing of waybar.css — ever.
+- Theme adapter: colors.toml is the sole palette source (22 flat keys, stable across omarchy 3/4). Missing or unknown shape = loud failure, never a silent wrong palette. No parsing of waybar.css — ever.
 - Elevated-kanata config lives in an ACL-protected path; anything that changes that path or its permissions is security-sensitive — flag it in the commit message.
 
 ## Conventions

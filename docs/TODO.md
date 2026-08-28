@@ -11,11 +11,12 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 - [ ] kanata console-mode: caps tap-hold config — tap emits PowerToys Run hotkey, hold emits hyper chord. Verify tap latency feels right (tune tap-timeout/hold-timeout)
 - [ ] kanata `apps` mode variant: VK_APPS tap = context menu, hold = hyper
 - [ ] kanata elevated (manual `Run as administrator` console): confirm hyper chord works while an **admin** Windows Terminal has focus `[v]`
-- [ ] GlazeWM installed (scoop, pinned): minimal config, hyper-chord bindings for a grammar subset (W/F/T, arrows, workspaces 1-4) — confirm hyper chords bind cleanly in GlazeWM YAML `[v]`
+- [ ] GlazeWM installed (pinned release): minimal config, hyper-chord bindings for a grammar subset (W/F/T, arrows, workspaces 1-4) — confirm hyper chords bind cleanly in GlazeWM YAML `[v]`
+- [ ] `hide_title_bar` window effect (Win11): enable on a test app, note stability/glitches — decides default-on vs per-app opt-in `[v]`
 - [ ] GlazeWM IPC capability pass: enumerate query/command/subscribe surface; document what komorebic has that it lacks (matters for agent features + UAT harness design)
 - [ ] Chrome `BrowserThemeColor` policy: HKCU registry write → does Chrome tint? Document result either way
 - [ ] Triple-monitor behavior: workspaces per monitor, focus crossing monitor boundaries, DPI sanity check across the three displays `[v]`
-- [ ] Monitor replug: unplug/replug one display, confirm glazewm#1233 symptom, confirm a GlazeWM restart heals it (supervisor requirement validated) `[v]`
+- [ ] Monitor-set change via the real workflow (teleprompter display toggled on/off): confirm glazewm#1233 symptom on re-add, GlazeWM restart heals, daily three don't reshuffle (supervisor requirement + occasional-display exclusion validated) `[v]`
 - [ ] Spike retro → update DESIGN.md with findings; anything invalidated gets redesigned before M1
 
 ## M1 — Core stack
@@ -30,8 +31,8 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 
 ## M2 — Theming
 
-- [ ] Adapter core: alacritty.toml palette extraction (pre/post-0.13 schemas, loud failure on unknown shape)
-- [ ] Renderers: WT scheme · Zebar stylesheet template · GlazeWM border colors · wallpaper · light/dark (marker + luminance fallback) · nvim colorscheme pass-through
+- [ ] Adapter core: colors.toml palette extraction (22 flat keys; loud failure on missing/unknown shape; format stable v3.7↔v4.0)
+- [ ] Renderers: WT scheme · Zebar stylesheet template · GlazeWM border colors · wallpaper · light/dark (marker + luminance fallback) · nvim colorscheme pass-through · vscode.json pass-through
 - [ ] Per-app compact-chrome settings pack (WT hide-titlebar, VS Code, Chrome flags) applied on render
 - [ ] Golden-file tests: 19 stock omarchy themes → snapshotted outputs, CI green
 - [ ] `winsome theme set|list`, `winsome bg next`
@@ -63,4 +64,4 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 
 ## Deferred (arc — revisit after v0.1)
 
-komorebi power option via winsome-wm-switch (BYO license; check whkd license) · per-project accent colors (WT tab / border tint keyed to repo) · agent layouts (omarchy `tdl`/`tsl` equivalent: editor+agent+terminal workspace via IPC) · workspace overview with live previews · trackpad gestures · community-theme guarantee · VS theme VSIX pack · menu (Command Palette extension or TUI) · notification daemon · website/manual
+legacy pre-v3 community themes (alacritty.toml fallback parser) · komorebi power option via winsome-wm-switch (BYO license; check whkd license) · per-project accent colors (WT tab / border tint keyed to repo) · agent layouts (omarchy `tdl`/`tsl` equivalent: editor+agent+terminal workspace via IPC) · workspace overview with live previews · trackpad gestures · community-theme guarantee · VS theme VSIX pack · menu (Command Palette extension or TUI) · notification daemon · website/manual

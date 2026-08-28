@@ -35,15 +35,15 @@ winsome CLI                       — theme|bg|update|render|toggle|keys|doctor
 
 **Render, don't symlink.** Windows symlinks want admin/dev-mode and tools clobber them. The repo holds source-of-truth defaults plus git-ignored `*.local` overrides (omacosy's `apps.conf` pattern); `winsome render` writes each tool's real config to its expected path, backing up anything pre-existing.
 
-**Supervisor is a hard requirement, not defense.** A dead tiler on Windows leaves a normal-looking desktop with hotkeys silently gone — worse than a crash. Additionally, GlazeWM has a confirmed open bug (glzr-io/glazewm#1233) where a reconnected monitor requires a restart. The supervisor owns: start order (kanata → GlazeWM → Zebar), restart-on-exit, display-change-event → GlazeWM bounce, and a health indicator in the bar.
+**Supervisor is a hard requirement, not defense.** A dead tiler on Windows leaves a normal-looking desktop with hotkeys silently gone — worse than a crash. Additionally, GlazeWM has a confirmed open bug (glzr-io/glazewm#1233) where a reconnected monitor requires a restart — and monitor-set change is a *routine workflow*, not an edge case (e.g. a display toggled on only for teleprompter use). The supervisor owns: start order (kanata → GlazeWM → Zebar), restart-on-exit, display-change-event → GlazeWM bounce, and a health indicator in the bar. Workspaces bind to the daily displays; an occasional display gets no workspace auto-assignment, so toggling it never reshuffles the primaries.
 
-**Theme adapter: alacritty.toml is the sole palette source.** Every omarchy theme ships one; it's structured (16 ANSI colors + fg/bg) where waybar.css is an unparseable cascade. Handle both pre- and post-0.13 alacritty schema; unknown shape fails loud ("couldn't parse this theme"), never silently mis-themes. Render targets: Windows Terminal scheme, Zebar stylesheet (our template), GlazeWM border colors, per-monitor wallpaper (IDesktopWallpaper), Windows light/dark (from `light.mode` marker, falling back to background luminance), Neovim (pass-through of the theme's own `neovim.lua` colorscheme — no generation), Chromium frame tint (`BrowserThemeColor` policy — pending verification). Per-app compact-chrome settings for curated apps ride along with render.
+**Theme adapter: colors.toml is the sole palette source.** Omarchy themes (format verified identical across v3.7.0 and v4.0.1) ship a flat `colors.toml`: `accent`, `cursor`, `foreground`, `background`, `selection_foreground`, `selection_background`, `color0`–`color15` — 22 structured keys, no schema variants. A theme without a parseable colors.toml fails loud ("couldn't parse this theme"), never silently mis-themes; waybar.css is never parsed. Legacy pre-v3 community themes (alacritty.toml-based) are a deferred fallback, not v1. Render targets: Windows Terminal scheme, Zebar stylesheet (our template), GlazeWM border colors, per-monitor wallpaper (IDesktopWallpaper), Windows light/dark (from `light.mode` marker, falling back to background luminance), Neovim (pass-through of the theme's own `neovim.lua` colorscheme — no generation), VS Code (pass-through of the theme's shipped `vscode.json`), Chromium frame tint (`BrowserThemeColor` policy — pending verification). Per-app compact-chrome settings for curated apps ride along with render.
 
 **Install**: `irm …/install.ps1 | iex` → scoop (no admin) → pinned versions from the winsome scoop bucket → clone to `~/.winsome` → render → one elevation prompt registers two scheduled tasks (kanata elevated; supervisor at logon). Idempotent. No driver, no reboot. `winsome update` = git pull (refuses on dirty tree) + re-render + restart. Bootstrap disables PowerToys Keyboard Manager and FancyZones (both double up on kanata/GlazeWM territory; hook order is unstable across reboots).
 
 ## Documented gaps (permanent or deferred)
 
-- **Titlebars stay** on apps that don't draw their own chrome. No Windows tiler removes them; macOS (omacosy) has the same limit. Curated apps get compact-chrome settings.
+- **Titlebars**: GlazeWM exposes a `hide_title_bar` window effect (Windows 11 only) — spike-pending. If it proves stable it becomes the default with per-app opt-out; if glitchy, an opt-in per-app rule, with compact-chrome settings covering curated apps either way.
 - **Notifications unthemed** — Windows toasts render in ShellExperienceHost; no lever exists.
 - **Elevated windows float untiled** — GlazeWM runs user-level; UIPI blocks managing admin windows. Keys still work in them (kanata is elevated).
 
@@ -52,7 +52,7 @@ winsome CLI                       — theme|bg|update|render|toggle|keys|doctor
 Layered; everything below "manual" runs in CI or a single script.
 
 **Unit (CI, windows-latest):**
-- Theme adapter is pure functions → golden-file tests: all 19 stock omarchy themes render to snapshotted outputs (WT scheme JSON, Zebar CSS, GlazeWM YAML fragment). Schema-variant fixtures (pre/post-0.13 alacritty), luminance-fallback cases, malformed-theme fail-loud cases.
+- Theme adapter is pure functions → golden-file tests: all 19 stock omarchy themes render to snapshotted outputs (WT scheme JSON, Zebar CSS, GlazeWM YAML fragment). Luminance-fallback cases, malformed/missing colors.toml fail-loud cases.
 - Rendered GlazeWM config: YAML parses, required keys assert.
 - kanata configs: `kanata --check` in CI; tap-hold behavior via kanata's simulated-input mode (grammar tests without hardware).
 - Installer PowerShell: Pester — manifest correctness, idempotency (two runs, identical state), path/ACL assertions.

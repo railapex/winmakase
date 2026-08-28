@@ -10,7 +10,7 @@
 
 - **Tiling** via [GlazeWM](https://github.com/glzr-io/glazewm), driven by omarchy's exact keybinding grammar
 - **A real modifier key** — Caps Lock (or the context-menu key) becomes the window-manager mod via [kanata](https://github.com/jtroo/kanata) tap-hold: tap for your launcher, hold for the WM. On a future omarchy machine, `caps:super` gives you the identical physical motion — the muscle memory transfers
-- **Omarchy theme compatibility** — Winsome consumes real omarchy theme folders and renders them onto Windows Terminal, the status bar, window borders, wallpaper, Neovim, and Windows light/dark mode. Stock and community omarchy themes just work
+- **Omarchy theme compatibility** — Winsome consumes real omarchy theme folders (their `colors.toml` palette plus shipped `neovim.lua` and `vscode.json`) and renders them onto Windows Terminal, VS Code, Neovim, the status bar, window borders, wallpaper, and Windows light/dark mode. Stock and community omarchy themes just work
 - **Status bar** via [Zebar](https://github.com/glzr-io/zebar), taskbar hidden
 - **Stock Windows where Windows already wins** — PowerToys Run/Command Palette, Win+V clipboard history, built-in OCR and dictation. Winsome curates; it doesn't rebuild
 - **A supervisor** that keeps the stack alive, restarts the tiler on crash or monitor replug, and shows health in the bar — silent failure is the enemy
@@ -19,7 +19,7 @@
 ## What it deliberately is not
 
 - Not a fork of omarchy — a sibling implementation that treats omarchy's themes and keymap as a compatibility target
-- Not a titlebar remover — no Windows tiler strips window chrome (neither does macOS); curated apps get per-app compact-chrome settings instead
+- Not a universal reskin — arbitrary win32 app internals stay unthemed (same gap omarchy has on Linux GUIs); titlebars are handled via GlazeWM's Win11 `hide_title_bar` effect plus per-app compact-chrome settings
 - Not a notification theming tool — Windows toasts aren't themeable; that's a documented gap, same as omarchy's unthemed GUI apps
 
 ## Credits
