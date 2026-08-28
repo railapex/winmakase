@@ -31,8 +31,8 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 
 ## M2 — Theming
 
-- [ ] Adapter core: colors.toml palette extraction (22 flat keys; loud failure on missing/unknown shape; format stable v3.7↔v4.0)
-- [ ] Renderers: WT scheme · Zebar stylesheet template · GlazeWM border colors · wallpaper · light/dark (marker + luminance fallback) · nvim colorscheme pass-through · vscode.json pass-through
+- [ ] Adapter core: colors.toml palette extraction (26 semantic keys incl. mode, omarchy 4 format; loud failure on missing/unknown shape)
+- [ ] Renderers: WT scheme (ANSI mapping = omarchy's ghostty.conf.tpl, verbatim) · Zebar stylesheet template · GlazeWM border colors · wallpaper · light/dark (mode key; luminance = legacy fallback only) · nvim colorscheme pass-through · vscode.json pass-through
 - [ ] Per-app compact-chrome settings pack (WT hide-titlebar, VS Code, Chrome flags) applied on render
 - [ ] Golden-file tests: 19 stock omarchy themes → snapshotted outputs, CI green
 - [ ] `winsome theme set|list`, `winsome bg next`
