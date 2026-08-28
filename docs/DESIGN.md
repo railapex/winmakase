@@ -44,7 +44,7 @@ winsome CLI                       — theme|bg|update|render|toggle|keys|doctor
 ## Documented gaps (permanent or deferred)
 
 - **Titlebars: solved.** GlazeWM's `hide_title_bar` effect (Windows 11) verified in the M0 spike: classic-chrome windows get their titlebar shaved; modern apps draw their own chrome and are unaffected. Default-on with per-app opt-out.
-- **Chrome frame tint is partial**: `BrowserThemeColor` policy requires HKLM on hardened machines (HKCU `Software\Policies` can be ACL-locked — observed), and a user-installed Chrome profile theme overrides it entirely. Tints theme-less profiles only; per-profile generated theme extensions are the full answer (deferred).
+- **Chrome frame tint works but is blunt**: `BrowserThemeColor` policy requires HKLM on hardened machines (HKCU `Software\Policies` can be ACL-locked — observed), applies on Chrome's lazy policy refresh (minutes after the registry write, not at launch), and overrides user-installed themes across **all** profiles — spike-verified. That uniformity destroys per-profile color-coding, so Winsome ships it opt-in; per-profile generated theme extensions are the surgical answer (deferred).
 - **Notifications unthemed** — Windows toasts render in ShellExperienceHost; no lever exists.
 - **Elevated windows float untiled** — GlazeWM runs user-level; UIPI blocks managing admin windows. Keys still work in them (kanata is elevated).
 

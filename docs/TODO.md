@@ -14,7 +14,7 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 - [x] GlazeWM 3.10.1: grammar subset bound on lwin+ctrl+alt chords, full 60-second run clean across all three monitors `[v]`
 - [x] `hide_title_bar`: works — classic-chrome charmap shaved clean, modern apps unaffected (own chrome). Default-on with per-app opt-out `[v]`
 - [x] GlazeWM IPC capability pass: query/command/sub all present (16 event types incl. monitor_*; built-in pause) — UAT harness + agent surface fully covered; see spike/NOTES.md
-- [x] Chrome `BrowserThemeColor`: HKCU Policies ACL-locked on this box → HKLM via elevated batch works, BUT user-installed profile themes override the policy (no visible tint on either of Chris's themed profiles). Partial win; per-profile generated themes = arc
+- [x] Chrome `BrowserThemeColor`: HKCU Policies ACL-locked on this box → HKLM works, applies on Chrome's lazy policy refresh (minutes, not at launch), and BEATS user-installed themes across ALL profiles — kills per-profile color-coding, so Winsome ships it opt-in. Per-profile generated themes = arc
 - [x] Triple-monitor behavior: per-monitor workspaces, focus crosses boundaries, uniform dpi 96 / scale 1.0 across all three (mixed-DPI risk absent on this rig) `[v]`
 - [x] Monitor-set change via the real workflow: full teleprompter add→remove→re-add cycle CLEAN on 3.10.1 — workspace 4 auto-activates on it, daily three never reshuffle, **#1233 did not reproduce**. Supervisor display-watch demoted to insurance; crash-restart remains core `[v]`
 - [x] Spike retro → DESIGN.md updated (titlebars solved, Chrome tint partial, #1233 not reproduced, WM chord = Ctrl+Alt+Win). Remaining M0 stragglers: apps-mode live test, timing tune by daily use
