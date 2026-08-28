@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::error::ThemeError;
-use crate::palette::Palette;
+use crate::palette::{Mode, Palette};
 
 /// WCAG relative luminance of a #rrggbb color, in [0, 1].
 /// https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
@@ -45,10 +45,10 @@ const LUMINANCE_LIGHT_THRESHOLD: f64 = 0.5;
 /// branches only fire for a palette built outside the normal load path (older schema,
 /// hand-built test fixtures).
 pub fn is_light_theme(theme_dir: &Path, palette: &Palette) -> bool {
-    match palette.mode.as_deref() {
-        Some("light") => return true,
-        Some("dark") => return false,
-        _ => {}
+    match palette.mode {
+        Some(Mode::Light) => return true,
+        Some(Mode::Dark) => return false,
+        None => {}
     }
     if theme_dir.join("light.mode").exists() {
         return true;

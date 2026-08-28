@@ -3,7 +3,7 @@ mod common;
 
 use std::fs;
 
-use winsome_theme::palette::{load_palette, parse_palette, Palette};
+use winsome_theme::palette::{load_palette, parse_palette, Mode, Palette};
 use winsome_theme::ThemeError;
 
 fn assert_all_hex_lowercase(p: &Palette) {
@@ -52,7 +52,7 @@ fn err_string<T: std::fmt::Debug>(result: Result<T, ThemeError>) -> String {
 #[test]
 fn parses_tokyo_night_to_a_complete_palette() {
     let p = load_palette(&common::fixtures_dir().join("tokyo-night")).unwrap();
-    assert_eq!(p.mode.as_deref(), Some("dark"));
+    assert_eq!(p.mode, Some(Mode::Dark));
     assert_eq!(p.background, "#1a1b26");
     assert_eq!(p.accent, "#7aa2f7");
     assert_all_hex_lowercase(&p);
@@ -61,7 +61,7 @@ fn parses_tokyo_night_to_a_complete_palette() {
 #[test]
 fn parses_catppuccin_to_a_complete_palette() {
     let p = load_palette(&common::fixtures_dir().join("catppuccin")).unwrap();
-    assert_eq!(p.mode.as_deref(), Some("dark"));
+    assert_eq!(p.mode, Some(Mode::Dark));
     assert_eq!(p.background, "#1e1e2e");
     assert_eq!(p.accent, "#89b4fa");
     assert_all_hex_lowercase(&p);

@@ -1,8 +1,20 @@
 use std::path::Path;
 
+use serde::{Deserialize, Serialize};
 use toml::Value as TomlValue;
 
 use crate::error::ThemeError;
+
+/// The two values omarchy's `mode` key can hold. A closed enum (not a bare `String`) so an
+/// invalid value like `"purple"` is unrepresentable once past `parse_palette` — the TS
+/// original relies on its `'dark' | 'light'` union plus runtime validation for the same
+/// guarantee; this makes it a type-system invariant instead.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Mode {
+    Dark,
+    Light,
+}
 
 /// Palette shape for an omarchy theme's colors.toml, as shipped by omarchy v4.0.1 (the
 /// "Quattro" palette redesign) and documented in DESIGN.md's theme-adapter section.
@@ -12,15 +24,17 @@ use crate::error::ThemeError;
 /// selection_foreground, selection_background, color0-15), which DESIGN.md briefly and
 /// incorrectly described as identical to v4.0.1 before that was corrected.
 ///
-/// `mode` is `Option<String>` rather than a required `"dark" | "light"` enum: the normal
-/// path (`parse_palette`/`load_palette`) always produces `Some("dark")` or `Some("light")`,
+/// `mode` is `Option<Mode>` rather than a required field: the normal path
+/// (`parse_palette`/`load_palette`) always produces `Some(Mode::Dark)` or `Some(Mode::Light)`,
 /// but the light/dark resolver's fallback branches (marker file, luminance) are exercised by
-/// constructing a palette with `mode: None` directly — the TS tests do this by casting
-/// around the type (`as unknown as Palette`); Rust has no such escape hatch, so the field
-/// itself has to be optional to let tests build that state without violating the type.
+/// constructing a palette with `mode: None` directly — the TS tests do this by casting around
+/// the type (`as unknown as Palette`); Rust has no such escape hatch, so the field itself has
+/// to be optional to let tests build that state. `Mode` still stays a closed enum, so `None`
+/// is the only invalid-relative-to-normal-parse state a `Palette` can hold — there's no way
+/// to construct one with a mode value that isn't dark, light, or absent.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Palette {
-    pub mode: Option<String>,
+    pub mode: Option<Mode>,
     pub accent: String,
     pub selection: String,
     pub muted: String,
@@ -109,7 +123,8 @@ pub fn parse_palette(toml_text: &str, source_label: &str) -> Result<Palette, The
     };
 
     let mode = match table.get("mode") {
-        Some(TomlValue::String(s)) if s == "dark" || s == "light" => s.clone(),
+        Some(TomlValue::String(s)) if s == "dark" => Mode::Dark,
+        Some(TomlValue::String(s)) if s == "light" => Mode::Light,
         other => {
             return Err(fail(
                 source_label,

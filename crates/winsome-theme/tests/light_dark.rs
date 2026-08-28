@@ -3,7 +3,7 @@ mod common;
 
 use std::fs;
 
-use winsome_theme::palette::{load_palette, Palette};
+use winsome_theme::palette::{load_palette, Mode, Palette};
 use winsome_theme::{is_light_theme, relative_luminance};
 
 // --- relativeLuminance ---
@@ -40,7 +40,7 @@ fn is_true_for_a_theme_whose_mode_is_light_even_with_a_dark_background() {
     let dir = common::make_temp_dir("mode-light");
     let p = load_palette(&common::fixtures_dir().join("tokyo-night")).unwrap();
     let mut light_mode = p.clone();
-    light_mode.mode = Some("light".to_string());
+    light_mode.mode = Some(Mode::Light);
     assert!(is_light_theme(&dir, &light_mode));
     common::cleanup_temp_dir(&dir);
 }
