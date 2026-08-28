@@ -1,18 +1,14 @@
-;; Winsome spike — caps mode, v3 (real-Super architecture)
-;; caps: tap = Alt+Space (launcher) · hold = REAL Win key (lmet)
-;; scrlk = real CapsLock — Chris's escape hatch, now a permanent design rule.
-;; process-unmapped-keys OFF: kanata touches ONLY caps/scrlk; every other key
-;; passes through raw, so GlazeWM consuming bound chords can never desync
-;; kanata's state tracking (the llhook:215 failure of v1/v2).
-;; Known trap: caps+L = Win+L = OS lock (winlogon-level, uninterceptable). L unbound.
+;; Winsome spike — caps mode, v4 (pure modifier — no tap-hold)
+;; caps = Win key, full stop. Launcher = Caps+Space (PT Run activation set to
+;; Win+Space — omarchy's exact Super+Space motion). scrlk = real CapsLock (escape hatch).
+;; v3's tap-hold raced: with process-unmapped-keys off kanata can't see the
+;; interrupting key, so fast chords leaked the letter raw and a bare caps
+;; release opened the Start menu. Pure modifier has no decision to race.
+;; Bare caps tap = bare Win tap = Start menu (native Windows behavior).
 (defcfg
   process-unmapped-keys no
 )
 
 (defsrc caps slck)
 
-(deflayer base @cap caps)
-
-(defalias
-  cap (tap-hold-press 200 200 A-spc lmet)
-)
+(deflayer base lmet caps)
