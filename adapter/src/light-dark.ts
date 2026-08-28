@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import type { Palette } from './palette.js';
 
 /**
@@ -21,21 +23,23 @@ const LUMINANCE_LIGHT_THRESHOLD = 0.5;
 /**
  * Decide whether a theme should drive Windows light mode.
  *
- * `palette.mode` — present on every omarchy v4.0.1 theme, required by parsePalette — is
- * authoritative, per DESIGN.md and omarchy's own resolver (`omarchy-theme-color`'s
- * `resolve_theme_mode`: `mode` short-circuits before anything else is even checked).
- * Relative-luminance-of-background is a legacy-only fallback for a palette built without
- * a `mode` (older schema, hand-built test fixtures) — with parsePalette in place, that
- * path never fires for a real theme; it exists so this function never has to guess from
- * nothing. No `light.mode` marker-file check: DESIGN.md's parenthetical mentioning one
- * predates the schema correction — mode already carries that signal directly now.
- *
- * `themeDir` isn't used by this function; kept to match the deliverable's given signature
- * (`isLightTheme(themeDir, palette)`) for callers that may want it later.
+ * Precedence mirrors omarchy's own resolver exactly — `omarchy-theme-color`'s
+ * `resolve_theme_mode`: `palette.mode` (present on every omarchy v4.0.1 theme, required by
+ * parsePalette) is authoritative and short-circuits before the marker file is even
+ * checked; only when it's absent does a `light.mode` marker file in the theme directory
+ * apply; relative-luminance-of-background is the last resort, falling back to "dark" if
+ * even that can't be read. All three tiers exist in the canonical resolver for themes
+ * that aren't v4-shaped — that's the legacy-fallback story this mirrors, not invention.
+ * In practice, since parsePalette requires `mode`, the marker-file and luminance branches
+ * only fire for a palette built outside the normal load path (older schema, hand-built
+ * test fixtures).
  */
-export function isLightTheme(_themeDir: string, palette: Palette): boolean {
+export function isLightTheme(themeDir: string, palette: Palette): boolean {
   if (palette.mode === 'light' || palette.mode === 'dark') {
     return palette.mode === 'light';
+  }
+  if (existsSync(join(themeDir, 'light.mode'))) {
+    return true;
   }
   return relativeLuminance(palette.background) >= LUMINANCE_LIGHT_THRESHOLD;
 }
