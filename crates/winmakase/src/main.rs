@@ -72,6 +72,12 @@ enum Cmd {
         action: KeymapAction,
     },
 
+    /// Render the kanata .kbd config for the `[keyboard]` mode in config.toml.
+    Kanata {
+        #[command(subcommand)]
+        action: KanataAction,
+    },
+
     /// Re-orient the focused row of windows in place (omarchy Super+J).
     Reflow {
         /// Print the move plan without executing it.
@@ -107,6 +113,19 @@ enum ScratchpadAction {
     /// The anonymous rwin+s key: rescue an unpresentable focused window, else
     /// pull the newest window out of scratch, else quietly do nothing.
     Summon,
+}
+
+#[derive(Subcommand)]
+enum KanataAction {
+    /// Print (or write) the .kbd for the configured keyboard mode.
+    Render {
+        /// Config file. Defaults to <home>/config.toml, created if absent.
+        #[arg(long, value_name = "FILE")]
+        config: Option<PathBuf>,
+        /// Write to a file instead of stdout.
+        #[arg(long, value_name = "FILE")]
+        out: Option<PathBuf>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -213,6 +232,7 @@ fn main() -> ExitCode {
         Cmd::Logs { component, lines } => logs(&paths, component, lines),
         Cmd::Down { timeout } => return down(&paths, timeout),
         Cmd::Keymap { action } => keymap_cmd(&paths, action),
+        Cmd::Kanata { action } => kanata_cmd(&paths, action),
         Cmd::Reflow { dry_run } => reflow_cmd(&paths, dry_run),
         Cmd::Scratchpad { action } => scratchpad_cmd(&paths, action),
         Cmd::Stub { .. } => unreachable!("handled above"),
@@ -357,6 +377,22 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
                 Some(dest) => std::fs::write(dest, yaml),
                 None => {
                     print!("{yaml}");
+                    Ok(())
+                }
+            }
+        }
+    }
+}
+
+fn kanata_cmd(paths: &Paths, action: KanataAction) -> io::Result<()> {
+    match action {
+        KanataAction::Render { config, out } => {
+            let cfg = Config::load_or_create(&config.unwrap_or_else(|| paths.config()))?;
+            let kbd = winmakase::kanata_kbd::render(&cfg.keyboard);
+            match out {
+                Some(dest) => std::fs::write(dest, kbd),
+                None => {
+                    print!("{kbd}");
                     Ok(())
                 }
             }

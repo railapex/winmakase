@@ -12,6 +12,7 @@ pub mod control;
 pub mod display_watch;
 pub mod glazewm;
 pub mod health;
+pub mod kanata_kbd;
 pub mod monitors;
 pub mod paths;
 pub mod proc_alive;

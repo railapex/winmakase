@@ -44,6 +44,16 @@ bounce_on_display_change = false
 # state the taskbar had is put back on shutdown. Panic restores it too.
 hide_taskbar = true
 
+# The rendered kanata config (`winmakase kanata render`): which physical key
+# carries the WM chord.
+#   caps — Caps Lock = right-Win modifier; scrlk = raw-CapsLock escape hatch.
+#   apps — menu key: tap = context menu, hold = WM chord; Caps stays native.
+# tap_ms/hold_ms: the apps-mode tap-hold decision window (caps mode has no tap).
+[keyboard]
+mode = "caps"
+tap_ms = 200
+hold_ms = 200
+
 # kanata and GlazeWM are a LINKED PAIR: both healthy or both down.
 # GlazeWM dying with kanata alive leaves raw Win+letter chords firing OS
 # shortcuts at a desktop nobody can tile. Start order is kanata first.
@@ -96,6 +106,10 @@ height = "60%"
 pub struct Config {
     #[serde(default)]
     pub supervisor: SupervisorConfig,
+    /// The rendered kanata config's content — distinct from `[kanata]`, which
+    /// is how the component is *hosted*.
+    #[serde(default)]
+    pub keyboard: KeyboardConfig,
     pub kanata: ComponentConfig,
     pub glazewm: ComponentConfig,
     /// Optional: a missing `[zebar]` section means no bar in the set.
@@ -157,6 +171,42 @@ impl ComponentConfig {
     pub fn adopting(mut self) -> Self {
         self.adopt = true;
         self
+    }
+}
+
+/// `[keyboard]` — what `winmakase kanata render` produces. Which physical key
+/// carries the WM chord, and the apps-mode tap-hold window.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct KeyboardConfig {
+    #[serde(default)]
+    pub mode: KeyboardMode,
+    #[serde(default = "d_tap_hold_ms")]
+    pub tap_ms: u16,
+    #[serde(default = "d_tap_hold_ms")]
+    pub hold_ms: u16,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum KeyboardMode {
+    /// Caps Lock = right-Win modifier (v4.1, live-proven); scrlk = raw hatch.
+    #[default]
+    Caps,
+    /// Menu key: tap = context menu, hold = WM chord; Caps stays native.
+    Apps,
+}
+
+fn d_tap_hold_ms() -> u16 {
+    200
+}
+
+impl Default for KeyboardConfig {
+    fn default() -> Self {
+        Self {
+            mode: KeyboardMode::Caps,
+            tap_ms: d_tap_hold_ms(),
+            hold_ms: d_tap_hold_ms(),
+        }
     }
 }
 
@@ -281,6 +331,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             supervisor: SupervisorConfig::default(),
+            keyboard: KeyboardConfig::default(),
             kanata: ComponentConfig::new(
                 "D:/dev/winmakase/spike/tools/kanata/kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
                 &[],
@@ -381,6 +432,51 @@ mod tests {
         .unwrap();
         assert_eq!(cfg.supervisor.poll_ms, 10);
         assert_eq!(cfg.supervisor.backoff_max_ms, 30_000);
+    }
+
+    #[test]
+    fn keyboard_section_is_optional_and_modes_parse() {
+        let cfg = Config::parse(
+            r#"
+            [kanata]
+            command = "k.exe"
+            [glazewm]
+            command = "g.exe"
+            "#,
+        )
+        .unwrap();
+        assert_eq!(cfg.keyboard, KeyboardConfig::default());
+        assert_eq!(cfg.keyboard.mode, KeyboardMode::Caps);
+
+        let cfg = Config::parse(
+            r#"
+            [keyboard]
+            mode = "apps"
+            tap_ms = 150
+            [kanata]
+            command = "k.exe"
+            [glazewm]
+            command = "g.exe"
+            "#,
+        )
+        .unwrap();
+        assert_eq!(cfg.keyboard.mode, KeyboardMode::Apps);
+        assert_eq!(cfg.keyboard.tap_ms, 150);
+        assert_eq!(cfg.keyboard.hold_ms, 200, "hold keeps its default");
+
+        // An unknown mode is a loud parse error, not a silent caps fallback.
+        let err = Config::parse(
+            r#"
+            [keyboard]
+            mode = "dvorak"
+            [kanata]
+            command = "k.exe"
+            [glazewm]
+            command = "g.exe"
+            "#,
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("dvorak"), "got: {err}");
     }
 
     #[test]

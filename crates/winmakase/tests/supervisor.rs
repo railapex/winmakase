@@ -51,6 +51,7 @@ fn fast_supervisor() -> SupervisorConfig {
 fn pair_config() -> Config {
     Config {
         supervisor: fast_supervisor(),
+        keyboard: Default::default(),
         kanata: stub(&["--tick-ms", "150"]),
         glazewm: stub(&["--tick-ms", "150"]),
         zebar: None,
