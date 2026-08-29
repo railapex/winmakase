@@ -1,13 +1,14 @@
-;; Winsome spike — caps mode, v4 RESTORED (holding state while keybinding architecture is reviewed)
-;; caps = Win key, pure modifier. Launcher = Caps+Space (PT Run activation = Win+Space).
-;; scrlk = real CapsLock (escape hatch). Bare caps tap = Start menu (native).
-;; 0ms chord path: GlazeWM binds real lwin chords; kanata synthesizes ONLY the modifier.
-;; v5 direct-drive parked: kanata cmd broke on spaced paths + console flash; wscript
-;; shim fixed both but costs 60-100ms/press — rejected. See spike/NOTES.md.
+;; Winsome spike — caps mode, v4.1 (caps = RIGHT Win; Sol-reviewed architecture)
+;; caps = rmet (right Win), pure modifier. GlazeWM binds rwin+X ONLY — verified in
+;; GlazeWM source (key.rs/keyboard_hook.rs): rwin bindings never match VK_LWIN, so
+;; the physical left Win key keeps 100% native Windows behavior (Start, Win+E, Win+L).
+;; Launcher = Caps+Space (PT Run on Win+Space — either Win key). scrlk = CapsLock hatch.
+;; Tap-caps stays a no-op-ish (bare rwin tap = Start) until the resident-relay fast-follow
+;; (winsome.exe + kanata notify action) — see docs/TODO.md. Panic: caps+shift+q.
 (defcfg
   process-unmapped-keys no
 )
 
 (defsrc caps slck)
 
-(deflayer base lmet caps)
+(deflayer base rmet caps)

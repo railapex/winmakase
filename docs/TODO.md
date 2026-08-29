@@ -23,7 +23,9 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 
 - [ ] Full omarchy grammar → keymap mapping file (tiler-agnostic data) + GlazeWM YAML generator
 - [ ] kanata config templates rendered from mode setting (`caps` | `apps`), game-foreground auto-suspend included
-- [ ] Optional `caps-rwin` mode: caps emits RIGHT Win, GlazeWM binds `rwin+X` only → physical left Win keeps native Windows behavior (verify GlazeWM accepts rwin bindings). Default stays opinionated: both Wins drive the WM
+- [x] caps→rwin is the DEFAULT (Sol review, source-verified in both codebases; live as v4.1): caps emits right Win, GlazeWM binds `rwin+X`, physical left Win fully native
+- [ ] **R5 fast-follow card**: tap-caps launcher via resident relay — winsome.exe holds warm WebSocket to GlazeWM IPC (persistent tokio server, no spawn) + TCP to kanata; requires small kanata patch adding a "notify TCP clients" action (scoped, upstreamable — its TCP server exists for exactly this). Single-digit ms. Blocked on supervisor landing; do NOT block M1 on it
+- [ ] Upstream freebie: CREATE_NO_WINDOW for kanata `cmd` spawns (kills console flash for low-frequency cmd actions like panic)
 - [ ] winsome-helper: taskbar hide/restore, per-monitor wallpaper (IDesktopWallpaper), Windows light/dark flip, audio output switch
 - [ ] Supervisor: start order kanata→GlazeWM→Zebar, restart-on-exit with backoff, display-change event → GlazeWM bounce, state file for health. **Linked-pair rule (spike incident): kanata+GlazeWM both-healthy-or-both-down — GlazeWM death reverts caps to stock instantly (prevents raw Win-shortcut soup), kanata death auto-restarts**
 - [ ] Logging (foundational — DESIGN § Logging): supervisor captures all component output to rolling `~/.winsome/logs/`, components headless (no kanata log window), `winsome logs <component>` tail, debug-mode flag flip
