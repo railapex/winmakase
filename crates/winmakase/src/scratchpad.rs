@@ -31,6 +31,13 @@ pub struct ScratchpadConfig {
     pub launch_args: Vec<String>,
     /// Window match: the process name, compared case-insensitively.
     pub process: String,
+    /// Optional second match rule: a case-insensitive substring the window
+    /// TITLE must also contain. Process alone is too coarse when the pad's
+    /// process is a daily driver — a `wt` pad without this grabs whichever
+    /// Windows Terminal it finds. Launch the pad with a distinctive title
+    /// (`wt -w -1 new-tab --title <marker>`) and match the marker here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
     /// Floating size for the summoned window, e.g. "55%" — passed to
     /// `set-floating --width/--height`. Omitted = GlazeWM's default placement.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -52,11 +59,22 @@ pub enum Action {
     Launch,
 }
 
-pub fn decide(workspaces: &[Workspace], process: &str) -> Action {
+pub fn decide(workspaces: &[Workspace], cfg: &ScratchpadConfig) -> Action {
+    let title_rule = cfg.title.as_deref().map(str::to_ascii_lowercase);
     let matches_process = |w: &crate::glazewm::Node| {
-        w.process_name
+        let process_ok = w
+            .process_name
             .as_deref()
-            .is_some_and(|p| p.eq_ignore_ascii_case(process))
+            .is_some_and(|p| p.eq_ignore_ascii_case(&cfg.process));
+        let title_ok = match &title_rule {
+            None => true,
+            // An untitled window cannot satisfy a title rule.
+            Some(needle) => w
+                .title
+                .as_deref()
+                .is_some_and(|t| t.to_ascii_lowercase().contains(needle)),
+        };
+        process_ok && title_ok
     };
 
     if let Some(scratch) = workspaces.iter().find(|w| w.name == SCRATCH_WORKSPACE) {
@@ -100,7 +118,7 @@ pub fn decide(workspaces: &[Workspace], process: &str) -> Action {
 /// Execute one toggle.
 pub fn toggle(client: &Client, cfg: &ScratchpadConfig) -> io::Result<String> {
     let workspaces = client.query_workspaces()?;
-    match decide(&workspaces, &cfg.process) {
+    match decide(&workspaces, cfg) {
         Action::Summon { window_id } => {
             summon(client, &workspaces, &window_id, cfg)?;
             Ok(format!("summoned {} from scratch", cfg.process))
@@ -117,7 +135,7 @@ pub fn toggle(client: &Client, cfg: &ScratchpadConfig) -> io::Result<String> {
             loop {
                 std::thread::sleep(Duration::from_millis(150));
                 let workspaces = client.query_workspaces()?;
-                if let Action::Banish { window_id } = decide(&workspaces, &cfg.process) {
+                if let Action::Banish { window_id } = decide(&workspaces, cfg) {
                     float_and_focus(client, &window_id, cfg)?;
                     return Ok(format!("launched {}", cfg.launch));
                 }
@@ -328,6 +346,24 @@ mod tests {
         serde_json::from_str(json).unwrap()
     }
 
+    fn pad(process: &str) -> ScratchpadConfig {
+        ScratchpadConfig {
+            launch: "x".into(),
+            launch_args: Vec::new(),
+            process: process.into(),
+            title: None,
+            width: None,
+            height: None,
+        }
+    }
+
+    fn titled_pad(process: &str, title: &str) -> ScratchpadConfig {
+        ScratchpadConfig {
+            title: Some(title.into()),
+            ..pad(process)
+        }
+    }
+
     const WITH_SCRATCH: &str = r#"[
         {"type":"workspace","id":"ws1","name":"1","isDisplayed":true,"hasFocus":true,
          "children":[{"type":"window","id":"c1","state":{"type":"tiling"},"processName":"chrome"}]},
@@ -342,7 +378,7 @@ mod tests {
     #[test]
     fn a_parked_match_is_summoned_most_recent_first() {
         assert_eq!(
-            decide(&workspaces(WITH_SCRATCH), "windowsterminal"),
+            decide(&workspaces(WITH_SCRATCH), &pad("windowsterminal")),
             Action::Summon {
                 window_id: "t2".into()
             },
@@ -353,7 +389,7 @@ mod tests {
     #[test]
     fn a_match_out_in_the_world_is_banished() {
         assert_eq!(
-            decide(&workspaces(WITH_SCRATCH), "chrome"),
+            decide(&workspaces(WITH_SCRATCH), &pad("chrome")),
             Action::Banish {
                 window_id: "c1".into()
             }
@@ -362,16 +398,70 @@ mod tests {
 
     #[test]
     fn no_match_anywhere_launches() {
-        assert_eq!(decide(&workspaces(WITH_SCRATCH), "wezterm"), Action::Launch);
+        assert_eq!(
+            decide(&workspaces(WITH_SCRATCH), &pad("wezterm")),
+            Action::Launch
+        );
     }
 
     #[test]
     fn matching_is_case_insensitive() {
         assert_eq!(
-            decide(&workspaces(WITH_SCRATCH), "WINDOWSTERMINAL"),
+            decide(&workspaces(WITH_SCRATCH), &pad("WINDOWSTERMINAL")),
             Action::Summon {
                 window_id: "t2".into()
             }
+        );
+    }
+
+    #[test]
+    fn a_title_rule_leaves_the_daily_driver_alone() {
+        // The owed refinement: same process everywhere (wt), and only the
+        // marker-titled window is the pad. Without the rule, toggling the pad
+        // would banish whichever terminal it found first.
+        let json = r#"[
+            {"type":"workspace","id":"ws1","name":"1","isDisplayed":true,"hasFocus":true,
+             "children":[
+                {"type":"window","id":"daily","state":{"type":"tiling"},
+                 "processName":"WindowsTerminal","title":"pwsh in D:/dev"},
+                {"type":"window","id":"padw","state":{"type":"tiling"},
+                 "processName":"WindowsTerminal","title":"winmakase-pad"}
+             ]},
+            {"type":"workspace","id":"wss","name":"scratch","children":[]}
+        ]"#;
+        let ws = workspaces(json);
+        assert_eq!(
+            decide(&ws, &titled_pad("windowsterminal", "WINMAKASE-PAD")),
+            Action::Banish {
+                window_id: "padw".into()
+            },
+            "title is a case-insensitive substring rule"
+        );
+        // No pad window anywhere: launch a new one, never grab the daily.
+        let daily_only = r#"[
+            {"type":"workspace","id":"ws1","name":"1","isDisplayed":true,"hasFocus":true,
+             "children":[{"type":"window","id":"daily","state":{"type":"tiling"},
+                          "processName":"WindowsTerminal","title":"pwsh in D:/dev"}]},
+            {"type":"workspace","id":"wss","name":"scratch","children":[]}
+        ]"#;
+        assert_eq!(
+            decide(
+                &workspaces(daily_only),
+                &titled_pad("windowsterminal", "winmakase-pad")
+            ),
+            Action::Launch
+        );
+    }
+
+    #[test]
+    fn an_untitled_window_cannot_satisfy_a_title_rule() {
+        // WITH_SCRATCH's terminals carry no title at all.
+        assert_eq!(
+            decide(
+                &workspaces(WITH_SCRATCH),
+                &titled_pad("windowsterminal", "pad")
+            ),
+            Action::Launch
         );
     }
 
@@ -469,7 +559,7 @@ mod tests {
              "children":[{"type":"window","id":"x1","state":{"type":"tiling"},"processName":"other"}]}
         ]"#;
         assert_eq!(
-            decide(&workspaces(json), "wt"),
+            decide(&workspaces(json), &pad("wt")),
             Action::Banish {
                 window_id: "c1".into()
             }

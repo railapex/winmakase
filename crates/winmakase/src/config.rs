@@ -92,12 +92,19 @@ args = []
 adopt = true
 
 # Named scratchpads for `winmakase scratchpad toggle <name>`: the matching
-# window (by process name) is banished to the hidden 'scratch' workspace and
-# summoned back floated + centered + focused. The GlazeWM config must define a
-# workspace named "scratch" (unkeyed, last in definition order).
+# window is banished to the hidden 'scratch' workspace and summoned back
+# floated + centered + focused. The GlazeWM config must define a workspace
+# named "scratch" (unkeyed, last in definition order).
+#
+# `title` is the second match rule: process alone is too coarse when the
+# pad's process is a daily driver — a bare `wt` rule grabs whichever
+# Windows Terminal it finds first. Launch with a distinctive marker title
+# and match it here (case-insensitive substring).
 [scratchpad.term]
 launch = "wt"
+launch_args = ["-w", "-1", "new-tab", "--title", "winmakase-pad"]
 process = "WindowsTerminal"
+title = "winmakase-pad"
 width = "55%"
 height = "60%"
 "#;
@@ -351,8 +358,11 @@ impl Default for Config {
                 "term".to_string(),
                 ScratchpadConfig {
                     launch: "wt".to_string(),
-                    launch_args: Vec::new(),
+                    launch_args: ["-w", "-1", "new-tab", "--title", "winmakase-pad"]
+                        .map(String::from)
+                        .to_vec(),
                     process: "WindowsTerminal".to_string(),
+                    title: Some("winmakase-pad".to_string()),
                     width: Some("55%".to_string()),
                     height: Some("60%".to_string()),
                 },
