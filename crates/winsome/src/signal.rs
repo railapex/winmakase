@@ -1,0 +1,59 @@
+//! Console control events.
+//!
+//! Ctrl+C must not kill the supervisor outright. GlazeWM has to be asked to
+//! exit through its own CLI so `glazewm-watcher` puts every window back where
+//! it was; kanata has to die too, or the desktop is left with a mod key and
+//! nothing listening for it. So the handler only raises a flag and the main
+//! loop does the work.
+//!
+//! Close/logoff/shutdown events are different: Windows terminates the process a
+//! few seconds after the handler returns. For those we block inside the handler
+//! until the main loop reports it has finished, which is the only way the
+//! desktop gets restored on a logoff.
+
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread;
+use std::time::{Duration, Instant};
+
+use windows_sys::Win32::System::Console::{
+    CTRL_BREAK_EVENT, CTRL_C_EVENT, CTRL_CLOSE_EVENT, CTRL_LOGOFF_EVENT, CTRL_SHUTDOWN_EVENT,
+    SetConsoleCtrlHandler,
+};
+use windows_sys::core::BOOL;
+
+static REQUESTED: AtomicBool = AtomicBool::new(false);
+static FINISHED: AtomicBool = AtomicBool::new(false);
+
+/// Windows gives a close/logoff handler roughly five seconds; stay inside it.
+const GRACE: Duration = Duration::from_secs(4);
+
+pub fn install() -> bool {
+    unsafe { SetConsoleCtrlHandler(Some(handler), 1) != 0 }
+}
+
+pub fn shutdown_requested() -> bool {
+    REQUESTED.load(Ordering::SeqCst)
+}
+
+/// Called once the supervisor has stopped its children and written final state.
+pub fn mark_finished() {
+    FINISHED.store(true, Ordering::SeqCst);
+}
+
+unsafe extern "system" fn handler(ctrl_type: u32) -> BOOL {
+    match ctrl_type {
+        CTRL_C_EVENT | CTRL_BREAK_EVENT => {
+            REQUESTED.store(true, Ordering::SeqCst);
+            1
+        }
+        CTRL_CLOSE_EVENT | CTRL_LOGOFF_EVENT | CTRL_SHUTDOWN_EVENT => {
+            REQUESTED.store(true, Ordering::SeqCst);
+            let deadline = Instant::now() + GRACE;
+            while !FINISHED.load(Ordering::SeqCst) && Instant::now() < deadline {
+                thread::sleep(Duration::from_millis(25));
+            }
+            1
+        }
+        _ => 0,
+    }
+}

@@ -1,0 +1,88 @@
+//! Where Winsome keeps its things.
+//!
+//! Everything lives under `~/.winsome`. `WINSOME_HOME` overrides the root —
+//! that is what the test suite drives, and it is also the escape hatch for
+//! running a second stack side by side without touching the live one.
+
+use std::env;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Paths {
+    home: PathBuf,
+}
+
+impl Paths {
+    /// `WINSOME_HOME`, else `%USERPROFILE%/.winsome`, else `$HOME/.winsome`.
+    pub fn resolve() -> io::Result<Self> {
+        if let Some(h) = env::var_os("WINSOME_HOME") {
+            return Ok(Self::at(h));
+        }
+        let profile = env::var_os("USERPROFILE")
+            .or_else(|| env::var_os("HOME"))
+            .ok_or_else(|| {
+                io::Error::other(
+                    "cannot locate the home directory: neither WINSOME_HOME, USERPROFILE, nor HOME is set",
+                )
+            })?;
+        Ok(Self::at(PathBuf::from(profile).join(".winsome")))
+    }
+
+    pub fn at(home: impl Into<PathBuf>) -> Self {
+        Self { home: home.into() }
+    }
+
+    pub fn home(&self) -> &Path {
+        &self.home
+    }
+
+    pub fn config(&self) -> PathBuf {
+        self.home.join("config.toml")
+    }
+
+    pub fn logs_dir(&self) -> PathBuf {
+        self.home.join("logs")
+    }
+
+    pub fn state_dir(&self) -> PathBuf {
+        self.home.join("state")
+    }
+
+    pub fn health(&self) -> PathBuf {
+        self.state_dir().join("health.json")
+    }
+
+    /// Control file the supervisor polls; see [`crate::control`].
+    pub fn control(&self) -> PathBuf {
+        self.state_dir().join("control")
+    }
+
+    pub fn log_for(&self, name: &str) -> PathBuf {
+        self.logs_dir().join(format!("{name}.log"))
+    }
+
+    pub fn ensure_dirs(&self) -> io::Result<()> {
+        fs::create_dir_all(self.logs_dir())?;
+        fs::create_dir_all(self.state_dir())?;
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn layout_hangs_off_the_root() {
+        let p = Paths::at(r"C:\winsome-home");
+        assert_eq!(p.config(), Path::new(r"C:\winsome-home\config.toml"));
+        assert_eq!(p.health(), Path::new(r"C:\winsome-home\state\health.json"));
+        assert_eq!(p.control(), Path::new(r"C:\winsome-home\state\control"));
+        assert_eq!(
+            p.log_for("kanata"),
+            Path::new(r"C:\winsome-home\logs\kanata.log")
+        );
+    }
+}
