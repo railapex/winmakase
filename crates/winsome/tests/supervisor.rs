@@ -50,6 +50,7 @@ fn pair_config() -> Config {
         supervisor: fast_supervisor(),
         kanata: stub(&["--tick-ms", "150"]),
         glazewm: stub(&["--tick-ms", "150"]),
+        zebar: None,
     }
 }
 
@@ -454,6 +455,59 @@ fn shutdown_stops_components_in_reverse_order_via_their_stop_command() {
     // Nothing left running.
     assert_eq!(winsome::proc_alive::is_alive(kanata), Some(false));
     assert_eq!(winsome::proc_alive::is_alive(glazewm), Some(false));
+}
+
+// -- the optional third component --------------------------------------------
+
+#[test]
+fn zebar_joins_the_set_and_restarts_alone() {
+    let mut cfg = pair_config();
+    cfg.zebar = Some(stub(&["--tick-ms", "150"]));
+    let mut h = Harness::start("zebar-set", cfg);
+
+    let (kanata, glazewm) = wait_for("the pair to start", || h.both_running());
+    let zebar1 = wait_for("zebar to start", || h.running_pid(Component::Zebar));
+
+    kill(zebar1);
+    let zebar2 = wait_for("zebar to come back", || {
+        h.running_pid(Component::Zebar).filter(|p| *p != zebar1)
+    });
+    assert_ne!(zebar2, zebar1);
+
+    // The pair is untouched: a dead bar is cosmetic, not a keyboard hazard.
+    assert_eq!(h.running_pid(Component::Kanata), Some(kanata));
+    assert_eq!(h.running_pid(Component::Glazewm), Some(glazewm));
+    assert_eq!(h.component(Component::Zebar).unwrap().restarts, 1);
+    let log = h.supervisor_log();
+    assert!(log.contains("restarting zebar in"), "{log}");
+    assert!(
+        !log.contains("linked-pair"),
+        "zebar must not trigger pair rules:\n{log}"
+    );
+
+    // Shutdown stops the bar first (reverse start order).
+    h.stop();
+    let log = h.supervisor_log();
+    let zebar_stopped = line_of(&log, &format!("zebar stopped (pid {zebar2})"));
+    let glazewm_stopped = line_of(&log, &format!("glazewm stopped (pid {glazewm})"));
+    assert!(zebar_stopped < glazewm_stopped);
+}
+
+#[test]
+fn a_config_without_zebar_runs_a_two_component_set() {
+    let mut h = Harness::start("without-bar", pair_config());
+    wait_for("the pair to start", || h.both_running());
+
+    let state = h.health().unwrap();
+    assert_eq!(state.components.len(), 2);
+    assert!(!state.components.contains_key("zebar"));
+
+    h.stop();
+    let log = h.supervisor_log();
+    assert!(
+        !log.contains("zebar"),
+        "an unconfigured component should never be mentioned:\n{log}"
+    );
 }
 
 // -- adoption and external processes ----------------------------------------

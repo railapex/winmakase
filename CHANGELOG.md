@@ -5,6 +5,8 @@ All notable changes to Winsome. Format follows [Keep a Changelog](https://keepac
 ## [Unreleased]
 
 ### Added
+- Zebar supervised as the optional third component (`[zebar]` in config.toml; absent = no bar): outside the linked pair, restarts alone, adopted on takeover. Starter `with-glazewm` widget live per-monitor; the GlazeWM config needs an `ignore` rule for zebar or the bars get tiled.
+- The supervisor owns taskbar state (`hide_taskbar`, default on): auto-hide on start, prior state restored on shutdown — a reboot now comes up with the taskbar hidden without any script.
 - Scratchpad spike pair on the live rig: `rwin+alt+s` banishes the focused window to a hidden `scratch` workspace (pure GlazeWM `move --workspace`); `rwin+s` runs `spike/summon.ps1` (shell-exec → IPC), pulling the newest scratch window back floated + centered + focused. Stand-in for the `winsome scratchpad` verb.
 - Supervisor hosts the live stack: adopt-first takeover (running components are watched, not restarted), kanata driven through the elevated `WinsomeKanata` scheduled task (`schtasks /run`//`/end` — the elevation door for a user-level supervisor), GlazeWM launched via `ShellExecuteExW` when its UIAccess manifest refuses plain `CreateProcess` (error 740), singleton guard against a second supervisor, and a display-change watch (always logged; `bounce_on_display_change` opt-in — glazewm#1233 insurance).
 - `winsomed.exe`: windowless (GUI-subsystem) supervisor for the `WinsomeSupervisor` logon task; session end arrives as `WM_ENDSESSION` and runs the same graceful shutdown as Ctrl+C.

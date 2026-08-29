@@ -69,6 +69,14 @@ adopt = true
 # in tiled positions.
 stop_command = "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe"
 stop_args = ["command", "wm-exit"]
+
+# The bar. Optional — delete this section to run without one. Not part of the
+# linked pair: zebar dying restarts zebar alone. Its widgets/startup config
+# lives in ~/.glzr/zebar, not here.
+[zebar]
+command = "C:/Program Files/glzr.io/Zebar/zebar.exe"
+args = []
+adopt = true
 "#;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -77,9 +85,12 @@ pub struct Config {
     pub supervisor: SupervisorConfig,
     pub kanata: ComponentConfig,
     pub glazewm: ComponentConfig,
+    /// Optional: a missing `[zebar]` section means no bar in the set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zebar: Option<ComponentConfig>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ComponentConfig {
     /// The component's executable. Spawned directly — unless `task` is set, in
     /// which case this is only the exact image path to find and watch.
@@ -266,6 +277,9 @@ impl Default for Config {
                     "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe",
                     &["command", "wm-exit"],
                 ),
+            zebar: Some(
+                ComponentConfig::new("C:/Program Files/glzr.io/Zebar/zebar.exe", &[]).adopting(),
+            ),
         }
     }
 }
@@ -323,6 +337,7 @@ mod tests {
         assert_eq!(cfg.kanata.task, None);
         assert!(!cfg.kanata.adopt, "adoption is opt-in");
         assert_eq!(cfg.glazewm.stop_command, None);
+        assert_eq!(cfg.zebar, None, "the bar is optional");
     }
 
     #[test]

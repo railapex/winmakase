@@ -117,9 +117,10 @@ enum LogTarget {
 }
 
 impl LogTarget {
-    const VARIANTS: [LogTarget; 3] = [
+    const VARIANTS: [LogTarget; 4] = [
         LogTarget::Component(Component::Kanata),
         LogTarget::Component(Component::Glazewm),
+        LogTarget::Component(Component::Zebar),
         LogTarget::Supervisor,
     ];
 

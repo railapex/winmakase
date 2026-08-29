@@ -151,6 +151,9 @@ struct PendingRestart {
 pub struct Supervisor {
     cfg: Config,
     paths: Paths,
+    /// The components this supervisor actually runs: `START_ORDER` filtered to
+    /// what the config declares (the bar is optional).
+    active: Vec<Component>,
     log: Arc<Mutex<RollingLog>>,
     child_logs: BTreeMap<Component, Arc<Mutex<RollingLog>>>,
     children: BTreeMap<Component, RunningChild>,
@@ -181,10 +184,15 @@ impl Supervisor {
             keep,
         )?));
 
+        let active: Vec<Component> = Component::START_ORDER
+            .into_iter()
+            .filter(|c| c.config(&cfg).is_some())
+            .collect();
+
         let mut child_logs = BTreeMap::new();
         let mut backoff = BTreeMap::new();
         let mut health = BTreeMap::new();
-        for c in Component::START_ORDER {
+        for c in active.iter().copied() {
             child_logs.insert(
                 c,
                 Arc::new(Mutex::new(RollingLog::open(
@@ -206,6 +214,7 @@ impl Supervisor {
         let supervisor = Self {
             cfg,
             paths,
+            active,
             log,
             child_logs,
             children: BTreeMap::new(),
@@ -269,7 +278,7 @@ impl Supervisor {
             ));
         }
 
-        self.start_set(Component::START_ORDER.to_vec(), false);
+        self.start_set(self.active.clone(), false);
 
         let poll = Duration::from_millis(self.cfg.supervisor.poll_ms.max(1));
         let reason = loop {
@@ -304,7 +313,7 @@ impl Supervisor {
     /// tests that drive `tick()` by hand.
     #[doc(hidden)]
     pub fn start_now(&mut self) {
-        self.start_set(Component::START_ORDER.to_vec(), false);
+        self.start_set(self.active.clone(), false);
     }
 
     /// Pretend a display change happened and its debounce window has passed.
@@ -341,7 +350,12 @@ impl Supervisor {
 
     /// Returns false if the component could not be brought up.
     fn start_component(&mut self, c: Component, is_restart: bool) -> bool {
-        let ccfg = c.config(&self.cfg).clone();
+        let Some(ccfg) = c.config(&self.cfg).cloned() else {
+            // Unreachable via the active set; a bug elsewhere must not panic
+            // the process holding the desktop together.
+            self.log(format!("{c} has no configuration — not starting it"));
+            return false;
+        };
 
         // Adopt-first: the exact executable already running means the desktop
         // is already using it — starting a second instance or bouncing the
@@ -617,13 +631,14 @@ impl Supervisor {
                 ));
             }
             // kanata alone: GlazeWM keeps tiling, chords come back in seconds.
-            Component::Kanata => {
+            // The bar likewise restarts alone — a missing bar is cosmetic.
+            Component::Kanata | Component::Zebar => {
                 if self.pending.is_some() {
-                    self.log("kanata restart already scheduled — leaving it be");
+                    self.log(format!("{c} restart already scheduled — leaving it be"));
                 } else {
-                    let delay = self.backoff_mut(Component::Kanata).next_delay();
-                    self.schedule(vec![Component::Kanata], delay, true);
-                    self.log(format!("restarting kanata in {delay:?}"));
+                    let delay = self.backoff_mut(c).next_delay();
+                    self.schedule(vec![c], delay, true);
+                    self.log(format!("restarting {c} in {delay:?}"));
                 }
             }
         }
@@ -760,7 +775,7 @@ impl Supervisor {
             return;
         };
         let pid = running.pid();
-        let ccfg = c.config(&self.cfg).clone();
+        let ccfg = c.config(&self.cfg).cloned().unwrap_or_default();
         let configured = Duration::from_millis(self.cfg.supervisor.stop_timeout_ms);
         let left = || deadline.map(|d| d.saturating_duration_since(Instant::now()));
 
@@ -808,7 +823,7 @@ impl Supervisor {
                 None => String::new(),
             }
         ));
-        for c in Component::START_ORDER.iter().rev().copied() {
+        for c in self.active.clone().into_iter().rev() {
             self.stop_gracefully(c, deadline);
         }
         if let Some(prior) = self.prior_taskbar.take() {
@@ -853,10 +868,15 @@ impl Supervisor {
         self.log("display change: bouncing the pair (bounce_on_display_change is on)");
         // Down in the safe order — kanata first, so it never outlives GlazeWM
         // synthesizing Win presses nothing consumes — then GlazeWM politely, so
-        // its watcher restores window positions.
+        // its watcher restores window positions. The bar is not bounced: zebar
+        // handles monitor changes itself.
         self.force_stop(Component::Kanata);
         self.stop_gracefully(Component::Glazewm, None);
-        self.schedule(Component::START_ORDER.to_vec(), Duration::ZERO, true);
+        self.schedule(
+            vec![Component::Kanata, Component::Glazewm],
+            Duration::ZERO,
+            true,
+        );
         self.write_health();
     }
 
