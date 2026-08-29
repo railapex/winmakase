@@ -25,7 +25,7 @@ winsome CLI                       — theme|bg|update|render|toggle|keys|doctor
 
 ### Key decisions and why
 
-**GlazeWM as base tiler, not komorebi.** komorebi is technically richer (deeper CLI/IPC), but its license (Komorebi 2.0.0, a PolyForm Strict fork) prohibits redistribution and requires a paid license for workplace use — undistributable as the core of an open-source project. GlazeWM: GPL-3.0, 12k+ stars, V3 Rust rewrite, YAML config, `focus_follows_cursor`, border effects, per-monitor workspaces. komorebi returns later as a bring-your-own-license power option (`winsome-wm-switch`, the omacosy AeroSpace/OmniWM pattern).
+**GlazeWM as base tiler, not komorebi.** komorebi is technically richer (deeper CLI/IPC), but its license (Komorebi 2.0.0, a PolyForm Strict fork) prohibits redistribution and requires a paid license for workplace use — undistributable as the core of an open-source project. GlazeWM: GPL-3.0, 12k+ stars, V3 Rust rewrite, YAML config, `focus_follows_cursor`, border effects, per-monitor workspaces. komorebi returns later as a bring-your-own-license power option (`winsome-wm-switch`, the omacosy AeroSpace/OmniWM pattern). **Known risk (2026-08-28): GlazeWM upstream is dormant** — no commit to main since 2026-04-08, 40+ open PRs, maintainer publicly inactive; mitigated by pinned versions, the supervisor owning failure modes, and GPL fork as worst case. Field re-swept at that date; GlazeWM still wins as default (see `docs/research/gap-features.md`).
 
 **kanata runs elevated with the LLHOOK backend; the Interception driver is never installed.** Two problems, one move: (a) UIPI starves a user-level keyboard hook when an admin window has focus — an elevated hook process sees those keys; (b) the Interception kernel driver is on anti-cheat blocklists (FACEIT names it) — LLHOOK is the same user-mode API PowerToys uses, uncontroversial. Elevated kanata reads its config from an ACL-protected path (an elevated process must not execute user-writable config). Residual: kernel anti-cheat games can ignore synthetic input in-game — a game-foreground auto-suspend toggle covers it.
 
@@ -53,6 +53,7 @@ winsome CLI                       — theme|bg|update|render|toggle|keys|doctor
 - **Chrome frame tint works but is blunt**: `BrowserThemeColor` policy requires HKLM on hardened machines (HKCU `Software\Policies` can be ACL-locked — observed), applies on Chrome's lazy policy refresh (minutes after the registry write, not at launch), and overrides user-installed themes across **all** profiles — spike-verified. That uniformity destroys per-profile color-coding, so Winsome ships it opt-in; per-profile generated theme extensions are the surgical answer (deferred).
 - **Notifications unthemed** — Windows toasts render in ShellExperienceHost; no lever exists.
 - **Elevated windows float untiled** — GlazeWM runs user-level; UIPI blocks managing admin windows. Keys still work in them (kanata is elevated).
+- **Window grouping/tabs (omarchy mod+G) absent** — GlazeWM has no grouping primitive (full IPC verb enum verified 2026-08-28) and upstream is dormant with its own stacking attempts abandoned; unfixable from outside the WM. mod+G binds to a notification stub pointing at the komorebi power option (the only genuine grouping on Windows). Decision record: `docs/research/gap-features.md`.
 
 ## Verification strategy
 
