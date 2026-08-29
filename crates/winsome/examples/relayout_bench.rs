@@ -34,14 +34,18 @@ fn rect_of(workspaces: &[Workspace], id: &str) -> Option<(i64, i64, i64, i64)> {
 
 fn main() {
     let mut args = std::env::args().skip(1);
-    let survivor = args.next().expect("usage: relayout_bench <survivor-id> <victim-id>");
-    let victim = args.next().expect("usage: relayout_bench <survivor-id> <victim-id>");
+    let survivor = args
+        .next()
+        .expect("usage: relayout_bench <survivor-id> <victim-id>");
+    let victim = args
+        .next()
+        .expect("usage: relayout_bench <survivor-id> <victim-id>");
 
     let cfg = Config::default();
     let client = Client::from_config(&cfg).expect("connect to GlazeWM");
 
-    let before = rect_of(&client.query_workspaces().unwrap(), &survivor)
-        .expect("survivor not found");
+    let before =
+        rect_of(&client.query_workspaces().unwrap(), &survivor).expect("survivor not found");
 
     let t0 = Instant::now();
     client
