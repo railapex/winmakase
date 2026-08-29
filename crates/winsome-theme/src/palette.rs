@@ -64,7 +64,8 @@ pub struct Palette {
 
 // omarchy ships 6-digit hex only (#rrggbb). 3-digit shorthand is a CSS convention omarchy
 // doesn't use — treat it as invalid input rather than silently expanding it.
-fn is_hex6(s: &str) -> bool {
+// pub(crate): also used by light_dark::relative_luminance, so the two validations can't drift.
+pub(crate) fn is_hex6(s: &str) -> bool {
     let bytes = s.as_bytes();
     bytes.len() == 7 && bytes[0] == b'#' && bytes[1..].iter().all(|b| b.is_ascii_hexdigit())
 }
