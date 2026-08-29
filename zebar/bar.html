@@ -39,12 +39,20 @@
       // the M2 config render replaces it with real monitor knowledge.
       const withTray = window.screenX === 0;
 
+      // Clock format. The locale token ('t') renders 12h AM/PM for en-US —
+      // Windows' Region short-time override does NOT reach the webview's
+      // locale APIs, so 24h must be explicit. Default 24h; flip to false for
+      // locale-default time. The M2 config render owns making this a real
+      // config knob.
+      const USE_24H_CLOCK = true;
+      const CLOCK_FORMAT = USE_24H_CLOCK ? 'EEE d MMM HH:mm' : 'EEE d MMM t';
+
       const providers = zebar.createProviderGroup({
         network: { type: 'network' },
         glazewm: { type: 'glazewm' },
         ...(withTray ? { systray: { type: 'systray' } } : {}),
         cpu: { type: 'cpu' },
-        date: { type: 'date', formatting: 'EEE d MMM t' },
+        date: { type: 'date', formatting: CLOCK_FORMAT },
         memory: { type: 'memory' },
         weather: { type: 'weather' },
       });
