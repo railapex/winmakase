@@ -484,27 +484,29 @@ impl Supervisor {
         let deadline = Instant::now() + Duration::from_millis(TASK_START_DISCOVER_MS);
         loop {
             match procs::pids_for_image_path(&ccfg.command) {
-                Ok(pids) if !pids.is_empty() => match ExternalProcess::open(pids[0], Some(task.to_string())) {
-                    Ok(ext) => {
-                        return self.record_started(
-                            c,
-                            RunningChild {
-                                handle: Box::new(ext),
-                                started: Instant::now(),
-                            },
-                            is_restart,
-                            &format!("via task {task}"),
-                        );
-                    }
-                    Err(e) => {
-                        self.health_mut(c).set(Status::Stopped, None);
-                        self.log(format!(
+                Ok(pids) if !pids.is_empty() => {
+                    match ExternalProcess::open(pids[0], Some(task.to_string())) {
+                        Ok(ext) => {
+                            return self.record_started(
+                                c,
+                                RunningChild {
+                                    handle: Box::new(ext),
+                                    started: Instant::now(),
+                                },
+                                is_restart,
+                                &format!("via task {task}"),
+                            );
+                        }
+                        Err(e) => {
+                            self.health_mut(c).set(Status::Stopped, None);
+                            self.log(format!(
                             "{c} FAILED to start: task {task} produced pid {} but it cannot be watched ({e})",
                             pids[0]
                         ));
-                        return false;
+                            return false;
+                        }
                     }
-                },
+                }
                 Ok(_) => {}
                 Err(e) => self.log(format!("{c}: process scan failed ({e}) — retrying")),
             }
@@ -804,8 +806,8 @@ impl Supervisor {
 
         // Floor the confirmation window: a fully spent budget must still leave
         // the kill enough time to observe the death it just caused.
-        let patience =
-            bounded(Duration::from_millis(KILL_PATIENCE_MS), left()).max(Duration::from_millis(100));
+        let patience = bounded(Duration::from_millis(KILL_PATIENCE_MS), left())
+            .max(Duration::from_millis(100));
         self.kill_and_record(c, running, patience);
     }
 

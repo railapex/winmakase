@@ -55,6 +55,10 @@ fn note_failure(paths: &Paths, msg: &str) {
         let _ = fs::create_dir_all(dir);
     }
     if let Ok(mut f) = fs::OpenOptions::new().create(true).append(true).open(&path) {
-        let _ = writeln!(f, "{} winsomed could not run: {msg}", timefmt::now_iso8601());
+        let _ = writeln!(
+            f,
+            "{} winsomed could not run: {msg}",
+            timefmt::now_iso8601()
+        );
     }
 }

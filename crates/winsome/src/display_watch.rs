@@ -23,8 +23,8 @@ use windows_sys::Win32::Foundation::{GetLastError, HWND, LPARAM, LRESULT, WPARAM
 use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     CREATESTRUCTW, CreateWindowExW, DefWindowProcW, DispatchMessageW, GWLP_USERDATA, GetMessageW,
-    MSG, PostMessageW, RegisterClassW, SetWindowLongPtrW, TranslateMessage, WM_CLOSE,
-    WM_DESTROY, WM_DISPLAYCHANGE, WM_ENDSESSION, WM_NCCREATE, WM_QUERYENDSESSION, WNDCLASSW,
+    MSG, PostMessageW, RegisterClassW, SetWindowLongPtrW, TranslateMessage, WM_CLOSE, WM_DESTROY,
+    WM_DISPLAYCHANGE, WM_ENDSESSION, WM_NCCREATE, WM_QUERYENDSESSION, WNDCLASSW,
 };
 
 use crate::signal;
@@ -66,7 +66,9 @@ impl DisplayWatch {
             }
             Err(_) => {
                 let _ = thread.join();
-                Err(io::Error::other("display-watch thread died before reporting"))
+                Err(io::Error::other(
+                    "display-watch thread died before reporting",
+                ))
             }
         }
     }
@@ -169,12 +171,7 @@ fn message_loop(changes: Arc<AtomicU64>, ready: &mpsc::Sender<Result<isize, Stri
     }
 }
 
-unsafe extern "system" fn wndproc(
-    hwnd: HWND,
-    msg: u32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-) -> LRESULT {
+unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     unsafe {
         match msg {
             WM_NCCREATE => {

@@ -7,7 +7,9 @@ use std::fs;
 use std::path::PathBuf;
 
 fn repo_path(rel: &str) -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..").join(rel)
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .join(rel)
 }
 
 fn real_file() -> winsome_keymap::KeymapFile {
@@ -27,7 +29,11 @@ fn real_keymap_is_valid() {
         (73, 19, 18, 2, 30),
         "entry counts changed: {cov:?}"
     );
-    assert_eq!((cov.chords_mapped, cov.chords_total), (73, 226), "chord counts changed: {cov:?}");
+    assert_eq!(
+        (cov.chords_mapped, cov.chords_total),
+        (73, 226),
+        "chord counts changed: {cov:?}"
+    );
 }
 
 #[test]

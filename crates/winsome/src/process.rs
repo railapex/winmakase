@@ -17,9 +17,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use windows_sys::Win32::Foundation::{
-    CloseHandle, GetLastError, WAIT_OBJECT_0, WAIT_TIMEOUT,
-};
+use windows_sys::Win32::Foundation::{CloseHandle, GetLastError, WAIT_OBJECT_0, WAIT_TIMEOUT};
 use windows_sys::Win32::System::Threading::{
     GetExitCodeProcess, GetProcessId, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
     PROCESS_TERMINATE, TerminateProcess, WaitForSingleObject,
@@ -181,8 +179,7 @@ impl ExternalProcess {
     /// Open a watch handle on `pid`. Fails rather than guesses: a component we
     /// cannot watch is a component we must not pretend to supervise.
     pub fn open(pid: u32, task: Option<String>) -> io::Result<Self> {
-        let raw =
-            unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, 0, pid) };
+        let raw = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, 0, pid) };
         if raw.is_null() {
             return Err(io::Error::new(
                 io::ErrorKind::PermissionDenied,
@@ -305,7 +302,11 @@ const SW_SHOWNORMAL: i32 = 1;
 /// pipes, so the child's output is not captured — it keeps whatever logging it
 /// does itself.
 pub fn shell_spawn(cfg: &ComponentConfig) -> io::Result<RunningChild> {
-    let file: Vec<u16> = cfg.command.encode_utf16().chain(std::iter::once(0)).collect();
+    let file: Vec<u16> = cfg
+        .command
+        .encode_utf16()
+        .chain(std::iter::once(0))
+        .collect();
     let params_string = cfg
         .args
         .iter()
@@ -372,10 +373,7 @@ pub fn run_to_completion(
 
 /// Poll a handle until it exits or `timeout` runs out.
 /// `Some(code)` when it exited; a poll error also ends the wait as `None`.
-pub fn wait_for_exit(
-    handle: &mut dyn ProcessHandle,
-    timeout: Duration,
-) -> Option<Option<i32>> {
+pub fn wait_for_exit(handle: &mut dyn ProcessHandle, timeout: Duration) -> Option<Option<i32>> {
     let deadline = Instant::now() + timeout;
     loop {
         match handle.poll() {

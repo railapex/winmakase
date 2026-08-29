@@ -185,7 +185,9 @@ fn validate_shape(bind: &Bind) -> Result<(), String> {
         return Err("status entries need a note".into());
     }
     if bind.chords.is_some() && bind.map.is_some() {
-        return Err("chords lists are for non-mapped entries; mapped entries bind one chord".into());
+        return Err(
+            "chords lists are for non-mapped entries; mapped entries bind one chord".into(),
+        );
     }
     if bind.foreach.is_some() && bind.chords.is_some() {
         return Err("foreach expands a single chord template, not a chords list".into());
@@ -348,9 +350,8 @@ mod tests {
     use super::*;
 
     fn one_bind(body: &str) -> KeymapFile {
-        let text = format!(
-            "[meta]\nupstream = 'u'\nref = 'r'\nfiles = []\nfetched = 'd'\n\n{body}"
-        );
+        let text =
+            format!("[meta]\nupstream = 'u'\nref = 'r'\nfiles = []\nfetched = 'd'\n\n{body}");
         parse(&text).expect("fixture parses")
     }
 
@@ -384,7 +385,10 @@ mod tests {
         assert_eq!(expanded.len(), 2);
         assert_eq!(expanded[0].chords, ["SUPER + 9"]);
         assert_eq!(expanded[1].chords, ["SUPER + 0"]);
-        assert_eq!(expanded[1].commands.as_deref(), Some(&["focus --workspace 10".to_string()][..]));
+        assert_eq!(
+            expanded[1].commands.as_deref(),
+            Some(&["focus --workspace 10".to_string()][..])
+        );
         assert_eq!(cov.chords_mapped, 2);
     }
 
@@ -394,7 +398,10 @@ mod tests {
             "[apps]\nterminal = 'wt'\n\n[[bind]]\nid = 'term'\nchord = 'SUPER + RETURN'\ndesc = 'Terminal'\nsrc = 'a'\nmap = ['shell-exec {terminal}']\n",
         );
         let (expanded, _) = check(&file).expect("valid");
-        assert_eq!(expanded[0].commands.as_deref(), Some(&["shell-exec wt".to_string()][..]));
+        assert_eq!(
+            expanded[0].commands.as_deref(),
+            Some(&["shell-exec wt".to_string()][..])
+        );
 
         let bad = one_bind(
             "[[bind]]\nid = 'term'\nchord = 'SUPER + RETURN'\ndesc = 'Terminal'\nsrc = 'a'\nmap = ['shell-exec {terminl}']\n",
@@ -409,7 +416,10 @@ mod tests {
             "[[bind]]\nid = 'a'\nchord = 'SUPER + W'\ndesc = 'x'\nsrc = 't'\nmap = ['close']\n\n[[bind]]\nid = 'b'\nchord = 'SUPER + W'\ndesc = 'y'\nsrc = 't'\nmap = ['close']\n",
         );
         let errors = check(&file).expect_err("conflict");
-        assert!(errors.iter().any(|e| e.contains("already bound by a")), "{errors:?}");
+        assert!(
+            errors.iter().any(|e| e.contains("already bound by a")),
+            "{errors:?}"
+        );
     }
 
     #[test]
@@ -436,6 +446,11 @@ mod tests {
         );
         let (expanded, _) = check(&file).expect("valid");
         let yaml = render_glazewm(&expanded);
-        assert!(yaml.contains("  # close — Close window\n  - commands: ['close']\n    bindings: ['rwin+w']\n"), "{yaml}");
+        assert!(
+            yaml.contains(
+                "  # close — Close window\n  - commands: ['close']\n    bindings: ['rwin+w']\n"
+            ),
+            "{yaml}"
+        );
     }
 }

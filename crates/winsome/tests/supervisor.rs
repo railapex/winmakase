@@ -534,8 +534,7 @@ fn a_running_component_is_adopted_not_started_again() {
     let external_pid = external.id();
 
     let mut cfg = pair_config();
-    cfg.kanata =
-        ComponentConfig::new(adoptee_str, &["_stub", "--tick-ms", "100"]).adopting();
+    cfg.kanata = ComponentConfig::new(adoptee_str, &["_stub", "--tick-ms", "100"]).adopting();
     let mut h = Harness::start("adopt", cfg);
 
     let (kanata, _) = wait_for("both components to start", || h.both_running());
@@ -545,7 +544,9 @@ fn a_running_component_is_adopted_not_started_again() {
     );
     let log = h.supervisor_log();
     assert!(
-        log.contains(&format!("kanata started (pid {external_pid}, restarts 0): adopted")),
+        log.contains(&format!(
+            "kanata started (pid {external_pid}, restarts 0): adopted"
+        )),
         "the log must say it adopted:\n{log}"
     );
 
@@ -600,7 +601,10 @@ fn an_unreadable_component_is_written_off_after_the_retry_budget() {
 
     sup.inject_running(
         Component::Kanata,
-        Box::new(FakeHandle::new(4242, vec![FakePoll::Error("scripted blip")])),
+        Box::new(FakeHandle::new(
+            4242,
+            vec![FakePoll::Error("scripted blip")],
+        )),
     );
     for _ in 0..12 {
         sup.tick();
@@ -642,7 +646,10 @@ fn glazewm_becoming_unreadable_still_triggers_the_linked_pair_rule() {
     );
     sup.inject_running(
         Component::Glazewm,
-        Box::new(FakeHandle::new(222, vec![FakePoll::Error("scripted fault")])),
+        Box::new(FakeHandle::new(
+            222,
+            vec![FakePoll::Error("scripted fault")],
+        )),
     );
     for _ in 0..12 {
         sup.tick();
@@ -738,8 +745,7 @@ fn a_task_hosted_component_is_started_watched_and_stopped_through_its_task() {
 
     let result = std::panic::catch_unwind(|| {
         let mut cfg = pair_config();
-        cfg.kanata = ComponentConfig::new(hosted.to_str().unwrap(), &[])
-            .hosted_by_task(&task);
+        cfg.kanata = ComponentConfig::new(hosted.to_str().unwrap(), &[]).hosted_by_task(&task);
         let mut h = Harness::start("task-hosted", cfg);
 
         let (kanata1, _) = wait_for("both components to start", || h.both_running());

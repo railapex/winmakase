@@ -260,17 +260,15 @@ fn logs(paths: &Paths, target: LogTarget, lines: usize) -> io::Result<()> {
 fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
     let load = |explicit: Option<PathBuf>| -> io::Result<(PathBuf, winsome_keymap::KeymapFile)> {
         let path = explicit.unwrap_or_else(|| paths.home().join("keymap").join("omarchy.toml"));
-        let text = std::fs::read_to_string(&path).map_err(|e| {
-            io::Error::new(e.kind(), format!("{}: {e}", path.display()))
-        })?;
+        let text = std::fs::read_to_string(&path)
+            .map_err(|e| io::Error::new(e.kind(), format!("{}: {e}", path.display())))?;
         let file = winsome_keymap::parse(&text)
             .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
         Ok((path, file))
     };
     let checked = |file: &winsome_keymap::KeymapFile| {
-        winsome_keymap::check(file).map_err(|errors| {
-            io::Error::new(io::ErrorKind::InvalidData, errors.join("\n"))
-        })
+        winsome_keymap::check(file)
+            .map_err(|errors| io::Error::new(io::ErrorKind::InvalidData, errors.join("\n")))
     };
 
     match action {
