@@ -97,3 +97,18 @@ Net: the power option is more attractive than at scoping (Zebar survives, ICUL i
 1. M1 TODO: research card → checked, replaced by two build items (`reflow` verb; `scratchpad` verb + behavior spike) and one keymap/gap item (mod+G stub + DESIGN gap entry).
 2. DESIGN.md: one-line upstream-dormancy risk note in the GlazeWM decision paragraph; grouping added to Documented gaps.
 3. Deferred/arc: komorebi power option annotated as the grouping route.
+
+## Patchset build — fork-ladder rung 1, evaluated 2026-08-28 (evening)
+
+**Question**: cherry-pick upstream PRs onto v3.10.1 as a winsome-built GlazeWM? Candidates: [#1347](https://github.com/glzr-io/glazewm/pull/1347) + [#1348](https://github.com/glzr-io/glazewm/pull/1348) (crash fixes, #1348 depends on #1347), [#1424](https://github.com/glzr-io/glazewm/pull/1424) (shell-exec quoted-path parsing, fixes #1417).
+
+**Verdict: not now.** Four legs:
+
+1. **The motivating incident was retracted.** The 2026-08-28 "GlazeWM died on the teleprompter drag" theory is disproven by the supervisor log (display change 02:55:21/28Z, GlazeWM alive at 02:55:41Z; the dead stack was a WinsomePanic live test). Observed GlazeWM crashes on this rig: **zero**.
+2. **What #1347/#1348 actually fix is narrower than billed**: not display-change crashes in general but an **OOM fast-fail during the commit-pressure spike after sleep/wake** (Windows pages processes back in; `DisplaySettingsChanged` fires mid-spike; allocation hits `rust_oom → __fastfail`, uncatchable). The fix is a pressure check + 1s debounce/re-arm. The upstream maintainer is himself hesitant on #1347 — single reporter, possibly environment-specific.
+3. **The supervisor already converts this crash class into a ~2s blip** — and its restart backoff (1s, doubling) lands the retry *after* the transient pressure spike, which is functionally the same debounce #1348 adds. The crash-loop the PR author describes is exactly what the backoff machinery absorbs.
+4. **The fork costs more than "two cherry-picks" because of the UIAccess manifest** (verified live 2026-08-28: `asInvoker` + `uiAccess="true"`, enforced at process launch). A self-built glazewm.exe must either be Authenticode-signed and installed to a secure path (self-signed root cert = a machine-trust change winsome should not ship) or built with `uiAccess=false` (unquantified behavior loss). That's build-and-trust engineering, not a patch.
+
+**#1424 is adopted as a constraint, not a build**: shell-exec mis-parses quoted paths containing spaces. The live scratchpad binding survives only because `D:\dev\winsome\spike\summon.ps1` has no spaces. Rule until upstream fixes it (or rung 1 fires for other reasons): **no spaces in any shell-exec path** — config-gen and keymap render must enforce it; `~/.winsome` paths are safe, `Program Files` paths are not.
+
+**Re-open triggers** (concrete, so this isn't a vibe): a real GlazeWM crash on this rig with exit code `0xc0000409` (-1073740791 in the supervisor log — exits are recorded with codes now) correlated with sleep/wake or a display change. Two such incidents → rung 1 re-opens with this doc as the starting point.
