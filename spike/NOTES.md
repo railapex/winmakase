@@ -2,6 +2,8 @@
 
 ## LIVE MACHINE STATE (handoff — read first in any new session)
 
+UPDATED 2026-08-28 ~18:50 MST. Additions since first writing: bindings for wm-cycle-focus (rwin+tab — fullscreen-trap escape), workspace-to-monitor (rwin+shift+alt+arrows), transparency pair (rwin+backspace/+shift), file manager (rwin+shift+f), Chrome profile chords; hide_title_bar OFF (Notepad garble); cursor follows window focus. The `winsome` binary is built AND review-hardened (10 findings fixed, 61+23 tests) but still NOT hosting the live stack — **next session's first move: supervisor adoption** (config → real exes, logon task, retire spike tasks/scripts, THEN the KBM divorce below). Chris's pending verdict: does rwin+shift+alt+enter open the programcsharp profile or the picker.
+
 As of 2026-08-28 ~17:15 MST, Chris's rig is dogfooding **v4.1**:
 - kanata (cmd_allowed gui build, ELEVATED via `WinsomeKanata` scheduled task) running `spike/caps.kbd`: caps→rmet (right Win), scrlk→CapsLock hatch. GlazeWM binds `rwin+X` (physical left Win fully native). Launcher = Caps+Space (PT Run activation = Win+Space). Chrome profile chords: rwin+shift+enter = Default/ownerrez, rwin+shift+alt+enter = "Profile 1"/programcsharp.
 - GlazeWM 3.10.1 user-level, config at `~/.glzr/glazewm/config.yaml` (NOT in repo — spike artifact): workspaces 1-6, borders on, hide_title_bar OFF, cursor follows window focus, fullscreen=maximized, taskbar auto-hidden (session-scoped).
