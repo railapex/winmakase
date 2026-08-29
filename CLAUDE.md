@@ -1,6 +1,6 @@
-# Winsome — Agent Instructions
+# Winmakase — Agent Instructions
 
-Omakase omarchy-style desktop environment for Windows 11. Public repo (railapex/winsome).
+Omakase omarchy-style desktop environment for Windows 11. Public repo (railapex/winmakase).
 
 ## Session start
 
@@ -19,7 +19,7 @@ Omakase omarchy-style desktop environment for Windows 11. Public repo (railapex/
 
 ## Conventions
 
-- Rust for the winsome binary (CLI + supervisor + theme adapter; cargo workspace, `crates/`). PowerShell 7 (`pwsh`) for install-time scripts as `.ps1` files. The TS under `adapter/`+`tests/` is the retired reference implementation — do not extend it; it's removed once the Rust port's parity is verified. No Python.
+- Rust for the winmakase binary (CLI + supervisor + theme adapter; cargo workspace, `crates/`). PowerShell 7 (`pwsh`) for install-time scripts as `.ps1` files. The TS under `adapter/`+`tests/` is the retired reference implementation — do not extend it; it's removed once the Rust port's parity is verified. No Python.
 - Tests: adapter = golden files under `tests/golden/` (19 stock omarchy themes); installer = Pester; configs = `kanata --check` + YAML parse in CI.
 - CHANGELOG.md (Keep a Changelog) updated with anything user-visible.
 - Commits: subject describes the actual diff. Author: Friday (`Friday <260232009+buildfriday@users.noreply.github.com>`) with Chris co-authored when he directed the work; plain Chris when he authored.
@@ -30,5 +30,5 @@ Omakase omarchy-style desktop environment for Windows 11. Public repo (railapex/
 - `keymap/` — tiler-agnostic grammar mapping (planned)
 - `adapter/` — theme adapter TS (planned)
 - `installer/` — install.ps1, uninstall.ps1, bucket (planned)
-- `supervisor/`, `helper/` — process supervision, winsome-helper (planned)
+- `supervisor/`, `helper/` — process supervision, winmakase-helper (planned)
 - `themes/` — omarchy themes as data dependency (submodule or synced; planned)

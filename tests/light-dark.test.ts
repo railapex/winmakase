@@ -26,7 +26,7 @@ describe('isLightTheme', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = mkdtempSync(join(tmpdir(), 'winsome-theme-'));
+    tempDir = mkdtempSync(join(tmpdir(), 'winmakase-theme-'));
   });
 
   afterEach(() => {

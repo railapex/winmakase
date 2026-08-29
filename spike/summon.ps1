@@ -9,7 +9,7 @@
 #    'scratch' workspace (banish half: rwin+alt+s = move --workspace scratch).
 #
 # Nothing in scratch and nothing abnormal = silent no-op. Spike-grade
-# stand-in for the `winsome scratchpad` verb (docs/research/gap-features.md).
+# stand-in for the `winmakase scratchpad` verb (docs/research/gap-features.md).
 $ErrorActionPreference = 'Stop'
 
 Add-Type -TypeDefinition @'

@@ -1,14 +1,14 @@
 {
   "$schema": "https://github.com/glzr-io/zebar/raw/v3.3.1/resources/zpack-schema.json",
-  "name": "winsome",
+  "name": "winmakase",
   "version": "0.1.0",
-  "description": "The Winsome bar: GlazeWM workspaces, systray, supervisor health dot, clock and stats. Forked from glzr-io.starter's with-glazewm widget.",
+  "description": "The Winmakase bar: GlazeWM workspaces, systray, supervisor health dot, clock and stats. Forked from glzr-io.starter's with-glazewm widget.",
   "tags": [
     "topbar",
-    "winsome"
+    "winmakase"
   ],
   "previewImages": [],
-  "repositoryUrl": "https://github.com/railapex/winsome",
+  "repositoryUrl": "https://github.com/railapex/winmakase",
   "widgets": [
     {
       "name": "bar",
@@ -29,7 +29,7 @@
       "privileges": {
         "shellCommands": [
           {
-            "program": "C:/Users/chris/.winsome/bin/winsome.exe",
+            "program": "C:/Users/chris/.winmakase/bin/winmakase.exe",
             "argsRegex": "^status --json$"
           }
         ]

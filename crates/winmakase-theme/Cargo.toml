@@ -1,0 +1,19 @@
+[package]
+name = "winmakase-theme"
+description = "Rust port of the winmakase omarchy theme adapter: palette parsing, light/dark resolution, and terminal scheme rendering."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+# Versions are pinned exactly (repo rule: never "latest"); bump deliberately in
+# their own commit, same as the scoop tool pins.
+[dependencies]
+toml = "=0.9.8"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.145"
+
+[lints.clippy]
+all = "deny"

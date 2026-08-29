@@ -1,4 +1,4 @@
-# Winsome
+# Winmakase
 
 > An omakase, omarchy-inspired desktop environment for Windows 11 — tiling, coordinated themes, and one keymap your hands can take with you to Linux.
 
@@ -6,15 +6,15 @@
 
 ## What
 
-[Omarchy](https://omarchy.org) proved that an opinionated, curated desktop — one command, one keymap, one theme switch — beats a pile of dotfiles. [Omacosy](https://github.com/paulsp94/omacosy) brought it to macOS. Winsome brings it to Windows 11:
+[Omarchy](https://omarchy.org) proved that an opinionated, curated desktop — one command, one keymap, one theme switch — beats a pile of dotfiles. [Omacosy](https://github.com/paulsp94/omacosy) brought it to macOS. Winmakase brings it to Windows 11:
 
 - **Tiling** via [GlazeWM](https://github.com/glzr-io/glazewm), driven by omarchy's exact keybinding grammar
 - **A real modifier key** — Caps Lock (or the context-menu key) becomes the window-manager mod via [kanata](https://github.com/jtroo/kanata) tap-hold: tap for your launcher, hold for the WM. On a future omarchy machine, `caps:super` gives you the identical physical motion — the muscle memory transfers
-- **Omarchy theme compatibility** — Winsome consumes real omarchy theme folders (their `colors.toml` palette plus shipped `neovim.lua` and `vscode.json`) and renders them onto Windows Terminal, VS Code, Neovim, the status bar, window borders, wallpaper, and Windows light/dark mode. Stock and community omarchy themes just work
+- **Omarchy theme compatibility** — Winmakase consumes real omarchy theme folders (their `colors.toml` palette plus shipped `neovim.lua` and `vscode.json`) and renders them onto Windows Terminal, VS Code, Neovim, the status bar, window borders, wallpaper, and Windows light/dark mode. Stock and community omarchy themes just work
 - **Status bar** via [Zebar](https://github.com/glzr-io/zebar), taskbar hidden
-- **Stock Windows where Windows already wins** — PowerToys Run/Command Palette, Win+V clipboard history, built-in OCR and dictation. Winsome curates; it doesn't rebuild
+- **Stock Windows where Windows already wins** — PowerToys Run/Command Palette, Win+V clipboard history, built-in OCR and dictation. Winmakase curates; it doesn't rebuild
 - **A supervisor** that keeps the stack alive, restarts the tiler on crash or monitor replug, and shows health in the bar — silent failure is the enemy
-- **Reversible** — manifest-driven uninstall restores your machine; `winsome toggle off` disables everything without uninstalling
+- **Reversible** — manifest-driven uninstall restores your machine; `winmakase toggle off` disables everything without uninstalling
 
 ## What it deliberately is not
 

@@ -1,4 +1,4 @@
-' Winsome shim: move focused window to workspace N and follow it (two ordered commands, no console).
+' Winmakase shim: move focused window to workspace N and follow it (two ordered commands, no console).
 Dim ws, sh
 ws = WScript.Arguments(0)
 Set sh = CreateObject("WScript.Shell")

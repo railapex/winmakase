@@ -49,16 +49,16 @@
         weather: { type: 'weather' },
       });
 
-      // The supervisor's health dot polls `winsome status --json` (declared
+      // The supervisor's health dot polls `winmakase status --json` (declared
       // under privileges.shellCommands). States: ok (all running), warn
       // (something restarting), down (stack stopped or supervisor dead),
-      // unknown (no winsome, no health state yet).
+      // unknown (no winmakase, no health state yet).
       const HEALTH_POLL_MS = 5000;
 
       async function readHealth() {
         try {
           const result = await zebar.shellExec(
-            'C:/Users/chris/.winsome/bin/winsome.exe',
+            'C:/Users/chris/.winmakase/bin/winmakase.exe',
             ['status', '--json'],
           );
           const health = JSON.parse(result.stdout);
@@ -185,7 +185,7 @@
             <div className="left">
               <span
                 className={`health-dot health-${health}`}
-                title={`winsome stack: ${health}`}
+                title={`winmakase stack: ${health}`}
               ></span>
               {output.glazewm && (
                 <div className="workspaces">

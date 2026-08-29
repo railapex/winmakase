@@ -1,13 +1,13 @@
-# Winsome keymap — omarchy grammar, verbatim, as tiler-agnostic data.
+# Winmakase keymap — omarchy grammar, verbatim, as tiler-agnostic data.
 #
-# Source of truth for every keybinding omarchy ships, mapped to what Winsome
+# Source of truth for every keybinding omarchy ships, mapped to what Winmakase
 # does with it on Windows. Each entry either `map`s to GlazeWM command(s) or
 # carries a `status` + `note` explaining why not:
-#   gap     — feature Winsome intends to cover but can't yet (planned verb named in note)
+#   gap     — feature Winmakase intends to cover but can't yet (planned verb named in note)
 #   native  — Windows / an installed tool already covers it (note says what)
 #   app     — application-launch layer owns it (apps.conf / webapp render, M2)
 #   omitted — deliberately not carried; note says why
-# `deviation` marks the few places Winsome knowingly diverges from omarchy —
+# `deviation` marks the few places Winmakase knowingly diverges from omarchy —
 # each one is also recorded in DESIGN.md (keymap paragraph).
 # `foreach` expands numeric families: {n} = the number, {digit} = n mod 10.
 # `chords` (list) compresses a family of chords sharing one fate — allowed only
@@ -68,7 +68,7 @@ chord = "SUPER + J"
 desc = "Toggle window split"
 src = "tiling"
 map = ["toggle-tiling-direction"]
-note = "Insert-direction only — GlazeWM cannot reflow an existing split in place (bench-confirmed). Flips to `shell-exec winsome reflow` when the verb ships; see docs/research/gap-features.md."
+note = "Insert-direction only — GlazeWM cannot reflow an existing split in place (bench-confirmed). Flips to `shell-exec winmakase reflow` when the verb ships; see docs/research/gap-features.md."
 
 [[bind]]
 id = "window-pseudo"
@@ -121,7 +121,7 @@ chords = ["SUPER + ALT + Home", "SUPER + Home"]
 desc = "Save / restore window width"
 src = "tiling"
 status = "omitted"
-note = "Scripted width memory; candidate winsome verb if missed (arc)."
+note = "Scripted width memory; candidate winmakase verb if missed (arc)."
 
 [[bind]]
 id = "workspace-layout-toggle"
@@ -189,7 +189,7 @@ chord = "SUPER + S"
 desc = "Toggle scratchpad"
 src = "tiling"
 status = "gap"
-note = "winsome scratchpad verb (all IPC primitives verified; docs/research/gap-features.md). Flips to `shell-exec winsome scratchpad toggle` when built."
+note = "winmakase scratchpad verb (all IPC primitives verified; docs/research/gap-features.md). Flips to `shell-exec winmakase scratchpad toggle` when built."
 
 [[bind]]
 id = "scratchpad-toggle-alt"
@@ -407,7 +407,7 @@ chord = "SUPER + G"
 desc = "Toggle window grouping"
 src = "tiling"
 status = "gap"
-note = "Grouping needs WM support GlazeWM lacks; komorebi power option is the genuine route. Binds a notification stub when winsome ships one. See docs/research/gap-features.md."
+note = "Grouping needs WM support GlazeWM lacks; komorebi power option is the genuine route. Binds a notification stub when winmakase ships one. See docs/research/gap-features.md."
 
 [[bind]]
 id = "group-family"
@@ -584,7 +584,7 @@ chord = "SUPER + ESCAPE"
 desc = "Cycle focus across tiling/floating/fullscreen layers"
 src = "utilities"
 map = ["wm-cycle-focus"]
-deviation = "omarchy binds SUPER+ESCAPE to its system menu (no Windows analog — slot free). Winsome uses it for the fullscreen focus-trap escape (spike finding: directional focus can't reach the fullscreen layer). Recorded in DESIGN.md."
+deviation = "omarchy binds SUPER+ESCAPE to its system menu (no Windows analog — slot free). Winmakase uses it for the fullscreen focus-trap escape (spike finding: directional focus can't reach the fullscreen layer). Recorded in DESIGN.md."
 
 [[bind]]
 id = "keybindings-reference"
@@ -592,7 +592,7 @@ chord = "SUPER + K"
 desc = "Keybindings"
 src = "utilities"
 status = "gap"
-note = "`winsome keys` (M4) renders the reference from this file; flips to shell-exec then."
+note = "`winmakase keys` (M4) renders the reference from this file; flips to shell-exec then."
 
 [[bind]]
 id = "keybindings-other"
@@ -615,7 +615,7 @@ chord = "SUPER + SHIFT + SPACE"
 desc = "Toggle top bar"
 src = "utilities"
 status = "gap"
-note = "Zebar show/hide via winsome-helper (arc)."
+note = "Zebar show/hide via winmakase-helper (arc)."
 
 [[bind]]
 id = "background-next"
@@ -623,7 +623,7 @@ chord = "SUPER + CTRL + SPACE"
 desc = "Background switcher"
 src = "utilities"
 status = "gap"
-note = "`winsome bg next` (M2); flips to shell-exec when the CLI verb ships."
+note = "`winmakase bg next` (M2); flips to shell-exec when the CLI verb ships."
 
 [[bind]]
 id = "theme-menu"
@@ -631,7 +631,7 @@ chord = "SUPER + SHIFT + CTRL + SPACE"
 desc = "Theme menu"
 src = "utilities"
 status = "gap"
-note = "`winsome theme set/list` (M2); menu form is arc."
+note = "`winmakase theme set/list` (M2); menu form is arc."
 
 [[bind]]
 id = "transparency-toggle"
@@ -639,7 +639,7 @@ chord = "SUPER + BACKSPACE"
 desc = "Toggle window transparency"
 src = "utilities"
 status = "gap"
-note = "GlazeWM set-transparency has opacity/delta but no toggle state; small winsome verb candidate (query current, flip)."
+note = "GlazeWM set-transparency has opacity/delta but no toggle state; small winmakase verb candidate (query current, flip)."
 
 [[bind]]
 id = "gaps-toggle"
@@ -674,7 +674,7 @@ chords = ["SUPER + CTRL + I", "SUPER + CTRL + N"]
 desc = "Toggle idle lock / nightlight"
 src = "utilities"
 status = "omitted"
-note = "Windows: power settings and Night light; winsome-helper light/dark flip is the adjacent v1 feature."
+note = "Windows: power settings and Night light; winmakase-helper light/dark flip is the adjacent v1 feature."
 
 [[bind]]
 id = "laptop-display"
@@ -839,7 +839,7 @@ chord = "SHIFT + XF86AudioMute"
 desc = "Switch audio output"
 src = "media"
 status = "gap"
-note = "winsome-helper audio output switch is a v1 helper feature; chord assignment decided when the helper ships."
+note = "winmakase-helper audio output switch is a v1 helper feature; chord assignment decided when the helper ships."
 
 [[bind]]
 id = "media-source-switch"

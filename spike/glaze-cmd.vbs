@@ -1,4 +1,4 @@
-' Winsome shim: run a glazewm command with NO console window (wscript = GUI subsystem).
+' Winmakase shim: run a glazewm command with NO console window (wscript = GUI subsystem).
 ' Usage: wscript //B glaze-cmd.vbs <command args...>   e.g. ... glaze-cmd.vbs focus --direction left
 Dim i, cmdline
 cmdline = """C:\Program Files\glzr.io\GlazeWM\cli\glazewm.exe"" command"

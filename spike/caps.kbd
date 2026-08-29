@@ -1,10 +1,10 @@
-;; Winsome spike — caps mode, v4.1 (caps = RIGHT Win; Sol-reviewed architecture)
+;; Winmakase spike — caps mode, v4.1 (caps = RIGHT Win; Sol-reviewed architecture)
 ;; caps = rmet (right Win), pure modifier. GlazeWM binds rwin+X ONLY — verified in
 ;; GlazeWM source (key.rs/keyboard_hook.rs): rwin bindings never match VK_LWIN, so
 ;; the physical left Win key keeps 100% native Windows behavior (Start, Win+E, Win+L).
 ;; Launcher = Caps+Space (PT Run on Win+Space — either Win key). scrlk = CapsLock hatch.
 ;; Tap-caps stays a no-op-ish (bare rwin tap = Start) until the resident-relay fast-follow
-;; (winsome.exe + kanata notify action) — see docs/TODO.md. Panic: caps+shift+q.
+;; (winmakase.exe + kanata notify action) — see docs/TODO.md. Panic: caps+shift+q.
 (defcfg
   process-unmapped-keys no
 )

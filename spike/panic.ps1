@@ -1,14 +1,14 @@
-# WinsomePanic — back to stock in seconds. Runs elevated via the WinsomePanic scheduled task.
+# WinmakasePanic — back to stock in seconds. Runs elevated via the WinmakasePanic scheduled task.
 # The supervisor restarts whatever dies, so panic stops the SUPERVISOR first —
 # killing components while it lives means the desktop refuses to die.
-# `winsome down` returns only when the shutdown has FINISHED (or failed); the
+# `winmakase down` returns only when the shutdown has FINISHED (or failed); the
 # sweep below is for a supervisor that is absent, hung, or died mid-shutdown.
-Start-Transcript -Path (Join-Path $env:USERPROFILE '.winsome\logs\panic-last.log') -Force
-$winsome = Join-Path $env:USERPROFILE '.winsome\bin\winsome.exe'
-if (Test-Path $winsome) { & $winsome down --timeout 15 }
+Start-Transcript -Path (Join-Path $env:USERPROFILE '.winmakase\logs\panic-last.log') -Force
+$winmakase = Join-Path $env:USERPROFILE '.winmakase\bin\winmakase.exe'
+if (Test-Path $winmakase) { & $winmakase down --timeout 15 }
 # Sweep: kill anything still standing, supervisor first so nothing respawns.
-Get-Process winsomed -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction Continue
-schtasks /end /tn WinsomeKanata 2>$null | Out-Null
+Get-Process winmakased -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction Continue
+schtasks /end /tn WinmakaseKanata 2>$null | Out-Null
 Get-Process | Where-Object { $_.ProcessName -like 'kanata*' } | Stop-Process -Force -ErrorAction Continue
 & 'C:\Program Files\glzr.io\GlazeWM\cli\glazewm.exe' command wm-exit 2>$null
 Start-Sleep -Seconds 2
@@ -26,7 +26,7 @@ public static class AppBar {
 '@
 $d = New-Object AppBar+APPBARDATA; $d.cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf($d); $d.lParam = 0
 [AppBar]::SHAppBarMessage(0x0000000A, [ref]$d) | Out-Null
-$survivors = Get-Process winsomed,glazewm,kanata* -ErrorAction SilentlyContinue
+$survivors = Get-Process winmakased,glazewm,kanata* -ErrorAction SilentlyContinue
 if ($survivors) { Write-Output "SURVIVORS: $($survivors.ProcessName -join ', ')" }
 else { Write-Output 'stock restored: supervisor down, kanata dead, GlazeWM exited, taskbar visible' }
 Stop-Transcript
