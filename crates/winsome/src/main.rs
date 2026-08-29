@@ -72,6 +72,19 @@ enum Cmd {
         action: KeymapAction,
     },
 
+    /// Re-orient the focused row of windows in place (omarchy Super+J).
+    Reflow {
+        /// Print the move plan without executing it.
+        #[arg(long)]
+        dry_run: bool,
+    },
+
+    /// Toggle a named scratchpad window (see [scratchpad.*] in config.toml).
+    Scratchpad {
+        #[command(subcommand)]
+        action: ScratchpadAction,
+    },
+
     /// Stand-in child process for supervisor tests. Not a user-facing verb.
     #[command(name = "_stub", hide = true)]
     Stub {
@@ -84,6 +97,16 @@ enum Cmd {
         #[arg(long)]
         stderr: bool,
     },
+}
+
+#[derive(Subcommand)]
+enum ScratchpadAction {
+    /// Summon the named window from the scratch workspace, banish it there,
+    /// or launch it — whichever applies.
+    Toggle { name: String },
+    /// The anonymous rwin+s key: rescue an unpresentable focused window, else
+    /// pull the newest window out of scratch, else quietly do nothing.
+    Summon,
 }
 
 #[derive(Subcommand)]
@@ -182,6 +205,8 @@ fn main() -> ExitCode {
         Cmd::Logs { component, lines } => logs(&paths, component, lines),
         Cmd::Down { timeout } => return down(&paths, timeout),
         Cmd::Keymap { action } => keymap_cmd(&paths, action),
+        Cmd::Reflow { dry_run } => reflow_cmd(&paths, dry_run),
+        Cmd::Scratchpad { action } => scratchpad_cmd(&paths, action),
         Cmd::Stub { .. } => unreachable!("handled above"),
     };
 
@@ -292,6 +317,64 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
             }
         }
     }
+}
+
+fn reflow_cmd(paths: &Paths, dry_run: bool) -> io::Result<()> {
+    let cfg = Config::load_or_create(&paths.config())?;
+    let client = winsome::glazewm::Client::from_config(&cfg)?;
+    let workspaces = client.query_workspaces()?;
+    let plan = winsome::reflow::plan(&workspaces)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+
+    println!(
+        "reflow: {} -> {} ({} move{})",
+        plan.from,
+        plan.to,
+        plan.moves.len(),
+        if plan.moves.len() == 1 { "" } else { "s" }
+    );
+    for m in &plan.moves {
+        println!("  move {} {:?}", m.direction, m.title);
+        if !dry_run {
+            client.command_for(&m.window_id, &["move", "--direction", m.direction])?;
+        }
+    }
+    if dry_run {
+        println!("(dry run — nothing moved)");
+    }
+    Ok(())
+}
+
+fn scratchpad_cmd(paths: &Paths, action: ScratchpadAction) -> io::Result<()> {
+    let cfg = Config::load_or_create(&paths.config())?;
+    let name = match action {
+        ScratchpadAction::Summon => {
+            let client = winsome::glazewm::Client::from_config(&cfg)?;
+            let outcome = winsome::scratchpad::summon_key(&client)?;
+            println!("{outcome}");
+            return Ok(());
+        }
+        ScratchpadAction::Toggle { name } => name,
+    };
+    let Some(pad) = cfg.scratchpad.get(&name) else {
+        let known: Vec<&str> = cfg.scratchpad.keys().map(String::as_str).collect();
+        return Err(io::Error::new(
+            io::ErrorKind::NotFound,
+            format!(
+                "no [scratchpad.{name}] in {} (configured: {})",
+                paths.config().display(),
+                if known.is_empty() {
+                    "none".to_string()
+                } else {
+                    known.join(", ")
+                }
+            ),
+        ));
+    };
+    let client = winsome::glazewm::Client::from_config(&cfg)?;
+    let outcome = winsome::scratchpad::toggle(&client, pad)?;
+    println!("{outcome}");
+    Ok(())
 }
 
 fn down(paths: &Paths, timeout_secs: u64) -> ExitCode {

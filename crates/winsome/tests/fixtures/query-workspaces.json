@@ -1,0 +1,403 @@
+{
+  "clientMessage": "query workspaces",
+  "data": {
+    "workspaces": [
+      {
+        "type": "workspace",
+        "id": "7ffd1769-ca6a-4a7b-b8d5-47ed4b060073",
+        "name": "1",
+        "displayName": null,
+        "parentId": "7d876ca8-d71d-4d61-949f-c99916498145",
+        "children": [
+          {
+            "type": "window",
+            "id": "ae194bfd-8a2b-4149-925b-c405ce7e8f42",
+            "parentId": "7ffd1769-ca6a-4a7b-b8d5-47ed4b060073",
+            "hasFocus": false,
+            "tilingSize": 1,
+            "width": 1184,
+            "height": 1864,
+            "x": -1192,
+            "y": -108,
+            "state": {
+              "type": "tiling"
+            },
+            "prevState": null,
+            "displayState": "shown",
+            "borderDelta": {
+              "left": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "top": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "right": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "bottom": {
+                "amount": 0,
+                "unit": "pixel"
+              }
+            },
+            "floatingPlacement": {
+              "left": -1182,
+              "top": -123,
+              "right": -18,
+              "bottom": 1771
+            },
+            "handle": 395640,
+            "title": "window 1",
+            "className": "Chrome_WidgetWin_1",
+            "processName": "chrome",
+            "activeDrag": null
+          }
+        ],
+        "childFocusOrder": [
+          "ae194bfd-8a2b-4149-925b-c405ce7e8f42"
+        ],
+        "hasFocus": false,
+        "isDisplayed": true,
+        "width": 1184,
+        "height": 1864,
+        "x": -1192,
+        "y": -108,
+        "tilingDirection": "vertical"
+      },
+      {
+        "type": "workspace",
+        "id": "2ae7e4fe-9ea1-4d8b-bc69-7a6fbe18d5ec",
+        "name": "2",
+        "displayName": null,
+        "parentId": "165fe9be-e5b3-479f-ac01-e8bdc226eed3",
+        "children": [
+          {
+            "type": "window",
+            "id": "4a7599c8-bb1f-4bb7-89b7-65632a24ecdf",
+            "parentId": "2ae7e4fe-9ea1-4d8b-bc69-7a6fbe18d5ec",
+            "hasFocus": true,
+            "tilingSize": 0.6991614,
+            "width": 2668,
+            "height": 1544,
+            "x": 8,
+            "y": 48,
+            "state": {
+              "type": "tiling"
+            },
+            "prevState": null,
+            "displayState": "shown",
+            "borderDelta": {
+              "left": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "top": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "right": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "bottom": {
+                "amount": 0,
+                "unit": "pixel"
+              }
+            },
+            "floatingPlacement": {
+              "left": 444,
+              "top": 33,
+              "right": 3396,
+              "bottom": 1607
+            },
+            "handle": 9511938,
+            "title": "window 2",
+            "className": "Zed::Window",
+            "processName": "muxel-live",
+            "activeDrag": null
+          },
+          {
+            "type": "window",
+            "id": "b30d57e9-da47-422d-853d-d9c3b5d0a234",
+            "parentId": "2ae7e4fe-9ea1-4d8b-bc69-7a6fbe18d5ec",
+            "hasFocus": false,
+            "tilingSize": 0.30083847,
+            "width": 1148,
+            "height": 1544,
+            "x": 2684,
+            "y": 48,
+            "state": {
+              "type": "tiling"
+            },
+            "prevState": null,
+            "displayState": "shown",
+            "borderDelta": {
+              "left": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "top": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "right": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "bottom": {
+                "amount": 0,
+                "unit": "pixel"
+              }
+            },
+            "floatingPlacement": {
+              "left": 1508,
+              "top": 33,
+              "right": 2332,
+              "bottom": 1607
+            },
+            "handle": 42735106,
+            "title": "window 3",
+            "className": "CASCADIA_HOSTING_WINDOW_CLASS",
+            "processName": "WindowsTerminal",
+            "activeDrag": null
+          }
+        ],
+        "childFocusOrder": [
+          "4a7599c8-bb1f-4bb7-89b7-65632a24ecdf",
+          "b30d57e9-da47-422d-853d-d9c3b5d0a234"
+        ],
+        "hasFocus": true,
+        "isDisplayed": true,
+        "width": 3824,
+        "height": 1544,
+        "x": 8,
+        "y": 48,
+        "tilingDirection": "horizontal"
+      },
+      {
+        "type": "workspace",
+        "id": "700f4ef2-57cf-414a-b5d2-e426f905b12a",
+        "name": "3",
+        "displayName": null,
+        "parentId": "999528b4-2b4e-4aa1-a02c-881831156196",
+        "children": [
+          {
+            "type": "window",
+            "id": "f1f6efe6-9214-4ec9-8b4e-abec28c965ea",
+            "parentId": "700f4ef2-57cf-414a-b5d2-e426f905b12a",
+            "hasFocus": false,
+            "tilingSize": 0.3333333,
+            "width": 2544,
+            "height": 935,
+            "x": 3848,
+            "y": -352,
+            "state": {
+              "type": "tiling"
+            },
+            "prevState": null,
+            "displayState": "shown",
+            "borderDelta": {
+              "left": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "top": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "right": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "bottom": {
+                "amount": 0,
+                "unit": "pixel"
+              }
+            },
+            "floatingPlacement": {
+              "left": 3858,
+              "top": 591,
+              "right": 6382,
+              "bottom": 1530
+            },
+            "handle": 264846,
+            "title": "window 4",
+            "className": "Chrome_WidgetWin_1",
+            "processName": "chrome",
+            "activeDrag": null
+          },
+          {
+            "type": "window",
+            "id": "f4c7b456-eade-4c10-94d7-fb0cea8db92a",
+            "parentId": "700f4ef2-57cf-414a-b5d2-e426f905b12a",
+            "hasFocus": false,
+            "tilingSize": 0.3333333,
+            "width": 2544,
+            "height": 935,
+            "x": 3848,
+            "y": 591,
+            "state": {
+              "type": "tiling"
+            },
+            "prevState": null,
+            "displayState": "shown",
+            "borderDelta": {
+              "left": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "top": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "right": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "bottom": {
+                "amount": 0,
+                "unit": "pixel"
+              }
+            },
+            "floatingPlacement": {
+              "left": 3858,
+              "top": 591,
+              "right": 6382,
+              "bottom": 1530
+            },
+            "handle": 264830,
+            "title": "window 5",
+            "className": "Chrome_WidgetWin_1",
+            "processName": "chrome",
+            "activeDrag": null
+          },
+          {
+            "type": "window",
+            "id": "5b775d06-c017-430b-9be2-fb8bbff302d6",
+            "parentId": "700f4ef2-57cf-414a-b5d2-e426f905b12a",
+            "hasFocus": false,
+            "tilingSize": 0.3333333,
+            "width": 2544,
+            "height": 935,
+            "x": 3848,
+            "y": 1534,
+            "state": {
+              "type": "tiling"
+            },
+            "prevState": null,
+            "displayState": "shown",
+            "borderDelta": {
+              "left": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "top": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "right": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "bottom": {
+                "amount": 0,
+                "unit": "pixel"
+              }
+            },
+            "floatingPlacement": {
+              "left": 4794,
+              "top": 129,
+              "right": 5446,
+              "bottom": 1991
+            },
+            "handle": 393882,
+            "title": "window 6",
+            "className": "Chrome_WidgetWin_1",
+            "processName": "chrome",
+            "activeDrag": null
+          }
+        ],
+        "childFocusOrder": [
+          "f4c7b456-eade-4c10-94d7-fb0cea8db92a",
+          "f1f6efe6-9214-4ec9-8b4e-abec28c965ea",
+          "5b775d06-c017-430b-9be2-fb8bbff302d6"
+        ],
+        "hasFocus": false,
+        "isDisplayed": true,
+        "width": 2544,
+        "height": 2824,
+        "x": 3848,
+        "y": -352,
+        "tilingDirection": "vertical"
+      },
+      {
+        "type": "workspace",
+        "id": "47ec167b-ab6c-44e6-a14d-d2cb1a94bd03",
+        "name": "6",
+        "displayName": null,
+        "parentId": "999528b4-2b4e-4aa1-a02c-881831156196",
+        "children": [
+          {
+            "type": "window",
+            "id": "15efb78e-57ce-4a51-a30e-08637cd1eb40",
+            "parentId": "47ec167b-ab6c-44e6-a14d-d2cb1a94bd03",
+            "hasFocus": false,
+            "tilingSize": 1,
+            "width": 2544,
+            "height": 2824,
+            "x": 3848,
+            "y": -352,
+            "state": {
+              "type": "tiling"
+            },
+            "prevState": null,
+            "displayState": "hidden",
+            "borderDelta": {
+              "left": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "top": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "right": {
+                "amount": 0,
+                "unit": "pixel"
+              },
+              "bottom": {
+                "amount": 0,
+                "unit": "pixel"
+              }
+            },
+            "floatingPlacement": {
+              "left": 3858,
+              "top": -366,
+              "right": 6382,
+              "bottom": 2487
+            },
+            "handle": 2231148,
+            "title": "window 7",
+            "className": "Chrome_WidgetWin_1",
+            "processName": "chrome",
+            "activeDrag": null
+          }
+        ],
+        "childFocusOrder": [
+          "15efb78e-57ce-4a51-a30e-08637cd1eb40"
+        ],
+        "hasFocus": false,
+        "isDisplayed": false,
+        "width": 2544,
+        "height": 2824,
+        "x": 3848,
+        "y": -352,
+        "tilingDirection": "vertical"
+      }
+    ]
+  },
+  "error": null,
+  "success": true
+}

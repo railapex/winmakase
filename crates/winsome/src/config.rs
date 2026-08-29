@@ -5,11 +5,14 @@
 //! starting the real kanata/GlazeWM pair on a machine someone is using breaks
 //! their desktop (M0 spike, cascade incident).
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
+
+use crate::scratchpad::ScratchpadConfig;
 
 /// Written verbatim when no config exists. Kept as text, not serialized from
 /// [`Config::default`], so the comments survive — a config file that cannot
@@ -77,6 +80,16 @@ stop_args = ["command", "wm-exit"]
 command = "C:/Program Files/glzr.io/Zebar/zebar.exe"
 args = []
 adopt = true
+
+# Named scratchpads for `winsome scratchpad toggle <name>`: the matching
+# window (by process name) is banished to the hidden 'scratch' workspace and
+# summoned back floated + centered + focused. The GlazeWM config must define a
+# workspace named "scratch" (unkeyed, last in definition order).
+[scratchpad.term]
+launch = "wt"
+process = "WindowsTerminal"
+width = "55%"
+height = "60%"
 "#;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -88,6 +101,9 @@ pub struct Config {
     /// Optional: a missing `[zebar]` section means no bar in the set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zebar: Option<ComponentConfig>,
+    /// Named scratchpads for `winsome scratchpad toggle <name>`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub scratchpad: crate::scratchpad::ScratchpadMap,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -280,6 +296,16 @@ impl Default for Config {
             zebar: Some(
                 ComponentConfig::new("C:/Program Files/glzr.io/Zebar/zebar.exe", &[]).adopting(),
             ),
+            scratchpad: BTreeMap::from([(
+                "term".to_string(),
+                ScratchpadConfig {
+                    launch: "wt".to_string(),
+                    launch_args: Vec::new(),
+                    process: "WindowsTerminal".to_string(),
+                    width: Some("55%".to_string()),
+                    height: Some("60%".to_string()),
+                },
+            )]),
         }
     }
 }

@@ -5,6 +5,10 @@ All notable changes to Winsome. Format follows [Keep a Changelog](https://keepac
 ## [Unreleased]
 
 ### Added
+- `winsome reflow`: omarchy Super+J parity — re-orients the focused row in place over GlazeWM's IPC (plan-based, `--dry-run` supported). Live-verified both directions; refuses multi-window nested splits rather than guessing.
+- `winsome scratchpad summon` (the rwin+s key: rescue an unpresentable focused window, else pull the newest window from the hidden scratch workspace) and `winsome scratchpad toggle <name>` (config-driven named pads: summon back, banish away, or launch). ~25ms warm against ~300ms for the pwsh spike script.
+- GlazeWM IPC client over a direct WebSocket (pinned tungstenite), shared by the verbs; typed container-tree parsing tested against a sanitized real-rig fixture.
+- Foundation CI (fmt, clippy -D warnings, workspace tests on windows-latest); winsome-theme joined the workspace, making its 19 tests visible to `--workspace` runs.
 - Zebar supervised as the optional third component (`[zebar]` in config.toml; absent = no bar): outside the linked pair, restarts alone, adopted on takeover. Starter `with-glazewm` widget live per-monitor; the GlazeWM config needs an `ignore` rule for zebar or the bars get tiled.
 - The supervisor owns taskbar state (`hide_taskbar`, default on): auto-hide on start, prior state restored on shutdown — a reboot now comes up with the taskbar hidden without any script.
 - Scratchpad spike pair on the live rig: `rwin+alt+s` banishes the focused window to a hidden `scratch` workspace (pure GlazeWM `move --workspace`); `rwin+s` runs `spike/summon.ps1` (shell-exec → IPC), pulling the newest scratch window back floated + centered + focused. Stand-in for the `winsome scratchpad` verb.
