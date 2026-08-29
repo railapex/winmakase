@@ -83,10 +83,14 @@ if (Test-Path $glazeCfg) {
 $reg = Join-Path $repoRoot 'installer\register-tasks.ps1'
 if ($BuildDir) { & $reg -RepoRoot $repoRoot -BuildDir $BuildDir } else { & $reg -RepoRoot $repoRoot }
 
-# 8. Back up.
+# 8. Redeploy the bar pack from the repo — the deployed copy predates the
+#    rename, and its health dot polls the binary by absolute path.
+$pack = Join-Path $zroot 'winmakase'
+if (Test-Path $pack) { Copy-Item (Join-Path $repoRoot 'zebar\*') $pack -Recurse -Force }
+
+# 9. Back up.
 schtasks /run /tn 'WinmakaseSupervisor' | Out-Null
 Write-Output 'migrated - stack restarting under Winmakase names; check: winmakase status'
-Write-Output 'remaining button: gh repo rename winmakase -R railapex/winsome'
 if (-not $RenameRepoDir) {
     Write-Output "repo dir still $repoOld - rerun elevated with -RenameRepoDir to move it"
 }
