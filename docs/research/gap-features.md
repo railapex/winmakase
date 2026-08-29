@@ -132,3 +132,12 @@ Chris asked whether the fork can actually be made fast. It can: animations are p
 - **fork, animations off: 20-35ms typical** (median 65 dragged by two outliers of the same flavor stock shows)
 
 **The batched-reposition work is real — roughly 2x faster than stock once the tweens stop sitting on it.** Revised picture: the fork offers snappier-than-stock relayout AND optional animations; the adoption blocker is now solely **cloak hygiene** — the exit leak reproduced on BOTH runs (animation-surrogate path and HideMethod::Cloak path; second run leaked four Chrome windows, recovered surgically — note that Settings/Notepad-tab/Input-Experience windows are *legitimately* cloaked UWP/tab machinery and must not be swept blindly). Any fork rung ships with an exit/panic decloak sweep, or an upstream-able fix in the fork's shutdown path. `uncloak.exe` and the noanim config are kept beside the clone.
+
+### Rung 2 defined — "steal the enquickening" (Chris, 2026-08-29 ~04:00)
+
+Direction, not yet scheduled: take the fork's speed (and the *perception* of speed) without adopting it wholesale. Two separable mechanisms identified in the commit history:
+
+1. **Raw speed — batched/atomic repositions**: the lock-step relayout + batched surrogates work (`f14188f`), atomic repositions (`0bfe191`), pure-move SetWindowPos skips (`7222ebb`), per-keypress DWM overhead cuts (`0de69e9`, `789899e`, `ef17c87`), per-monitor vsync timing (`2a03af8`). Measured effect with animations off: 20-35ms relayout vs stock's 41-58. Caveat: most are tagged `(anim)` and live in/around the fork's animation manager — a cherry-pick sequence is entangled; extraction of the DeferWindowPos-style batching into a patch against 3.10.1 is the likelier shape.
+2. **Perceived speed — flash elimination**: window-open chrome-flash prevention (cloak-on-manage until first position, `manage_window.rs`), end-of-resize flash handoff (`7bb1382`), swap-transparency flash fix (`9e05bb6`). Small, more separable — but every cloak use inherits the leak lesson: any stolen cloak needs a guaranteed uncloak on exit/panic.
+
+The play when it fires: extract (1) as a surgical patch on 3.10.1, take (2)'s open-flash cloak with an exit sweep, keep animations off or ultra-short. Raw speed AND the perception of it, no fork adoption.

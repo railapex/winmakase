@@ -87,7 +87,13 @@
       // from the rig's actual promoted set (HKCU NotifyIconSettings,
       // IsPromoted): Viscosity + Elgato Control Center. The M2 config render
       // owns making this a real config knob.
-      const PINNED_TRAY = [/viscosity/i, /elgato|control\s*center/i];
+      const PINNED_TRAY = [
+        /viscosity/i,
+        /elgato|control\s*center/i,
+        // Windows Update's icon only exists when something pends — always
+        // worth surfacing when it does.
+        /windows\s*update|restart.*(required|pending)/i,
+      ];
 
       function App() {
         const [output, setOutput] = useState(providers.outputMap);
