@@ -36,6 +36,7 @@ use crate::process::{self, ExternalProcess, Poll, ProcessHandle, RunningChild};
 use crate::procs;
 use crate::rolling_log::RollingLog;
 use crate::signal;
+use crate::taskbar;
 use crate::timefmt;
 
 /// Wall-clock a console-triggered shutdown may take, start to finish.
@@ -161,6 +162,8 @@ pub struct Supervisor {
     display_watch: Option<DisplayWatch>,
     /// Set when a display change arrives; acted on once the burst goes quiet.
     display_event_at: Option<Instant>,
+    /// Taskbar state found at startup, put back on shutdown.
+    prior_taskbar: Option<u32>,
     started_at: SystemTime,
     shutting_down: bool,
 }
@@ -212,6 +215,7 @@ impl Supervisor {
             pending: None,
             display_watch: None,
             display_event_at: None,
+            prior_taskbar: None,
             started_at: SystemTime::now(),
             shutting_down: false,
         };
@@ -254,6 +258,15 @@ impl Supervisor {
             Ok(w) => self.display_watch = Some(w),
             // Not fatal: the watch is #1233 insurance, the stack is the job.
             Err(e) => self.log(format!("display watch could not start: {e}")),
+        }
+
+        if self.cfg.supervisor.hide_taskbar {
+            let prior = taskbar::get_state();
+            taskbar::set_state(taskbar::AUTOHIDE);
+            self.prior_taskbar = Some(prior);
+            self.log(format!(
+                "taskbar auto-hidden (prior state {prior}, restored on shutdown)"
+            ));
         }
 
         self.start_set(Component::START_ORDER.to_vec(), false);
@@ -797,6 +810,10 @@ impl Supervisor {
         ));
         for c in Component::START_ORDER.iter().rev().copied() {
             self.stop_gracefully(c, deadline);
+        }
+        if let Some(prior) = self.prior_taskbar.take() {
+            taskbar::set_state(prior);
+            self.log(format!("taskbar state restored ({prior})"));
         }
         self.write_health();
         self.log("shutdown complete");

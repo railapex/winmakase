@@ -37,6 +37,9 @@ log_keep_files = 3
 # on every routine teleprompter toggle would be self-inflicted churn. Display
 # changes are logged either way.
 bounce_on_display_change = false
+# Auto-hide the taskbar while the stack runs (Zebar replaces it); whatever
+# state the taskbar had is put back on shutdown. Panic restores it too.
+hide_taskbar = true
 
 # kanata and GlazeWM are a LINKED PAIR: both healthy or both down.
 # GlazeWM dying with kanata alive leaves raw Win+letter chords firing OS
@@ -151,6 +154,16 @@ pub struct SupervisorConfig {
     /// display here is toggled routinely. Events are logged regardless.
     #[serde(default)]
     pub bounce_on_display_change: bool,
+    /// Auto-hide the taskbar while the stack runs; restore its prior state on
+    /// shutdown. On by default — a hidden taskbar is the product's end state,
+    /// and before the supervisor owned this, a reboot brought the taskbar
+    /// back even though the logon task brought the stack up.
+    #[serde(default = "d_hide_taskbar")]
+    pub hide_taskbar: bool,
+}
+
+fn d_hide_taskbar() -> bool {
+    true
 }
 
 fn d_poll_ms() -> u64 {
@@ -232,6 +245,7 @@ impl Default for SupervisorConfig {
             log_max_bytes: d_log_max_bytes(),
             log_keep_files: d_log_keep_files(),
             bounce_on_display_change: false,
+            hide_taskbar: d_hide_taskbar(),
         }
     }
 }
@@ -355,6 +369,7 @@ mod tests {
             log_max_bytes: 0,
             log_keep_files: 0,
             bounce_on_display_change: false,
+            hide_taskbar: false,
         };
         let notes = s.sanitize();
         // Not merely non-zero: fast enough to be a spin is still broken.

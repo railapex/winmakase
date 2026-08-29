@@ -19,6 +19,7 @@ pub mod rolling_log;
 pub mod signal;
 pub mod stub;
 pub mod supervisor;
+pub mod taskbar;
 pub mod timefmt;
 
 #[doc(hidden)]

@@ -39,6 +39,9 @@ fn fast_supervisor() -> SupervisorConfig {
         log_max_bytes: 1 << 20,
         log_keep_files: 3,
         bounce_on_display_change: false,
+        // Never true in tests: it would toggle the real taskbar of whoever
+        // runs `cargo test`.
+        hide_taskbar: false,
     }
 }
 
