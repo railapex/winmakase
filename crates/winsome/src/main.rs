@@ -116,12 +116,20 @@ enum KeymapAction {
         /// Keymap file. Defaults to <home>/keymap/omarchy.toml.
         #[arg(long, value_name = "FILE")]
         keymap: Option<PathBuf>,
+        /// Local overrides file. Defaults to <home>/keymap/local.toml,
+        /// merged only when it exists.
+        #[arg(long, value_name = "FILE")]
+        local: Option<PathBuf>,
     },
     /// Render the GlazeWM `keybindings:` section from the mapped entries.
     Render {
         /// Keymap file. Defaults to <home>/keymap/omarchy.toml.
         #[arg(long, value_name = "FILE")]
         keymap: Option<PathBuf>,
+        /// Local overrides file. Defaults to <home>/keymap/local.toml,
+        /// merged only when it exists.
+        #[arg(long, value_name = "FILE")]
+        local: Option<PathBuf>,
         /// Write to a file instead of stdout.
         #[arg(long, value_name = "FILE")]
         out: Option<PathBuf>,
@@ -296,29 +304,50 @@ fn logs(paths: &Paths, target: LogTarget, lines: usize) -> io::Result<()> {
 }
 
 fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
-    let load = |explicit: Option<PathBuf>| -> io::Result<(PathBuf, winsome_keymap::KeymapFile)> {
-        let path = explicit.unwrap_or_else(|| paths.home().join("keymap").join("omarchy.toml"));
+    let invalid = |msg: String| io::Error::new(io::ErrorKind::InvalidData, msg);
+    // Loads the stock keymap, then folds in local overrides: an explicit
+    // --local path must exist; the default <home>/keymap/local.toml is
+    // merged only when present.
+    let load = |keymap: Option<PathBuf>,
+                local: Option<PathBuf>|
+     -> io::Result<(PathBuf, winsome_keymap::KeymapFile, Option<String>)> {
+        let path = keymap.unwrap_or_else(|| paths.home().join("keymap").join("omarchy.toml"));
         let text = std::fs::read_to_string(&path)
             .map_err(|e| io::Error::new(e.kind(), format!("{}: {e}", path.display())))?;
-        let file = winsome_keymap::parse(&text)
-            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
-        Ok((path, file))
+        let mut file = winsome_keymap::parse(&text).map_err(invalid)?;
+
+        let (local_path, required) = match local {
+            Some(p) => (p, true),
+            None => (paths.home().join("keymap").join("local.toml"), false),
+        };
+        let mut merged = None;
+        if required || local_path.exists() {
+            let text = std::fs::read_to_string(&local_path)
+                .map_err(|e| io::Error::new(e.kind(), format!("{}: {e}", local_path.display())))?;
+            let overrides = winsome_keymap::parse_overrides(&text).map_err(invalid)?;
+            let report = winsome_keymap::merge(&mut file, overrides)
+                .map_err(|errors| invalid(errors.join("\n")))?;
+            merged = Some(format!("local {} — {report}", local_path.display()));
+        }
+        Ok((path, file, merged))
     };
     let checked = |file: &winsome_keymap::KeymapFile| {
-        winsome_keymap::check(file)
-            .map_err(|errors| io::Error::new(io::ErrorKind::InvalidData, errors.join("\n")))
+        winsome_keymap::check(file).map_err(|errors| invalid(errors.join("\n")))
     };
 
     match action {
-        KeymapAction::Check { keymap } => {
-            let (path, file) = load(keymap)?;
+        KeymapAction::Check { keymap, local } => {
+            let (path, file, merged) = load(keymap, local)?;
             let (_, coverage) = checked(&file)?;
             println!("{}", path.display());
+            if let Some(note) = merged {
+                println!("{note}");
+            }
             println!("{}", winsome_keymap::render_coverage(&file.meta, &coverage));
             Ok(())
         }
-        KeymapAction::Render { keymap, out } => {
-            let (_, file) = load(keymap)?;
+        KeymapAction::Render { keymap, local, out } => {
+            let (_, file, _) = load(keymap, local)?;
             let (expanded, _) = checked(&file)?;
             let yaml = winsome_keymap::render_glazewm(&expanded);
             match out {

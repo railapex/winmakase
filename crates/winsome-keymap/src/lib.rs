@@ -93,6 +93,94 @@ pub fn parse(text: &str) -> Result<KeymapFile, String> {
     toml::from_str(text).map_err(|e| format!("keymap parse error: {e}"))
 }
 
+/// A user's local keymap overrides — `keymap/local.toml` under the Winsome
+/// home, never in the repo. Three abilities: set `[apps]` commands (override
+/// a stock key or add a new one for local placeholders), add or replace whole
+/// `[[bind]]` entries (matched by id — an existing id is replaced in place,
+/// a new one appended), and `disable` stock ids.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OverrideFile {
+    #[serde(default)]
+    pub apps: BTreeMap<String, String>,
+    #[serde(rename = "bind", default)]
+    pub binds: Vec<Bind>,
+    #[serde(default)]
+    pub disable: Vec<String>,
+}
+
+/// What `merge` did. The CLI prints this so a local file's effect on the
+/// rendered grammar is visible, never silent.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct MergeReport {
+    pub apps_set: usize,
+    pub binds_replaced: usize,
+    pub binds_added: usize,
+    pub binds_disabled: usize,
+}
+
+impl std::fmt::Display for MergeReport {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} apps set, {} binds replaced, {} added, {} disabled",
+            self.apps_set, self.binds_replaced, self.binds_added, self.binds_disabled
+        )
+    }
+}
+
+pub fn parse_overrides(text: &str) -> Result<OverrideFile, String> {
+    toml::from_str(text).map_err(|e| format!("keymap overrides parse error: {e}"))
+}
+
+/// Fold local overrides into the stock keymap. Merge is dumb like the
+/// generator — the merged file still goes through `check`, which owns all
+/// shape and conflict judgment. Merge itself only rejects references to
+/// nothing: a `disable` naming no stock bind (a typo must fail loudly, not
+/// quietly change nothing) or an id both disabled and re-bound.
+pub fn merge(base: &mut KeymapFile, local: OverrideFile) -> Result<MergeReport, Vec<String>> {
+    let mut errors = Vec::new();
+    let mut report = MergeReport::default();
+
+    for id in &local.disable {
+        if local.binds.iter().any(|b| b.id == *id) {
+            errors.push(format!(
+                "{id}: both disabled and re-bound — drop the disable"
+            ));
+            continue;
+        }
+        match base.binds.iter().position(|b| b.id == *id) {
+            Some(pos) => {
+                base.binds.remove(pos);
+                report.binds_disabled += 1;
+            }
+            None => errors.push(format!("{id}: disable names no stock bind")),
+        }
+    }
+
+    for bind in local.binds {
+        match base.binds.iter().position(|b| b.id == bind.id) {
+            Some(pos) => {
+                base.binds[pos] = bind;
+                report.binds_replaced += 1;
+            }
+            None => {
+                base.binds.push(bind);
+                report.binds_added += 1;
+            }
+        }
+    }
+
+    report.apps_set = local.apps.len();
+    base.apps.extend(local.apps);
+
+    if errors.is_empty() {
+        Ok(report)
+    } else {
+        Err(errors)
+    }
+}
+
 /// Expand and validate. All violations are collected, not just the first.
 pub fn check(file: &KeymapFile) -> Result<(Vec<Expanded>, Coverage), Vec<String>> {
     let mut errors = Vec::new();
@@ -437,6 +525,86 @@ mod tests {
             "[[bind]]\nid = 'a'\nchords = ['SUPER + W', 'SUPER + Q']\ndesc = 'x'\nsrc = 't'\nmap = ['close']\n",
         );
         assert!(check(&file).is_err());
+    }
+
+    #[test]
+    fn merge_app_override_reaches_stock_binds() {
+        // The Chrome-profile case: overriding {browser} retargets every stock
+        // browser chord without touching a single bind entry.
+        let mut base = one_bind(
+            "[apps]\nbrowser = 'chrome'\n\n[[bind]]\nid = 'app-browser'\nchord = 'SUPER + SHIFT + RETURN'\ndesc = 'Browser'\nsrc = 'a'\nmap = ['shell-exec {browser}']\n",
+        );
+        let local = parse_overrides("[apps]\nbrowser = 'chrome --profile-directory=Default'\n")
+            .expect("overrides parse");
+        let report = merge(&mut base, local).expect("merges");
+        assert_eq!(report.apps_set, 1);
+        let (expanded, _) = check(&base).expect("valid");
+        assert_eq!(
+            expanded[0].commands.as_deref(),
+            Some(&["shell-exec chrome --profile-directory=Default".to_string()][..])
+        );
+    }
+
+    #[test]
+    fn merge_adds_replaces_and_disables() {
+        let mut base = one_bind(
+            "[[bind]]\nid = 'a'\nchord = 'SUPER + W'\ndesc = 'x'\nsrc = 't'\nmap = ['close']\n\n[[bind]]\nid = 'b'\nchord = 'SUPER + Q'\ndesc = 'y'\nsrc = 't'\nmap = ['close']\n",
+        );
+        let local = parse_overrides(
+            "disable = ['b']\n\n[[bind]]\nid = 'a'\nchord = 'SUPER + C'\ndesc = 'x2'\nsrc = 'local'\nmap = ['close']\n\n[[bind]]\nid = 'new'\nchord = 'SUPER + N'\ndesc = 'n'\nsrc = 'local'\nmap = ['close']\n",
+        )
+        .expect("overrides parse");
+        let report = merge(&mut base, local).expect("merges");
+        assert_eq!(
+            (
+                report.binds_replaced,
+                report.binds_added,
+                report.binds_disabled
+            ),
+            (1, 1, 1)
+        );
+        // Replacement holds the original position; the add is appended.
+        assert_eq!(base.binds[0].id, "a");
+        assert_eq!(base.binds[0].chord.as_deref(), Some("SUPER + C"));
+        assert_eq!(base.binds[1].id, "new");
+        check(&base).expect("merged file validates");
+    }
+
+    #[test]
+    fn merge_rejects_dangling_and_ambiguous_disables() {
+        let mut base = one_bind(
+            "[[bind]]\nid = 'a'\nchord = 'SUPER + W'\ndesc = 'x'\nsrc = 't'\nmap = ['close']\n",
+        );
+        let local = parse_overrides("disable = ['typo']\n").expect("parses");
+        let errors = merge(&mut base, local).expect_err("dangling disable");
+        assert!(errors[0].contains("names no stock bind"), "{errors:?}");
+
+        let local = parse_overrides(
+            "disable = ['a']\n\n[[bind]]\nid = 'a'\nchord = 'SUPER + C'\ndesc = 'x'\nsrc = 'l'\nmap = ['close']\n",
+        )
+        .expect("parses");
+        let errors = merge(&mut base, local).expect_err("disable + rebind");
+        assert!(
+            errors[0].contains("both disabled and re-bound"),
+            "{errors:?}"
+        );
+    }
+
+    #[test]
+    fn merged_local_bind_on_taken_chord_conflicts_in_check() {
+        let mut base = one_bind(
+            "[[bind]]\nid = 'a'\nchord = 'SUPER + W'\ndesc = 'x'\nsrc = 't'\nmap = ['close']\n",
+        );
+        let local = parse_overrides(
+            "[[bind]]\nid = 'mine'\nchord = 'SUPER + W'\ndesc = 'grab'\nsrc = 'local'\nmap = ['close']\n",
+        )
+        .expect("parses");
+        merge(&mut base, local).expect("merge itself is dumb");
+        let errors = check(&base).expect_err("check owns conflicts");
+        assert!(
+            errors.iter().any(|e| e.contains("already bound by a")),
+            "{errors:?}"
+        );
     }
 
     #[test]
