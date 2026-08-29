@@ -7,7 +7,7 @@ keybindings:
   - commands: ['close']
     bindings: ['rwin+q']
   # layout-toggle-split — Toggle window split
-  - commands: ['toggle-tiling-direction']
+  - commands: ['shell-exec --hide-window winmakase reflow']
     bindings: ['rwin+j']
   # window-float — Toggle window floating/tiling
   - commands: ['toggle-floating --centered']
@@ -123,6 +123,12 @@ keybindings:
   # workspace-move-silent-10 — Move window silently to workspace 10
   - commands: ['move --workspace 10']
     bindings: ['rwin+alt+shift+0']
+  # scratchpad-toggle — Toggle scratchpad
+  - commands: ['shell-exec --hide-window winmakase scratchpad summon']
+    bindings: ['rwin+s']
+  # scratchpad-move — Move window to scratchpad
+  - commands: ['move --workspace scratch']
+    bindings: ['rwin+alt+s']
   # workspace-next — Next workspace
   - commands: ['focus --next-active-workspace']
     bindings: ['rwin+tab']
@@ -192,6 +198,9 @@ keybindings:
   # resize-height-grow-lots — Expand window height a lot
   - commands: ['resize --height +5%']
     bindings: ['rwin+ctrl+shift+oem_plus']
+  # group-toggle — Toggle window grouping
+  - commands: ['shell-exec --hide-window winmakase gap grouping']
+    bindings: ['rwin+g']
   # app-terminal — Terminal
   - commands: ['shell-exec wt']
     bindings: ['rwin+enter']

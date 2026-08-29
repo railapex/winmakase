@@ -14,6 +14,7 @@ pub mod glazewm;
 pub mod health;
 pub mod kanata_kbd;
 pub mod monitors;
+pub mod notify;
 pub mod paths;
 pub mod proc_alive;
 pub mod process;

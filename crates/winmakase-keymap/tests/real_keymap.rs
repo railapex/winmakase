@@ -24,14 +24,16 @@ fn real_keymap_is_valid() {
     // Coverage acts as a drift alarm: a keymap edit that changes these counts
     // is fine, but must be a conscious edit of this assertion in the same
     // commit — never a surprise.
+    // 2026-08-29: reflow/scratchpad/grouping-stub verb flips (+3 mapped from
+    // gap; scratchpad-move split into a mapped chord and a grave-alias gap).
     assert_eq!(
         (cov.mapped, cov.gap, cov.native, cov.app, cov.omitted),
-        (73, 19, 18, 2, 30),
+        (76, 17, 18, 2, 30),
         "entry counts changed: {cov:?}"
     );
     assert_eq!(
         (cov.chords_mapped, cov.chords_total),
-        (73, 226),
+        (76, 226),
         "chord counts changed: {cov:?}"
     );
 }

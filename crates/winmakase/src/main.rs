@@ -86,6 +86,14 @@ enum Cmd {
         action: KanataAction,
     },
 
+    /// Explain a documented gap — bound to chords whose omarchy feature the
+    /// stack cannot provide, so the key explains itself instead of dying
+    /// silently.
+    Gap {
+        #[arg(value_enum)]
+        name: GapName,
+    },
+
     /// Re-orient the focused row of windows in place (omarchy Super+J).
     Reflow {
         /// Print the move plan without executing it.
@@ -111,6 +119,12 @@ enum Cmd {
         #[arg(long)]
         stderr: bool,
     },
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
+enum GapName {
+    /// Window grouping / tabs (omarchy Super+G family).
+    Grouping,
 }
 
 #[derive(Subcommand)]
@@ -242,6 +256,10 @@ fn main() -> ExitCode {
         Cmd::Reload { timeout } => return reload(&paths, timeout),
         Cmd::Keymap { action } => keymap_cmd(&paths, action),
         Cmd::Kanata { action } => kanata_cmd(&paths, action),
+        Cmd::Gap { name } => {
+            gap_cmd(name);
+            Ok(())
+        }
         Cmd::Reflow { dry_run } => reflow_cmd(&paths, dry_run),
         Cmd::Scratchpad { action } => scratchpad_cmd(&paths, action),
         Cmd::Stub { .. } => unreachable!("handled above"),
@@ -431,6 +449,19 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
                 }
             }
         }
+    }
+}
+
+fn gap_cmd(name: GapName) {
+    match name {
+        GapName::Grouping => winmakase::notify::info(
+            "Winmakase — window grouping",
+            "Window grouping (omarchy's Super+G tabs) is a documented gap: \
+             GlazeWM has no grouping support and its upstream is dormant.\n\n\
+             The genuine route is the komorebi power option (bring-your-own-license), \
+             planned after v0.1.\n\n\
+             Details: docs/research/gap-features.md and DESIGN.md § Documented gaps.",
+        ),
     }
 }
 

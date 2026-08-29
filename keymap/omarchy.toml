@@ -37,6 +37,10 @@ terminal = "wt"
 browser = "chrome"
 files = "explorer"
 editor = "code"
+# The winmakase CLI itself, for verb binds (reflow, scratchpad, gap …).
+# Bare name assumes PATH; a machine's local.toml overrides it with the
+# deployed full path (~/.winmakase/bin/winmakase.exe) until install owns PATH.
+winmakase = "winmakase"
 
 # ============================================================ tiling.lua
 
@@ -67,8 +71,8 @@ id = "layout-toggle-split"
 chord = "SUPER + J"
 desc = "Toggle window split"
 src = "tiling"
-map = ["toggle-tiling-direction"]
-note = "Insert-direction only — GlazeWM cannot reflow an existing split in place (bench-confirmed). Flips to `shell-exec winmakase reflow` when the verb ships; see docs/research/gap-features.md."
+map = ["shell-exec --hide-window {winmakase} reflow"]
+note = "True in-place reflow via the winmakase verb (shipped + live-verified 2026-08-28; GlazeWM's own toggle-tiling-direction only changes insert direction, bench-confirmed). Nested multi-window splits refused loudly. See docs/research/gap-features.md."
 
 [[bind]]
 id = "window-pseudo"
@@ -188,8 +192,8 @@ id = "scratchpad-toggle"
 chord = "SUPER + S"
 desc = "Toggle scratchpad"
 src = "tiling"
-status = "gap"
-note = "winmakase scratchpad verb (all IPC primitives verified; docs/research/gap-features.md). Flips to `shell-exec winmakase scratchpad toggle` when built."
+map = ["shell-exec --hide-window {winmakase} scratchpad summon"]
+note = "Anonymous rescue-first summon (shipped 2026-08-28, matches the live rig): rescue an unpresentable focused window, else pull the newest from scratch, else no-op. Named pads via `winmakase scratchpad toggle <name>` (config [scratchpad.*]). Requires a GlazeWM workspace named 'scratch' (unkeyed, last in definition order)."
 
 [[bind]]
 id = "scratchpad-toggle-alt"
@@ -197,15 +201,23 @@ chord = "SUPER + grave"
 desc = "Toggle scratchpad"
 src = "tiling"
 status = "gap"
-note = "Alias of scratchpad-toggle."
+note = "grave is not in the chord translation table; SUPER+S covers the muscle memory."
 
 [[bind]]
 id = "scratchpad-move"
-chords = ["SUPER + ALT + S", "SUPER + SHIFT + grave"]
+chord = "SUPER + ALT + S"
+desc = "Move window to scratchpad"
+src = "tiling"
+map = ["move --workspace scratch"]
+note = "Banish is pure GlazeWM (matches the live rig); summon brings it back floated + centered."
+
+[[bind]]
+id = "scratchpad-move-alt"
+chord = "SUPER + SHIFT + grave"
 desc = "Move window to scratchpad"
 src = "tiling"
 status = "gap"
-note = "Targeted `move --workspace scratch` once the scratchpad verb ships."
+note = "grave is not in the chord translation table; SUPER+ALT+S covers it."
 
 [[bind]]
 id = "workspace-next"
@@ -406,8 +418,8 @@ id = "group-toggle"
 chord = "SUPER + G"
 desc = "Toggle window grouping"
 src = "tiling"
-status = "gap"
-note = "Grouping needs WM support GlazeWM lacks; komorebi power option is the genuine route. Binds a notification stub when winmakase ships one. See docs/research/gap-features.md."
+map = ["shell-exec --hide-window {winmakase} gap grouping"]
+note = "Documented gap wired to explain itself: the chord raises a native notice naming the komorebi power option (post-v0.1) rather than dying silently. See docs/research/gap-features.md."
 
 [[bind]]
 id = "group-family"
