@@ -41,18 +41,6 @@ impl fmt::Display for Component {
     }
 }
 
-impl std::str::FromStr for Component {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_ascii_lowercase().as_str() {
-            "kanata" => Ok(Component::Kanata),
-            "glazewm" | "glaze" => Ok(Component::Glazewm),
-            other => Err(format!("unknown component {other:?} (kanata, glazewm)")),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -64,9 +52,8 @@ mod tests {
     }
 
     #[test]
-    fn parses_names() {
-        assert_eq!("Kanata".parse(), Ok(Component::Kanata));
-        assert_eq!("glazewm".parse(), Ok(Component::Glazewm));
-        assert!("zebar".parse::<Component>().is_err());
+    fn names_are_the_log_file_stems() {
+        let names: Vec<&str> = Component::START_ORDER.iter().map(|c| c.as_str()).collect();
+        assert_eq!(names, vec!["kanata", "glazewm"]);
     }
 }

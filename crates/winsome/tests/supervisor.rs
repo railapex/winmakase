@@ -138,6 +138,25 @@ fn kill(pid: u32) {
     assert!(status.success(), "taskkill failed for pid {pid}");
 }
 
+/// Every kanata start/stop in the log, in order, as (event, pid).
+fn kanata_events(log: &str) -> Vec<(&'static str, u32)> {
+    let mut events = Vec::new();
+    for line in log.lines() {
+        for (marker, event) in [
+            ("kanata started (pid ", "started"),
+            ("kanata stopped (pid ", "stopped"),
+        ] {
+            if let Some((_, rest)) = line.split_once(marker) {
+                let digits: String = rest.chars().take_while(char::is_ascii_digit).collect();
+                if let Ok(pid) = digits.parse::<u32>() {
+                    events.push((event, pid));
+                }
+            }
+        }
+    }
+    events
+}
+
 /// Index of the first log line containing `needle`.
 fn line_of(log: &str, needle: &str) -> usize {
     log.lines()
@@ -274,6 +293,60 @@ fn a_component_that_will_not_start_never_brings_up_its_partner() {
     );
     assert!(log.contains("retrying the whole set in 120ms"));
     assert_eq!(h.component(Component::Glazewm).unwrap().pid, None);
+}
+
+#[test]
+fn a_half_started_pair_is_rolled_back_instead_of_leaving_an_orphan() {
+    // kanata starts fine, glazewm cannot start at all. The retry must not
+    // respawn kanata on top of the one already running: `children.insert`
+    // would drop the old handle, and dropping a `Child` does not kill it, so
+    // the desktop would accumulate a keyboard remapper per retry.
+    let mut cfg = pair_config();
+    cfg.glazewm = ComponentConfig::new("winsome-no-such-binary-7a21.exe", &[]);
+    let mut h = Harness::start("partial-start", cfg);
+
+    wait_for("three start attempts", || {
+        (h.supervisor_log().matches("kanata started (pid ").count() >= 3).then_some(())
+    });
+    h.stop();
+
+    let log = h.supervisor_log();
+
+    // Nothing survived the run. This is the assertion that matters: a leaked
+    // kanata is a second keyboard remapper on a live desktop.
+    let events = kanata_events(&log);
+    for (event, pid) in &events {
+        if *event == "started" {
+            assert_eq!(
+                winsome::proc_alive::is_alive(*pid),
+                Some(false),
+                "kanata pid {pid} was orphaned; events: {events:?}"
+            );
+        }
+    }
+
+    // Start and stop strictly alternate, on matching pids: at no point were two
+    // kanata processes live.
+    assert!(events.len() >= 6, "{events:?}");
+    for pair in events.chunks(2) {
+        assert_eq!(pair[0].0, "started", "{events:?}");
+        let Some(stop) = pair.get(1) else { continue };
+        assert_eq!(stop.0, "stopped", "{events:?}");
+        assert_eq!(
+            stop.1, pair[0].1,
+            "the kanata taken down must be the one that came up: {events:?}"
+        );
+    }
+
+    assert!(log.contains("linked-pair: rolling kanata back"));
+    assert!(
+        !log.contains("glazewm started"),
+        "glazewm never came up, so nothing should claim it did"
+    );
+    assert!(
+        !log.contains("already running — not starting another"),
+        "rollback should have left nothing for the guard to catch"
+    );
 }
 
 // -- logs and health --------------------------------------------------------

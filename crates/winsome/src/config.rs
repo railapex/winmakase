@@ -128,6 +128,52 @@ fn d_log_keep_files() -> usize {
     3
 }
 
+impl SupervisorConfig {
+    /// Clamp values that would break the supervisor rather than merely tune it,
+    /// returning what changed so the caller can log it.
+    ///
+    /// A hand-edited zero is the case that matters: a zero backoff turns
+    /// restart-on-crash into a busy loop respawning a keyboard remapper as fast
+    /// as the OS allows. Clamping and saying so beats refusing to start the
+    /// desktop over a typo.
+    pub fn sanitize(&mut self) -> Vec<String> {
+        let mut notes = Vec::new();
+        let mut clamp = |name: &str, value: &mut u64, floor: u64| {
+            if *value < floor {
+                notes.push(format!(
+                    "supervisor.{name} = {value} is below the minimum {floor} — using {floor}"
+                ));
+                *value = floor;
+            }
+        };
+        // Floors, not just non-zero. A 1ms backoff is still ~13 respawns a
+        // second of a keyboard remapper — thrash, not recovery — and a 1ms poll
+        // is a spin loop. Below these the value is indistinguishable from the
+        // zero it was clamped from.
+        clamp("poll_ms", &mut self.poll_ms, 10);
+        clamp("backoff_initial_ms", &mut self.backoff_initial_ms, 100);
+        clamp("log_max_bytes", &mut self.log_max_bytes, 4096);
+        // Zero here resets the backoff on every tick, which is backoff in name
+        // only — a crash loop would restart forever at the initial delay.
+        clamp("healthy_reset_secs", &mut self.healthy_reset_secs, 1);
+
+        if self.backoff_max_ms < self.backoff_initial_ms {
+            notes.push(format!(
+                "supervisor.backoff_max_ms = {} is below backoff_initial_ms = {} — raising it to match",
+                self.backoff_max_ms, self.backoff_initial_ms
+            ));
+            self.backoff_max_ms = self.backoff_initial_ms;
+        }
+        if self.log_keep_files == 0 {
+            notes.push(
+                "supervisor.log_keep_files = 0 would discard every log — using 1".to_string(),
+            );
+            self.log_keep_files = 1;
+        }
+        notes
+    }
+}
+
 impl Default for SupervisorConfig {
     fn default() -> Self {
         Self {
@@ -243,6 +289,52 @@ mod tests {
         assert_eq!(written, Config::default());
         assert!(fs::read_to_string(&path).unwrap().contains("LINKED PAIR"));
         assert_eq!(Config::load_or_create(&path).unwrap(), Config::default());
+    }
+
+    #[test]
+    fn a_zeroed_config_is_clamped_and_reported() {
+        let mut s = SupervisorConfig {
+            poll_ms: 0,
+            backoff_initial_ms: 0,
+            backoff_max_ms: 0,
+            healthy_reset_secs: 0,
+            stop_timeout_ms: 0,
+            log_max_bytes: 0,
+            log_keep_files: 0,
+        };
+        let notes = s.sanitize();
+        // Not merely non-zero: fast enough to be a spin is still broken.
+        assert!(s.poll_ms >= 10);
+        assert!(s.backoff_initial_ms >= 100);
+        assert!(s.backoff_max_ms >= s.backoff_initial_ms);
+        assert!(s.log_max_bytes >= 4096);
+        assert_eq!(s.log_keep_files, 1);
+        // Every clamp is named, so the log says what was ignored and why.
+        assert!(s.healthy_reset_secs >= 1);
+        assert_eq!(notes.len(), 6, "{notes:#?}");
+        assert!(notes.iter().any(|n| n.contains("backoff_initial_ms")));
+        assert!(notes.iter().any(|n| n.contains("log_keep_files")));
+        // Sanitizing twice is a no-op.
+        assert!(s.sanitize().is_empty());
+    }
+
+    #[test]
+    fn a_sane_config_is_left_alone() {
+        let mut s = SupervisorConfig::default();
+        assert!(s.sanitize().is_empty());
+        assert_eq!(s, SupervisorConfig::default());
+    }
+
+    #[test]
+    fn a_cap_below_the_initial_delay_is_raised() {
+        let mut s = SupervisorConfig {
+            backoff_initial_ms: 2_000,
+            backoff_max_ms: 500,
+            ..SupervisorConfig::default()
+        };
+        let notes = s.sanitize();
+        assert_eq!(s.backoff_max_ms, 2_000);
+        assert_eq!(notes.len(), 1);
     }
 
     #[test]

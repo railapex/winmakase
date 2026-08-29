@@ -49,14 +49,19 @@ pub fn parse_iso8601(s: &str) -> Option<SystemTime> {
     let num = |from: usize, to: usize| s.get(from..to)?.parse::<i64>().ok();
     let (y, mo, d) = (num(0, 4)?, num(5, 7)?, num(8, 10)?);
     let (h, mi, se) = (num(11, 13)?, num(14, 16)?, num(17, 19)?);
-    if !(1..=12).contains(&mo) || !(1..=31).contains(&d) || h > 23 || mi > 59 || se > 60 {
+    if !(1..=12).contains(&mo) || !(1..=31).contains(&d) || h > 23 || mi > 59 || se > 59 {
         return None;
     }
     let secs = days_from_civil(y, mo as u32, d as u32) * 86_400 + h * 3600 + mi * 60 + se;
     if secs < 0 {
         return None;
     }
-    Some(UNIX_EPOCH + Duration::from_secs(secs as u64))
+    let t = UNIX_EPOCH + Duration::from_secs(secs as u64);
+    // The civil-calendar math normalises rather than rejects: Feb 30 comes back
+    // as Mar 2, April 31 as May 1. Round-tripping is the cheapest way to hold
+    // the strictness this parser claims — if it does not format back to what
+    // was handed in, it was not a real date.
+    (iso8601(t) == s).then_some(t)
 }
 
 /// How long ago `stamp` was, or `None` if it is unparseable or in the future.
@@ -116,6 +121,40 @@ mod tests {
     fn handles_leap_day() {
         let stamp = "2028-02-29T12:00:00Z";
         assert_eq!(iso8601(parse_iso8601(stamp).unwrap()), stamp);
+    }
+
+    #[test]
+    fn rejects_days_that_month_does_not_have() {
+        // These all parse arithmetically and normalise into the next month.
+        // Silently accepting them would make the parser a date generator.
+        for bad in [
+            "2026-02-30T00:00:00Z",
+            "2026-02-29T00:00:00Z", // 2026 is not a leap year
+            "2100-02-29T00:00:00Z", // century, not a leap year
+            "2026-04-31T00:00:00Z",
+            "2026-06-31T00:00:00Z",
+            "2026-09-31T00:00:00Z",
+            "2026-11-31T00:00:00Z",
+        ] {
+            assert!(parse_iso8601(bad).is_none(), "should have rejected {bad}");
+        }
+        // The valid neighbours still parse.
+        for good in [
+            "2024-02-29T00:00:00Z", // leap year
+            "2000-02-29T00:00:00Z", // 400-year leap century
+            "2026-02-28T00:00:00Z",
+            "2026-04-30T00:00:00Z",
+            "2026-12-31T23:59:59Z",
+        ] {
+            assert_eq!(iso8601(parse_iso8601(good).unwrap()), good);
+        }
+    }
+
+    #[test]
+    fn rejects_leap_seconds() {
+        // We never write :60, so accepting it could only smuggle in a
+        // timestamp that rolls over to the next minute.
+        assert!(parse_iso8601("2026-06-30T23:59:60Z").is_none());
     }
 
     #[test]

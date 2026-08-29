@@ -24,8 +24,15 @@ use windows_sys::core::BOOL;
 static REQUESTED: AtomicBool = AtomicBool::new(false);
 static FINISHED: AtomicBool = AtomicBool::new(false);
 
-/// Windows gives a close/logoff handler roughly five seconds; stay inside it.
-const GRACE: Duration = Duration::from_secs(4);
+/// Windows gives a close/logoff handler roughly five seconds before it
+/// terminates the process; stay inside it with a second to spare.
+///
+/// Public because the supervisor sizes its console-shutdown budget against this
+/// and asserts the relationship at compile time — a shutdown that outruns the
+/// grace period is killed half-done, with GlazeWM's windows unrestored and
+/// kanata still holding the keyboard.
+pub const GRACE_MS: u64 = 4_000;
+const GRACE: Duration = Duration::from_millis(GRACE_MS);
 
 pub fn install() -> bool {
     unsafe { SetConsoleCtrlHandler(Some(handler), 1) != 0 }

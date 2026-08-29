@@ -3,9 +3,11 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Duration;
 
+use clap::builder::PossibleValue;
 use clap::{Parser, Subcommand, ValueEnum};
 
 use winsome::commands;
+use winsome::component::Component;
 use winsome::config::Config;
 use winsome::control;
 use winsome::health::Health;
@@ -77,20 +79,45 @@ enum Cmd {
     },
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
+/// A `logs` target: any supervised component, plus the supervisor's own log.
+///
+/// The component names come from [`Component`] rather than being spelled again
+/// here, so renaming one cannot leave the CLI pointing at a log file that no
+/// longer exists.
+#[derive(Copy, Clone, PartialEq, Eq)]
 enum LogTarget {
-    Kanata,
-    Glazewm,
+    Component(Component),
     Supervisor,
 }
 
 impl LogTarget {
+    const VARIANTS: [LogTarget; 3] = [
+        LogTarget::Component(Component::Kanata),
+        LogTarget::Component(Component::Glazewm),
+        LogTarget::Supervisor,
+    ];
+
     fn as_str(self) -> &'static str {
         match self {
-            LogTarget::Kanata => "kanata",
-            LogTarget::Glazewm => "glazewm",
+            LogTarget::Component(c) => c.as_str(),
             LogTarget::Supervisor => "supervisor",
         }
+    }
+}
+
+// Add a component and this stops compiling until `logs` can reach its log.
+const _: () = assert!(
+    LogTarget::VARIANTS.len() == Component::START_ORDER.len() + 1,
+    "every component needs a logs target, plus one for the supervisor"
+);
+
+impl ValueEnum for LogTarget {
+    fn value_variants<'a>() -> &'a [Self] {
+        &Self::VARIANTS
+    }
+
+    fn to_possible_value(&self) -> Option<PossibleValue> {
+        Some(PossibleValue::new(self.as_str()))
     }
 }
 

@@ -16,8 +16,12 @@ pub struct Backoff {
 
 impl Backoff {
     pub fn new(initial: Duration, max: Duration) -> Self {
+        // Clamp first, then floor the cap against the clamped value. Reading
+        // the raw parameter here was a zero-delay restart loop: 0/0 gave an
+        // initial of 1ms and a cap of 0, and the cap wins.
+        let initial = initial.max(Duration::from_millis(1));
         Self {
-            initial: initial.max(Duration::from_millis(1)),
+            initial,
             max: max.max(initial),
             failures: 0,
         }
@@ -82,6 +86,19 @@ mod tests {
             assert!(b.next_delay() <= Duration::from_secs(30));
         }
         assert_eq!(b.next_delay(), Duration::from_secs(30));
+    }
+
+    #[test]
+    fn a_zero_configuration_still_waits() {
+        // A config of all zeroes must not turn restart into a busy loop that
+        // respawns a keyboard remapper thousands of times a second.
+        let mut b = Backoff::new(Duration::ZERO, Duration::ZERO);
+        for _ in 0..5 {
+            assert!(b.next_delay() > Duration::ZERO);
+        }
+        // A cap below the initial delay is raised to it, not honoured downward.
+        let mut b = Backoff::new(Duration::from_secs(2), Duration::from_millis(1));
+        assert_eq!(b.next_delay(), Duration::from_secs(2));
     }
 
     #[test]
