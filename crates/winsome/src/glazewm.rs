@@ -99,6 +99,15 @@ pub struct Node {
     /// Win32 HWND, for probes the tree cannot answer (cloak, visibility).
     #[serde(default)]
     pub handle: Option<i64>,
+    // Screen-space geometry, when the container has any.
+    #[serde(default)]
+    pub x: Option<i64>,
+    #[serde(default)]
+    pub y: Option<i64>,
+    #[serde(default)]
+    pub width: Option<i64>,
+    #[serde(default)]
+    pub height: Option<i64>,
 }
 
 impl Node {
