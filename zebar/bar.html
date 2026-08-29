@@ -82,9 +82,17 @@
 
       createRoot(document.getElementById('root')).render(<App />);
 
+      // Pinned tray icons (matched on tooltip), the rest behind the ⋯
+      // expander — mirrors Windows' own promoted-vs-overflow split. Seeded
+      // from the rig's actual promoted set (HKCU NotifyIconSettings,
+      // IsPromoted): Viscosity + Elgato Control Center. The M2 config render
+      // owns making this a real config knob.
+      const PINNED_TRAY = [/viscosity/i, /elgato|control\s*center/i];
+
       function App() {
         const [output, setOutput] = useState(providers.outputMap);
         const [health, setHealth] = useState('unknown');
+        const [trayExpanded, setTrayExpanded] = useState(false);
 
         useEffect(() => {
           providers.onOutput(() => setOutput(providers.outputMap));
@@ -270,22 +278,34 @@
 
               {output.systray && (
                 <div className="systray">
-                  {output.systray.icons.map(icon => (
-                    <img
-                      key={icon.id}
-                      className="systray-icon"
-                      src={icon.iconUrl}
-                      title={icon.tooltip}
-                      onClick={e => {
-                        e.preventDefault();
-                        output.systray.onLeftClick(icon.id);
-                      }}
-                      onContextMenu={e => {
-                        e.preventDefault();
-                        output.systray.onRightClick(icon.id);
-                      }}
-                    />
-                  ))}
+                  {output.systray.icons
+                    .filter(icon =>
+                      trayExpanded ||
+                      PINNED_TRAY.some(p => p.test(icon.tooltip ?? '')),
+                    )
+                    .map(icon => (
+                      <img
+                        key={icon.id}
+                        className="systray-icon"
+                        src={icon.iconUrl}
+                        title={icon.tooltip}
+                        onClick={e => {
+                          e.preventDefault();
+                          output.systray.onLeftClick(icon.id);
+                        }}
+                        onContextMenu={e => {
+                          e.preventDefault();
+                          output.systray.onRightClick(icon.id);
+                        }}
+                      />
+                    ))}
+                  <button
+                    className="tray-expander"
+                    title={trayExpanded ? 'collapse tray' : 'show all tray icons'}
+                    onClick={() => setTrayExpanded(v => !v)}
+                  >
+                    {trayExpanded ? '›' : '‹'}
+                  </button>
                 </div>
               )}
             </div>
