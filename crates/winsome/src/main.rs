@@ -254,12 +254,25 @@ fn status(paths: &Paths, json: bool) -> io::Result<()> {
         Err(e) => return Err(e),
     };
 
+    let alive = proc_alive::is_alive(health.supervisor.pid);
+
     if json {
-        println!("{}", serde_json::to_string_pretty(&health)?);
+        // The health file records transitions, not liveness — a supervisor
+        // killed outright leaves a file that reads "running" forever. The
+        // table view already checks the pid; machine consumers (the Zebar
+        // health dot) need the same truth, added as a sibling field so the
+        // schema-1 shape is untouched. `null` = could not tell.
+        let mut value = serde_json::to_value(&health)?;
+        if let Some(obj) = value.as_object_mut() {
+            obj.insert(
+                "supervisorProcessAlive".to_string(),
+                serde_json::to_value(alive)?,
+            );
+        }
+        println!("{}", serde_json::to_string_pretty(&value)?);
         return Ok(());
     }
 
-    let alive = proc_alive::is_alive(health.supervisor.pid);
     println!("{}", commands::render_status(&health, &path, alive));
     Ok(())
 }

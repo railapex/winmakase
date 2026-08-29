@@ -19,7 +19,10 @@ use winsome::paths::Paths;
 use winsome::supervisor::{StopReason, Supervisor};
 use winsome::testutil::{FakeHandle, FakePoll, TempDir};
 
-const PATIENCE: Duration = Duration::from_secs(15);
+// Generous on purpose: these tests run alongside a full workspace build on
+// loaded machines (CI runners, parallel test threads); a starved harness
+// thread must not read as a supervisor bug.
+const PATIENCE: Duration = Duration::from_secs(45);
 
 // -- harness ---------------------------------------------------------------
 

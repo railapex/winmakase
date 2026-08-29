@@ -30,6 +30,7 @@ use crate::config::{ComponentConfig, Config};
 use crate::control;
 use crate::display_watch::DisplayWatch;
 use crate::health::{ComponentHealth, Health, Status, SupervisorHealth};
+use crate::monitors;
 use crate::paths::Paths;
 use crate::proc_alive;
 use crate::process::{self, ExternalProcess, Poll, ProcessHandle, RunningChild};
@@ -79,6 +80,14 @@ const TASK_START_DISCOVER_MS: u64 = 5_000;
 /// a resolution change and a replug arrive as bursts, and bouncing the pair
 /// once per event would multiply the disruption the bounce exists to fix.
 const DISPLAY_DEBOUNCE_MS: u64 = 2_000;
+
+/// How long after a zebar start to check that its dock actually took on every
+/// monitor. Bars need several seconds to create windows and register appbars.
+const DOCK_CHECK_DELAY_MS: u64 = 12_000;
+
+/// A dock race that three bounces cannot win is not a race — stop churning
+/// the bar and leave the loud log line.
+const DOCK_BOUNCE_LIMIT: u32 = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StopReason {
@@ -167,6 +176,10 @@ pub struct Supervisor {
     display_event_at: Option<Instant>,
     /// Taskbar state found at startup, put back on shutdown.
     prior_taskbar: Option<u32>,
+    /// Set when zebar (re)starts; a pending dock-consistency check.
+    dock_check_at: Option<Instant>,
+    /// Consecutive bar bounces spent on a lost dock race.
+    dock_bounces: u32,
     started_at: SystemTime,
     shutting_down: bool,
 }
@@ -225,6 +238,8 @@ impl Supervisor {
             display_watch: None,
             display_event_at: None,
             prior_taskbar: None,
+            dock_check_at: None,
+            dock_bounces: 0,
             started_at: SystemTime::now(),
             shutting_down: false,
         };
@@ -305,8 +320,55 @@ impl Supervisor {
     pub fn tick(&mut self) {
         self.reap_exits();
         self.check_display_changes();
+        self.check_bar_dock();
         self.fire_due_restart();
         self.reset_recovered_backoffs();
+    }
+
+    /// Zebar's per-window appbar registrations race and sometimes lose (live
+    /// findings, 2026-08-28: bars render but one or two monitors get no
+    /// reserved space and windows tile underneath). A restart demonstrably
+    /// re-wins the race, so: a while after each zebar start, a mixed reserve
+    /// picture (some monitors reserved, some not) earns the bar a bounce.
+    fn check_bar_dock(&mut self) {
+        let Some(at) = self.dock_check_at else {
+            return;
+        };
+        if at.elapsed() < Duration::from_millis(DOCK_CHECK_DELAY_MS) {
+            return;
+        }
+        self.dock_check_at = None;
+        if !self.children.contains_key(&Component::Zebar) {
+            return;
+        }
+
+        let reserves = monitors::top_reserves();
+        match monitors::dock_verdict(&reserves) {
+            monitors::DockVerdict::Consistent => {
+                if self.dock_bounces > 0 {
+                    self.log(format!(
+                        "zebar dock consistent after {} bounce(s) (reserves {reserves:?})",
+                        self.dock_bounces
+                    ));
+                }
+                self.dock_bounces = 0;
+            }
+            monitors::DockVerdict::Partial if self.dock_bounces >= DOCK_BOUNCE_LIMIT => {
+                self.log(format!(
+                    "zebar dock still partial after {DOCK_BOUNCE_LIMIT} bounces (reserves {reserves:?}) — giving up until its next restart"
+                ));
+                self.dock_bounces = 0;
+            }
+            monitors::DockVerdict::Partial => {
+                self.dock_bounces += 1;
+                self.log(format!(
+                    "zebar lost its dock on some monitors (reserves {reserves:?}) — bouncing the bar ({}/{DOCK_BOUNCE_LIMIT})",
+                    self.dock_bounces
+                ));
+                self.force_stop(Component::Zebar);
+                self.plan_recovery(Component::Zebar);
+            }
+        }
     }
 
     /// Start the component set without entering the poll loop, for stepping
@@ -538,6 +600,10 @@ impl Supervisor {
         }
         let n = self.health[&c].restarts;
         self.log(format!("{c} started (pid {pid}, restarts {n}): {how}"));
+        if c == Component::Zebar {
+            // Adopted or started: either way its dock deserves the check.
+            self.dock_check_at = Some(Instant::now());
+        }
         true
     }
 
