@@ -1,0 +1,28 @@
+# Foundation CI: format, lint, and the full workspace test suite on Windows.
+# M4 grows this: kanata --check on the shipped configs (needs the pinned kanata
+# download — the binaries are not in the repo) and the 19-theme golden run.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  rust:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      # The tests ignored on dev machines because they touch the real desktop
+      # (register/run a scheduled task, toggle the taskbar). A CI runner's
+      # desktop is nobody's desktop; flakes here must not block a merge.
+      - name: desktop-touching integration tests
+        run: cargo test --workspace -- --ignored
+        continue-on-error: true
