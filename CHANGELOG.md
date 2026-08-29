@@ -5,6 +5,7 @@ All notable changes to Winsome. Format follows [Keep a Changelog](https://keepac
 ## [Unreleased]
 
 ### Added
+- The winsome bar pack (`zebar/`): systray on the primary monitor's bar, a supervisor health dot (via `winsome status --json`, which now reports `supervisorProcessAlive`), workspaces/clock/stats per monitor, dockToEdge built in. The supervisor verifies bar-dock consistency after each zebar start and bounces the bar when a monitor's reserved space went missing (the registrations race; a restart re-wins it).
 - `winsome reflow`: omarchy Super+J parity — re-orients the focused row in place over GlazeWM's IPC (plan-based, `--dry-run` supported). Live-verified both directions; refuses multi-window nested splits rather than guessing.
 - `winsome scratchpad summon` (the rwin+s key: rescue an unpresentable focused window, else pull the newest window from the hidden scratch workspace) and `winsome scratchpad toggle <name>` (config-driven named pads: summon back, banish away, or launch). ~25ms warm against ~300ms for the pwsh spike script.
 - GlazeWM IPC client over a direct WebSocket (pinned tungstenite), shared by the verbs; typed container-tree parsing tested against a sanitized real-rig fixture.
