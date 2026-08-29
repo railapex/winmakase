@@ -24,8 +24,10 @@ use windows_sys::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     CREATESTRUCTW, CreateWindowExW, DefWindowProcW, DispatchMessageW, GWLP_USERDATA, GetMessageW,
     MSG, PostMessageW, RegisterClassW, SetWindowLongPtrW, TranslateMessage, WM_CLOSE,
-    WM_DESTROY, WM_DISPLAYCHANGE, WM_NCCREATE, WNDCLASSW,
+    WM_DESTROY, WM_DISPLAYCHANGE, WM_ENDSESSION, WM_NCCREATE, WM_QUERYENDSESSION, WNDCLASSW,
 };
+
+use crate::signal;
 
 /// Counts `WM_DISPLAYCHANGE` broadcasts on a hidden window's thread; the
 /// supervisor drains the count from its poll loop.
@@ -187,6 +189,18 @@ unsafe extern "system" fn wndproc(
                 ) as *const AtomicU64;
                 if !ptr.is_null() {
                     (*ptr).fetch_add(1, Ordering::SeqCst);
+                }
+                0
+            }
+            // Session end for the windowless supervisor (`winsomed` has no
+            // console, so no CTRL_LOGOFF_EVENT): same contract as the console
+            // handler — flag the main loop, then hold the OS off until the
+            // stack is down and state is written.
+            WM_QUERYENDSESSION => 1,
+            WM_ENDSESSION => {
+                if wparam != 0 {
+                    signal::request_shutdown();
+                    signal::block_until_finished_within_grace();
                 }
                 0
             }

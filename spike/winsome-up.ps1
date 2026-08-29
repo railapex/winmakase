@@ -1,5 +1,8 @@
-# Bring up the Winsome dogfood stack, UAC-free (kanata via pre-registered elevated task).
-# Run NON-elevated so GlazeWM stays user-level.
+# Bring up the Winsome dogfood stack. SUPERSEDED as the bring-up path by the
+# supervisor (WinsomeSupervisor runs at logon and owns the components); this
+# script remains for after a panic or a manual stop: it hides the taskbar
+# (which the supervisor does not own — that is Zebar-milestone territory) and
+# starts the supervisor task, which adopts or starts kanata + GlazeWM itself.
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -13,6 +16,5 @@ public static class AppBar {
 '@
 $d = New-Object AppBar+APPBARDATA; $d.cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf($d); $d.lParam = 0x1
 [AppBar]::SHAppBarMessage(0x0000000A, [ref]$d) | Out-Null
-Start-Process 'C:\Program Files\glzr.io\GlazeWM\glazewm.exe'
-schtasks /run /tn WinsomeKanata | Out-Null
-Write-Output 'GlazeWM up (user-level), kanata task triggered (elevated), taskbar auto-hidden'
+schtasks /run /tn WinsomeSupervisor | Out-Null
+Write-Output 'taskbar auto-hidden, WinsomeSupervisor triggered (it adopts or starts kanata + GlazeWM)'

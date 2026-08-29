@@ -42,6 +42,24 @@ pub fn shutdown_requested() -> bool {
     REQUESTED.load(Ordering::SeqCst)
 }
 
+/// Ask the main loop to shut down, from any thread. The windowless supervisor
+/// (`winsomed`, a GUI-subsystem process with no console) gets its session-end
+/// notice as `WM_ENDSESSION` on the display watch's window rather than as a
+/// console event; both funnel here.
+pub fn request_shutdown() {
+    REQUESTED.store(true, Ordering::SeqCst);
+}
+
+/// Block until the main loop reports the shutdown finished, up to the OS grace
+/// period. What the close/logoff paths do to keep Windows from terminating the
+/// process before GlazeWM's windows are restored.
+pub fn block_until_finished_within_grace() {
+    let deadline = Instant::now() + GRACE;
+    while !FINISHED.load(Ordering::SeqCst) && Instant::now() < deadline {
+        thread::sleep(Duration::from_millis(25));
+    }
+}
+
 /// Called once the supervisor has stopped its children and written final state.
 pub fn mark_finished() {
     FINISHED.store(true, Ordering::SeqCst);
@@ -50,15 +68,12 @@ pub fn mark_finished() {
 unsafe extern "system" fn handler(ctrl_type: u32) -> BOOL {
     match ctrl_type {
         CTRL_C_EVENT | CTRL_BREAK_EVENT => {
-            REQUESTED.store(true, Ordering::SeqCst);
+            request_shutdown();
             1
         }
         CTRL_CLOSE_EVENT | CTRL_LOGOFF_EVENT | CTRL_SHUTDOWN_EVENT => {
-            REQUESTED.store(true, Ordering::SeqCst);
-            let deadline = Instant::now() + GRACE;
-            while !FINISHED.load(Ordering::SeqCst) && Instant::now() < deadline {
-                thread::sleep(Duration::from_millis(25));
-            }
+            request_shutdown();
+            block_until_finished_within_grace();
             1
         }
         _ => 0,

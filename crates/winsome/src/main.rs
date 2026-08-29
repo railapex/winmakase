@@ -1,7 +1,8 @@
 use std::io;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use std::time::Duration;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use clap::builder::PossibleValue;
 use clap::{Parser, Subcommand, ValueEnum};
@@ -311,13 +312,41 @@ fn down(paths: &Paths, timeout_secs: u64) -> ExitCode {
         Err(_) => println!("winsome: no health state found; asking anyway"),
     }
 
+    // One deadline for the whole operation, hearing AND finishing.
+    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
     if let Err(e) = control::request_stop(paths) {
         return fail(e);
     }
     match control::wait_for_ack(paths, Duration::from_secs(timeout_secs)) {
         Ok(true) => {
-            println!("winsome: supervisor acknowledged, shutting down");
-            ExitCode::SUCCESS
+            // The ack means the request was heard, not done: the supervisor is
+            // still stopping components. Callers act on "down came back", so
+            // success has to mean finished (the panic path learned this live —
+            // it killed the supervisor mid-shutdown and orphaned the pair).
+            println!("winsome: supervisor acknowledged — waiting for the stack to stop");
+            loop {
+                match Health::read(&paths.health()) {
+                    Ok(h) if !h.supervisor.running => {
+                        println!("winsome: stack stopped");
+                        return ExitCode::SUCCESS;
+                    }
+                    Ok(h) if proc_alive::is_alive(h.supervisor.pid) == Some(false) => {
+                        eprintln!(
+                            "winsome: supervisor (pid {}) died mid-shutdown — components may be orphaned",
+                            h.supervisor.pid
+                        );
+                        return ExitCode::FAILURE;
+                    }
+                    _ => {}
+                }
+                if Instant::now() >= deadline {
+                    eprintln!(
+                        "winsome: still shutting down after {timeout_secs}s — check `winsome status`"
+                    );
+                    return ExitCode::FAILURE;
+                }
+                thread::sleep(Duration::from_millis(50));
+            }
         }
         Ok(false) => {
             eprintln!(

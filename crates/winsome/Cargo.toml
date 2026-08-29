@@ -15,6 +15,12 @@ path = "src/lib.rs"
 name = "winsome"
 path = "src/main.rs"
 
+# The logon-task host: the supervisor as a windowless (GUI-subsystem) process,
+# so the scheduled task puts no console on the desktop. See src/bin/winsomed.rs.
+[[bin]]
+name = "winsomed"
+path = "src/bin/winsomed.rs"
+
 # Versions are pinned exactly (repo rule: never "latest"); bump deliberately in
 # their own commit, same as the scoop tool pins.
 [dependencies]
@@ -29,7 +35,9 @@ windows-sys = { version = "=0.61.2", features = [
     "Win32_System_Console",
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_LibraryLoader",
+    "Win32_System_Registry",
     "Win32_System_Threading",
+    "Win32_UI_Shell",
     "Win32_UI_WindowsAndMessaging",
 ] }
 

@@ -382,6 +382,28 @@ impl Supervisor {
         let log = Arc::clone(&self.child_logs[&c]);
         match process::spawn(&ccfg, log) {
             Ok(running) => self.record_started(c, running, is_restart, &process::render(&ccfg)),
+            // 740 = ERROR_ELEVATION_REQUIRED: a UIAccess manifest (GlazeWM
+            // ships asInvoker + uiAccess=true) refuses plain CreateProcess.
+            // The shell path launches it un-elevated; output is not captured.
+            Err(e) if e.raw_os_error() == Some(740) => match process::shell_spawn(&ccfg) {
+                Ok(running) => self.record_started(
+                    c,
+                    running,
+                    is_restart,
+                    &format!(
+                        "{} — via shell (UIAccess manifest); output not captured",
+                        process::render(&ccfg)
+                    ),
+                ),
+                Err(e) => {
+                    self.health_mut(c).set(Status::Stopped, None);
+                    self.log(format!(
+                        "{c} FAILED to start via the shell fallback: {e} — command was {}",
+                        process::render(&ccfg)
+                    ));
+                    false
+                }
+            },
             Err(e) => {
                 self.health_mut(c).set(Status::Stopped, None);
                 self.log(format!(

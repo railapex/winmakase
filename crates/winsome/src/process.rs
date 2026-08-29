@@ -21,9 +21,10 @@ use windows_sys::Win32::Foundation::{
     CloseHandle, GetLastError, WAIT_OBJECT_0, WAIT_TIMEOUT,
 };
 use windows_sys::Win32::System::Threading::{
-    GetExitCodeProcess, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE,
-    TerminateProcess, WaitForSingleObject,
+    GetExitCodeProcess, GetProcessId, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION,
+    PROCESS_TERMINATE, TerminateProcess, WaitForSingleObject,
 };
+use windows_sys::Win32::UI::Shell::{SHELLEXECUTEINFOW, ShellExecuteExW};
 
 use crate::config::ComponentConfig;
 use crate::rolling_log::RollingLog;
@@ -168,6 +169,15 @@ pub struct ExternalProcess {
 }
 
 impl ExternalProcess {
+    /// Wrap a process handle we already own (a `ShellExecuteExW` launch).
+    fn from_handle(raw: *mut c_void) -> Self {
+        Self {
+            pid: unsafe { GetProcessId(raw) },
+            handle: OwnedProcessHandle(raw),
+            task: None,
+        }
+    }
+
     /// Open a watch handle on `pid`. Fails rather than guesses: a component we
     /// cannot watch is a component we must not pretend to supervise.
     pub fn open(pid: u32, task: Option<String>) -> io::Result<Self> {
@@ -276,6 +286,58 @@ impl ProcessHandle for ExternalProcess {
 
 fn args(a: &[&str]) -> Vec<String> {
     a.iter().map(|s| (*s).to_string()).collect()
+}
+
+// -- shell launches ----------------------------------------------------------
+
+const SEE_MASK_NOCLOSEPROCESS: u32 = 0x0000_0040;
+const SEE_MASK_NOASYNC: u32 = 0x0000_0100;
+const SEE_MASK_FLAG_NO_UI: u32 = 0x0000_0400;
+const SW_SHOWNORMAL: i32 = 1;
+
+/// Launch through the shell instead of `CreateProcess`.
+///
+/// Exists for one manifest: GlazeWM ships `asInvoker` + `uiAccess="true"`, and
+/// Windows refuses a plain `CreateProcess` of a UIAccess binary from a normal
+/// process (`ERROR_ELEVATION_REQUIRED`, os error 740 — found live when the
+/// supervisor first spawned rather than adopted it). `ShellExecuteExW` routes
+/// through the appinfo service, which may grant UIAccess. The cost: no stdio
+/// pipes, so the child's output is not captured — it keeps whatever logging it
+/// does itself.
+pub fn shell_spawn(cfg: &ComponentConfig) -> io::Result<RunningChild> {
+    let file: Vec<u16> = cfg.command.encode_utf16().chain(std::iter::once(0)).collect();
+    let params_string = cfg
+        .args
+        .iter()
+        .map(|a| quote(a))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let params: Vec<u16> = params_string
+        .encode_utf16()
+        .chain(std::iter::once(0))
+        .collect();
+
+    let mut info: SHELLEXECUTEINFOW = unsafe { std::mem::zeroed() };
+    info.cbSize = std::mem::size_of::<SHELLEXECUTEINFOW>() as u32;
+    info.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC | SEE_MASK_FLAG_NO_UI;
+    info.lpFile = file.as_ptr();
+    if !cfg.args.is_empty() {
+        info.lpParameters = params.as_ptr();
+    }
+    info.nShow = SW_SHOWNORMAL;
+
+    let ok = unsafe { ShellExecuteExW(&mut info) };
+    if ok == 0 || info.hProcess.is_null() {
+        return Err(io::Error::other(format!(
+            "ShellExecuteExW failed for {} (Win32 error {})",
+            cfg.command,
+            unsafe { GetLastError() }
+        )));
+    }
+    Ok(RunningChild {
+        handle: Box::new(ExternalProcess::from_handle(info.hProcess)),
+        started: Instant::now(),
+    })
 }
 
 // -- shared helpers ----------------------------------------------------------
@@ -455,6 +517,22 @@ mod tests {
         let code = wait_for_exit(&mut ext, Duration::from_secs(10)).expect("exits");
         assert_eq!(code, Some(9));
         let _ = child.wait();
+    }
+
+    #[test]
+    fn a_shell_spawned_process_is_watched_and_reports_its_exit_code() {
+        let cfg = ComponentConfig::new("cmd.exe", &["/c", "exit 11"]);
+        let mut running = shell_spawn(&cfg).unwrap();
+        assert!(running.pid() != 0);
+        let code = wait_for_exit(running.handle.as_mut(), Duration::from_secs(10))
+            .expect("the child exits");
+        assert_eq!(code, Some(11));
+    }
+
+    #[test]
+    fn shell_spawning_a_missing_binary_is_an_error() {
+        let cfg = ComponentConfig::new("winsome-no-such-binary-77e1.exe", &[]);
+        assert!(shell_spawn(&cfg).is_err());
     }
 
     #[test]
