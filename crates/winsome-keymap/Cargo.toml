@@ -1,0 +1,17 @@
+[package]
+name = "winsome-keymap"
+description = "Omarchy keybinding grammar as tiler-agnostic data, and the GlazeWM YAML generator."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+# Versions are pinned exactly (repo rule: never "latest"); bump deliberately in
+# their own commit, same as the scoop tool pins.
+[dependencies]
+serde = { version = "=1.0.228", features = ["derive"] }
+toml = "=0.9.8"
+
+[lints.clippy]
+all = "deny"

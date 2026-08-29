@@ -1,0 +1,860 @@
+# Winsome keymap — omarchy grammar, verbatim, as tiler-agnostic data.
+#
+# Source of truth for every keybinding omarchy ships, mapped to what Winsome
+# does with it on Windows. Each entry either `map`s to GlazeWM command(s) or
+# carries a `status` + `note` explaining why not:
+#   gap     — feature Winsome intends to cover but can't yet (planned verb named in note)
+#   native  — Windows / an installed tool already covers it (note says what)
+#   app     — application-launch layer owns it (apps.conf / webapp render, M2)
+#   omitted — deliberately not carried; note says why
+# `deviation` marks the few places Winsome knowingly diverges from omarchy —
+# each one is also recorded in DESIGN.md (keymap paragraph).
+# `foreach` expands numeric families: {n} = the number, {digit} = n mod 10.
+# `chords` (list) compresses a family of chords sharing one fate — allowed only
+# on non-mapped entries; mapped entries always bind exactly one chord.
+#
+# Upstream tracking: re-fetch the files below and diff against this file's
+# entries. New/changed upstream binds must land here as new entries or edits —
+# grammar drift shows up as a diff, never a surprise.
+
+[meta]
+upstream = "basecamp/omarchy"
+ref = "quattro"
+files = [
+  "default/hypr/bindings/tiling.lua",
+  "default/hypr/bindings/applications.lua",
+  "default/hypr/bindings/clipboard.lua",
+  "default/hypr/bindings/utilities.lua",
+  "default/hypr/bindings/media.lua",
+  "default/hypr/bindings/voxtype.lua",
+]
+fetched = "2026-08-29"
+
+# Launch commands substituted into `map` entries as {terminal} etc.
+# apps.conf (M2) will own user overrides; these are the stock defaults.
+[apps]
+terminal = "wt"
+browser = "chrome"
+files = "explorer"
+editor = "code"
+
+# ============================================================ tiling.lua
+
+[[bind]]
+id = "window-close"
+chord = "SUPER + W"
+desc = "Close window"
+src = "tiling"
+map = ["close"]
+
+[[bind]]
+id = "window-close-alt"
+chord = "SUPER + Q"
+desc = "Close window"
+src = "tiling"
+map = ["close"]
+
+[[bind]]
+id = "window-close-all"
+chord = "CTRL + ALT + DELETE"
+desc = "Close all windows"
+src = "tiling"
+status = "omitted"
+note = "Ctrl+Alt+Del is the Windows SAS sequence — unbindable by design."
+
+[[bind]]
+id = "layout-toggle-split"
+chord = "SUPER + J"
+desc = "Toggle window split"
+src = "tiling"
+map = ["toggle-tiling-direction"]
+note = "Insert-direction only — GlazeWM cannot reflow an existing split in place (bench-confirmed). Flips to `shell-exec winsome reflow` when the verb ships; see docs/research/gap-features.md."
+
+[[bind]]
+id = "window-pseudo"
+chord = "SUPER + P"
+desc = "Pseudo window"
+src = "tiling"
+status = "omitted"
+note = "Hyprland dwindle pseudotile; no GlazeWM concept."
+
+[[bind]]
+id = "window-float"
+chord = "SUPER + T"
+desc = "Toggle window floating/tiling"
+src = "tiling"
+map = ["toggle-floating --centered"]
+
+[[bind]]
+id = "window-fullscreen"
+chord = "SUPER + F"
+desc = "Full screen"
+src = "tiling"
+map = ["toggle-fullscreen"]
+
+[[bind]]
+id = "window-tiled-fullscreen"
+chord = "SUPER + CTRL + F"
+desc = "Tiled full screen"
+src = "tiling"
+status = "omitted"
+note = "omarchy script alternates tiled/true fullscreen; no GlazeWM analog."
+
+[[bind]]
+id = "window-fullwidth"
+chord = "SUPER + ALT + F"
+desc = "Full width"
+src = "tiling"
+map = ["toggle-fullscreen --maximized"]
+
+[[bind]]
+id = "window-pop"
+chord = "SUPER + O"
+desc = "Pop window out (float & pin)"
+src = "tiling"
+map = ["set-floating --centered --shown-on-top"]
+note = "Approximate: floats shown-on-top. Hyprland's pin (visible on all workspaces) has no GlazeWM analog."
+
+[[bind]]
+id = "window-width-memory"
+chords = ["SUPER + ALT + Home", "SUPER + Home"]
+desc = "Save / restore window width"
+src = "tiling"
+status = "omitted"
+note = "Scripted width memory; candidate winsome verb if missed (arc)."
+
+[[bind]]
+id = "workspace-layout-toggle"
+chord = "SUPER + L"
+desc = "Toggle workspace layout"
+src = "tiling"
+status = "gap"
+note = "Double-blocked: Win+L is winlogon-level (kanata cannot shield it, spike finding) and GlazeWM has no layout cycle. Accepted loss — recorded in DESIGN.md."
+
+[[bind]]
+id = "focus-left"
+chord = "SUPER + LEFT"
+desc = "Focus on left window"
+src = "tiling"
+map = ["focus --direction left"]
+
+[[bind]]
+id = "focus-right"
+chord = "SUPER + RIGHT"
+desc = "Focus on right window"
+src = "tiling"
+map = ["focus --direction right"]
+
+[[bind]]
+id = "focus-up"
+chord = "SUPER + UP"
+desc = "Focus on above window"
+src = "tiling"
+map = ["focus --direction up"]
+
+[[bind]]
+id = "focus-down"
+chord = "SUPER + DOWN"
+desc = "Focus on below window"
+src = "tiling"
+map = ["focus --direction down"]
+
+[[bind]]
+id = "workspace-switch"
+chord = "SUPER + {digit}"
+desc = "Switch to workspace {n}"
+src = "tiling"
+map = ["focus --workspace {n}"]
+foreach = { from = 1, to = 10 }
+
+[[bind]]
+id = "workspace-move"
+chord = "SUPER + SHIFT + {digit}"
+desc = "Move window to workspace {n}"
+src = "tiling"
+map = ["move --workspace {n}", "focus --workspace {n}"]
+foreach = { from = 1, to = 10 }
+
+[[bind]]
+id = "workspace-move-silent"
+chord = "SUPER + SHIFT + ALT + {digit}"
+desc = "Move window silently to workspace {n}"
+src = "tiling"
+map = ["move --workspace {n}"]
+foreach = { from = 1, to = 10 }
+
+[[bind]]
+id = "scratchpad-toggle"
+chord = "SUPER + S"
+desc = "Toggle scratchpad"
+src = "tiling"
+status = "gap"
+note = "winsome scratchpad verb (all IPC primitives verified; docs/research/gap-features.md). Flips to `shell-exec winsome scratchpad toggle` when built."
+
+[[bind]]
+id = "scratchpad-toggle-alt"
+chord = "SUPER + grave"
+desc = "Toggle scratchpad"
+src = "tiling"
+status = "gap"
+note = "Alias of scratchpad-toggle."
+
+[[bind]]
+id = "scratchpad-move"
+chords = ["SUPER + ALT + S", "SUPER + SHIFT + grave"]
+desc = "Move window to scratchpad"
+src = "tiling"
+status = "gap"
+note = "Targeted `move --workspace scratch` once the scratchpad verb ships."
+
+[[bind]]
+id = "workspace-next"
+chord = "SUPER + TAB"
+desc = "Next workspace"
+src = "tiling"
+map = ["focus --next-active-workspace"]
+deviation = "Spike temporarily used this chord for wm-cycle-focus; restored to omarchy's meaning. Cycle-focus lives on SUPER + ESCAPE."
+
+[[bind]]
+id = "workspace-prev"
+chord = "SUPER + SHIFT + TAB"
+desc = "Previous workspace"
+src = "tiling"
+map = ["focus --prev-active-workspace"]
+
+[[bind]]
+id = "workspace-former"
+chord = "SUPER + CTRL + TAB"
+desc = "Former workspace"
+src = "tiling"
+map = ["focus --recent-workspace"]
+
+[[bind]]
+id = "workspace-to-monitor-left"
+chord = "SUPER + SHIFT + ALT + LEFT"
+desc = "Move workspace to left monitor"
+src = "tiling"
+map = ["move-workspace --direction left"]
+
+[[bind]]
+id = "workspace-to-monitor-right"
+chord = "SUPER + SHIFT + ALT + RIGHT"
+desc = "Move workspace to right monitor"
+src = "tiling"
+map = ["move-workspace --direction right"]
+
+[[bind]]
+id = "workspace-to-monitor-up"
+chord = "SUPER + SHIFT + ALT + UP"
+desc = "Move workspace to up monitor"
+src = "tiling"
+map = ["move-workspace --direction up"]
+
+[[bind]]
+id = "workspace-to-monitor-down"
+chord = "SUPER + SHIFT + ALT + DOWN"
+desc = "Move workspace to down monitor"
+src = "tiling"
+map = ["move-workspace --direction down"]
+
+[[bind]]
+id = "window-swap-left"
+chord = "SUPER + SHIFT + LEFT"
+desc = "Swap window to the left"
+src = "tiling"
+map = ["move --direction left"]
+
+[[bind]]
+id = "window-swap-right"
+chord = "SUPER + SHIFT + RIGHT"
+desc = "Swap window to the right"
+src = "tiling"
+map = ["move --direction right"]
+
+[[bind]]
+id = "window-swap-up"
+chord = "SUPER + SHIFT + UP"
+desc = "Swap window up"
+src = "tiling"
+map = ["move --direction up"]
+
+[[bind]]
+id = "window-swap-down"
+chord = "SUPER + SHIFT + DOWN"
+desc = "Swap window down"
+src = "tiling"
+map = ["move --direction down"]
+
+[[bind]]
+id = "window-cycle"
+chords = ["ALT + TAB", "ALT + SHIFT + TAB"]
+desc = "Focus next/previous window"
+src = "tiling"
+status = "native"
+note = "Windows Alt+Tab kept native — muscle memory and task view beat shadowing it. The WM-tree cycle (fullscreen trap escape) is on SUPER + ESCAPE."
+
+[[bind]]
+id = "monitor-focus-cycle"
+chords = ["CTRL + ALT + TAB", "CTRL + ALT + SHIFT + TAB"]
+desc = "Focus next/previous monitor"
+src = "tiling"
+status = "omitted"
+note = "Ctrl+Alt+Tab is the Windows persistent task switcher; GlazeWM focus --monitor takes an index, not a delta. Directional focus already crosses monitor boundaries (spike-verified)."
+
+[[bind]]
+id = "resize-width-shrink"
+chord = "SUPER + code:20"
+desc = "Shrink window width"
+src = "tiling"
+map = ["resize --width -2%"]
+
+[[bind]]
+id = "resize-width-grow"
+chord = "SUPER + code:21"
+desc = "Expand window width"
+src = "tiling"
+map = ["resize --width +2%"]
+
+[[bind]]
+id = "resize-height-shrink"
+chord = "SUPER + SHIFT + code:20"
+desc = "Shrink window height"
+src = "tiling"
+map = ["resize --height -2%"]
+
+[[bind]]
+id = "resize-height-grow"
+chord = "SUPER + SHIFT + code:21"
+desc = "Expand window height"
+src = "tiling"
+map = ["resize --height +2%"]
+
+[[bind]]
+id = "resize-width-shrink-little"
+chord = "SUPER + ALT + code:20"
+desc = "Shrink window width a little"
+src = "tiling"
+map = ["resize --width -1%"]
+
+[[bind]]
+id = "resize-width-grow-little"
+chord = "SUPER + ALT + code:21"
+desc = "Expand window width a little"
+src = "tiling"
+map = ["resize --width +1%"]
+
+[[bind]]
+id = "resize-height-shrink-little"
+chord = "SUPER + SHIFT + ALT + code:20"
+desc = "Shrink window height a little"
+src = "tiling"
+map = ["resize --height -1%"]
+
+[[bind]]
+id = "resize-height-grow-little"
+chord = "SUPER + SHIFT + ALT + code:21"
+desc = "Expand window height a little"
+src = "tiling"
+map = ["resize --height +1%"]
+
+[[bind]]
+id = "resize-width-shrink-lots"
+chord = "SUPER + CTRL + code:20"
+desc = "Shrink window width a lot"
+src = "tiling"
+map = ["resize --width -5%"]
+
+[[bind]]
+id = "resize-width-grow-lots"
+chord = "SUPER + CTRL + code:21"
+desc = "Expand window width a lot"
+src = "tiling"
+map = ["resize --width +5%"]
+
+[[bind]]
+id = "resize-height-shrink-lots"
+chord = "SUPER + CTRL + SHIFT + code:20"
+desc = "Shrink window height a lot"
+src = "tiling"
+map = ["resize --height -5%"]
+
+[[bind]]
+id = "resize-height-grow-lots"
+chord = "SUPER + CTRL + SHIFT + code:21"
+desc = "Expand window height a lot"
+src = "tiling"
+map = ["resize --height +5%"]
+
+[[bind]]
+id = "workspace-scroll"
+chords = ["SUPER + mouse_down", "SUPER + mouse_up"]
+desc = "Scroll active workspace forward/backward"
+src = "tiling"
+status = "gap"
+note = "GlazeWM has no mouse bindings (upstream PR #1407 open, repo dormant)."
+
+[[bind]]
+id = "window-drag"
+chords = ["SUPER + mouse:272", "SUPER + mouse:273"]
+desc = "Move / resize window by dragging"
+src = "tiling"
+status = "gap"
+note = "GlazeWM has no mouse bindings (upstream PR #1407 open, repo dormant)."
+
+[[bind]]
+id = "group-toggle"
+chord = "SUPER + G"
+desc = "Toggle window grouping"
+src = "tiling"
+status = "gap"
+note = "Grouping needs WM support GlazeWM lacks; komorebi power option is the genuine route. Binds a notification stub when winsome ships one. See docs/research/gap-features.md."
+
+[[bind]]
+id = "group-family"
+chords = [
+  "SUPER + ALT + G",
+  "SUPER + ALT + LEFT", "SUPER + ALT + RIGHT", "SUPER + ALT + UP", "SUPER + ALT + DOWN",
+  "SUPER + ALT + TAB", "SUPER + ALT + SHIFT + TAB",
+  "SUPER + CTRL + LEFT", "SUPER + CTRL + RIGHT",
+  "SUPER + ALT + mouse_down", "SUPER + ALT + mouse_up",
+]
+desc = "Move in/out of group, cycle group windows"
+src = "tiling"
+status = "gap"
+note = "Entire grouping family — same gap as group-toggle."
+
+[[bind]]
+id = "group-window-select"
+chord = "SUPER + ALT + {digit}"
+desc = "Switch to group window {n}"
+src = "tiling"
+status = "gap"
+note = "Grouping family."
+foreach = { from = 1, to = 5 }
+
+[[bind]]
+id = "monitor-scaling"
+chords = ["SUPER + SLASH", "SUPER + ALT + SLASH"]
+desc = "Monitor scaling up/down"
+src = "tiling"
+status = "omitted"
+note = "Windows display scaling is a Settings-level operation; no live analog."
+
+# ============================================================ applications.lua
+
+[[bind]]
+id = "app-terminal"
+chord = "SUPER + RETURN"
+desc = "Terminal"
+src = "applications"
+map = ["shell-exec {terminal}"]
+
+[[bind]]
+id = "app-browser"
+chord = "SUPER + SHIFT + RETURN"
+desc = "Browser"
+src = "applications"
+map = ["shell-exec {browser}"]
+
+[[bind]]
+id = "app-browser-alt"
+chord = "SUPER + SHIFT + B"
+desc = "Browser"
+src = "applications"
+map = ["shell-exec {browser}"]
+
+[[bind]]
+id = "app-browser-private"
+chord = "SUPER + SHIFT + ALT + B"
+desc = "Browser (private)"
+src = "applications"
+map = ["shell-exec {browser} --incognito"]
+
+[[bind]]
+id = "app-files"
+chord = "SUPER + SHIFT + F"
+desc = "File manager"
+src = "applications"
+map = ["shell-exec {files}"]
+
+[[bind]]
+id = "app-files-cwd"
+chord = "SUPER + ALT + SHIFT + F"
+desc = "File manager (cwd)"
+src = "applications"
+status = "omitted"
+note = "cwd detection needs terminal integration; plain file manager covers the muscle memory."
+
+[[bind]]
+id = "app-editor"
+chord = "SUPER + SHIFT + N"
+desc = "Editor"
+src = "applications"
+map = ["shell-exec {editor}"]
+
+[[bind]]
+id = "app-preinstalled-pack"
+chords = [
+  "SUPER + ALT + RETURN", "SUPER + CTRL + RETURN",
+  "SUPER + SHIFT + M", "SUPER + SHIFT + ALT + M",
+  "SUPER + SHIFT + D", "SUPER + SHIFT + G",
+  "SUPER + SHIFT + O", "SUPER + SHIFT + W", "SUPER + SHIFT + SLASH",
+]
+desc = "Preinstalled apps: tmux, herdr, music, docker, signal, obsidian, omawrite, passwords"
+src = "applications"
+status = "app"
+note = "apps.conf launch layer (M2); per-app availability differs on Windows."
+
+[[bind]]
+id = "app-webapp-pack"
+chords = [
+  "SUPER + SHIFT + A", "SUPER + SHIFT + ALT + A",
+  "SUPER + SHIFT + C", "SUPER + SHIFT + E", "SUPER + SHIFT + ALT + E",
+  "SUPER + SHIFT + Y", "SUPER + SHIFT + ALT + G", "SUPER + SHIFT + CTRL + G",
+  "SUPER + SHIFT + P", "SUPER + SHIFT + S", "SUPER + SHIFT + X", "SUPER + SHIFT + ALT + X",
+]
+desc = "Webapps: ChatGPT, Grok, calendar, email, YouTube, WhatsApp, Messages, Photos, Maps, X"
+src = "applications"
+status = "app"
+note = "webapp layer (M2): chrome --app=URL generation, the omarchy webapp trick."
+
+# ============================================================ clipboard.lua
+
+[[bind]]
+id = "clipboard-universal"
+chords = ["SUPER + C", "SUPER + V", "SUPER + X"]
+desc = "Universal copy / paste / cut"
+src = "clipboard"
+status = "native"
+note = "Ctrl+C/V/X is already universal on Windows. Synthesizing these from the mod key would reintroduce the kanata/GlazeWM two-hooks desync (spike's biggest finding)."
+
+[[bind]]
+id = "clipboard-manager"
+chord = "SUPER + CTRL + V"
+desc = "Clipboard manager"
+src = "clipboard"
+status = "native"
+note = "Win+V clipboard history."
+
+# ============================================================ utilities.lua
+
+[[bind]]
+id = "launcher"
+chord = "SUPER + SPACE"
+desc = "Omarchy menu / launcher"
+src = "utilities"
+status = "native"
+note = "Launcher's own activation hotkey: installer sets PT Run to Win+Space; caps-hold+Space arrives as rwin+space and matches (spike-verified)."
+
+[[bind]]
+id = "apps-menu"
+chord = "SUPER + ALT + SPACE"
+desc = "Apps menu"
+src = "utilities"
+status = "omitted"
+note = "PT Run is single-mode; omarchy-menu has no Windows analog (arc: CmdPal extension)."
+
+[[bind]]
+id = "emoji"
+chord = "SUPER + CTRL + E"
+desc = "Emojis"
+src = "utilities"
+status = "native"
+note = "Win+. emoji panel."
+
+[[bind]]
+id = "capture-menu"
+chord = "SUPER + CTRL + C"
+desc = "Capture menu"
+src = "utilities"
+status = "native"
+note = "Win+Shift+S snipping."
+
+[[bind]]
+id = "omarchy-menus"
+chords = ["SUPER + CTRL + O", "SUPER + CTRL + H", "SUPER + SHIFT + code:201"]
+desc = "Toggle / hardware / root menus"
+src = "utilities"
+status = "omitted"
+note = "omarchy-menu system; no analog (arc: menu via CmdPal extension or TUI)."
+
+[[bind]]
+id = "wm-cycle-focus"
+chord = "SUPER + ESCAPE"
+desc = "Cycle focus across tiling/floating/fullscreen layers"
+src = "utilities"
+map = ["wm-cycle-focus"]
+deviation = "omarchy binds SUPER+ESCAPE to its system menu (no Windows analog — slot free). Winsome uses it for the fullscreen focus-trap escape (spike finding: directional focus can't reach the fullscreen layer). Recorded in DESIGN.md."
+
+[[bind]]
+id = "keybindings-reference"
+chord = "SUPER + K"
+desc = "Keybindings"
+src = "utilities"
+status = "gap"
+note = "`winsome keys` (M4) renders the reference from this file; flips to shell-exec then."
+
+[[bind]]
+id = "keybindings-other"
+chords = ["SUPER + ALT + K", "SUPER + CTRL + K"]
+desc = "Tmux / Herdr keybindings"
+src = "utilities"
+status = "omitted"
+note = "No tmux/herdr layer in v1."
+
+[[bind]]
+id = "calculator"
+chord = "SUPER + CTRL + Q"
+desc = "Calculator"
+src = "utilities"
+map = ["shell-exec calc"]
+
+[[bind]]
+id = "bar-toggle"
+chord = "SUPER + SHIFT + SPACE"
+desc = "Toggle top bar"
+src = "utilities"
+status = "gap"
+note = "Zebar show/hide via winsome-helper (arc)."
+
+[[bind]]
+id = "background-next"
+chord = "SUPER + CTRL + SPACE"
+desc = "Background switcher"
+src = "utilities"
+status = "gap"
+note = "`winsome bg next` (M2); flips to shell-exec when the CLI verb ships."
+
+[[bind]]
+id = "theme-menu"
+chord = "SUPER + SHIFT + CTRL + SPACE"
+desc = "Theme menu"
+src = "utilities"
+status = "gap"
+note = "`winsome theme set/list` (M2); menu form is arc."
+
+[[bind]]
+id = "transparency-toggle"
+chord = "SUPER + BACKSPACE"
+desc = "Toggle window transparency"
+src = "utilities"
+status = "gap"
+note = "GlazeWM set-transparency has opacity/delta but no toggle state; small winsome verb candidate (query current, flip)."
+
+[[bind]]
+id = "gaps-toggle"
+chord = "SUPER + SHIFT + BACKSPACE"
+desc = "Toggle window gaps"
+src = "utilities"
+status = "omitted"
+note = "GlazeWM gaps are config-level; no runtime toggle command."
+
+[[bind]]
+id = "square-aspect-toggle"
+chord = "SUPER + CTRL + BACKSPACE"
+desc = "Toggle single-window square aspect"
+src = "utilities"
+status = "omitted"
+note = "omarchy script niche; no analog."
+
+[[bind]]
+id = "notifications"
+chords = [
+  "SUPER + comma", "SUPER + SHIFT + comma", "SUPER + CTRL + comma",
+  "SUPER + ALT + comma", "SUPER + SHIFT + ALT + comma",
+]
+desc = "Dismiss / silence / invoke / history of notifications"
+src = "utilities"
+status = "native"
+note = "Windows notification center (Win+N); toasts have no per-item chord API. Documented gap class — Windows notifications are unthemed and unscripted (DESIGN.md)."
+
+[[bind]]
+id = "idle-nightlight"
+chords = ["SUPER + CTRL + I", "SUPER + CTRL + N"]
+desc = "Toggle idle lock / nightlight"
+src = "utilities"
+status = "omitted"
+note = "Windows: power settings and Night light; winsome-helper light/dark flip is the adjacent v1 feature."
+
+[[bind]]
+id = "laptop-display"
+chords = ["SUPER + CTRL + Delete", "SUPER + CTRL + ALT + Delete", "switch:on:Lid Switch", "switch:off:Lid Switch"]
+desc = "Laptop display / lid handling"
+src = "utilities"
+status = "omitted"
+note = "Laptop-specific; target rig is a desktop. Win+P covers projection."
+
+[[bind]]
+id = "screenshot"
+chord = "PRINT"
+desc = "Screenshot"
+src = "utilities"
+status = "native"
+note = "PrtSc / Win+Shift+S."
+
+[[bind]]
+id = "screenrecording"
+chord = "ALT + PRINT"
+desc = "Screen recording"
+src = "utilities"
+status = "native"
+note = "Win+Alt+R (Game Bar)."
+
+[[bind]]
+id = "webcam-overlay"
+chords = ["SUPER + ALT + code:34", "SUPER + ALT + code:35"]
+desc = "Webcam overlay resize"
+src = "utilities"
+status = "omitted"
+note = "No webcam overlay in v1."
+
+[[bind]]
+id = "color-picker"
+chord = "SUPER + PRINT"
+desc = "Color picker"
+src = "utilities"
+status = "native"
+note = "PowerToys Color Picker (Win+Shift+C)."
+
+[[bind]]
+id = "ocr"
+chord = "SUPER + CTRL + PRINT"
+desc = "Extract text (OCR)"
+src = "utilities"
+status = "native"
+note = "PowerToys Text Extractor (Win+Shift+T) — part of the stay-stock cut list."
+
+[[bind]]
+id = "share-transcode"
+chords = ["SUPER + CTRL + S", "SUPER + CTRL + PERIOD"]
+desc = "Share menu / transcode"
+src = "utilities"
+status = "omitted"
+note = "No analog in v1."
+
+[[bind]]
+id = "reminders"
+chords = ["SUPER + CTRL + R", "SUPER + CTRL + ALT + R", "SUPER + SHIFT + CTRL + R"]
+desc = "Set / show / clear reminders"
+src = "utilities"
+status = "omitted"
+note = "No reminder system in v1."
+
+[[bind]]
+id = "info-toasts"
+chords = ["SUPER + CTRL + ALT + T", "SUPER + CTRL + ALT + B", "SUPER + CTRL + ALT + W"]
+desc = "Show time / battery / weather"
+src = "utilities"
+status = "omitted"
+note = "Zebar shows clock persistently; battery/weather widgets are Zebar-config territory."
+
+[[bind]]
+id = "agent"
+chord = "SUPER + SHIFT + CTRL + A"
+desc = "Agent"
+src = "utilities"
+status = "omitted"
+note = "omarchy-agent picker; no analog in v1."
+
+[[bind]]
+id = "shell-panels"
+chords = [
+  "SUPER + CTRL + A", "SUPER + CTRL + B", "SUPER + CTRL + D",
+  "SUPER + CTRL + ALT + D", "SUPER + CTRL + W", "SUPER + CTRL + P",
+]
+desc = "Audio / bluetooth / display / calendar / network / power panels"
+src = "utilities"
+status = "omitted"
+note = "omarchy-shell panels; Windows quick settings (Win+A) covers the class."
+
+[[bind]]
+id = "activity"
+chord = "SUPER + CTRL + T"
+desc = "Activity monitor"
+src = "utilities"
+map = ["shell-exec taskmgr"]
+
+[[bind]]
+id = "bar-panel-select"
+chord = "SUPER + CTRL + {digit}"
+desc = "Bar panel {n}"
+src = "utilities"
+status = "omitted"
+note = "omarchy-shell bar panels; no Zebar analog."
+foreach = { from = 1, to = 9 }
+
+[[bind]]
+id = "zoom"
+chords = ["SUPER + CTRL + Z", "SUPER + CTRL + ALT + Z"]
+desc = "Zoom in / reset zoom"
+src = "utilities"
+status = "native"
+note = "Magnifier (Win+plus / Win+Esc) — stay-stock cut list."
+
+[[bind]]
+id = "lock"
+chord = "SUPER + CTRL + L"
+desc = "Lock system"
+src = "utilities"
+status = "native"
+note = "Win+L is winlogon-level and fires regardless of extra modifiers."
+
+# ============================================================ media.lua
+
+[[bind]]
+id = "media-volume"
+chords = ["XF86AudioRaiseVolume", "XF86AudioLowerVolume", "XF86AudioMute", "XF86AudioMicMute", "ALT + XF86AudioRaiseVolume", "ALT + XF86AudioLowerVolume"]
+desc = "Volume / mute / mic mute"
+src = "media"
+status = "native"
+note = "Hardware keys handled by Windows."
+
+[[bind]]
+id = "media-brightness"
+chords = ["XF86MonBrightnessUp", "XF86MonBrightnessDown", "SHIFT + XF86MonBrightnessUp", "SHIFT + XF86MonBrightnessDown", "ALT + XF86MonBrightnessUp", "ALT + XF86MonBrightnessDown", "XF86KbdBrightnessUp", "XF86KbdBrightnessDown", "XF86KbdLightOnOff"]
+desc = "Display / keyboard brightness"
+src = "media"
+status = "native"
+note = "Hardware keys handled by Windows / OEM drivers."
+
+[[bind]]
+id = "media-transport"
+chords = ["XF86AudioNext", "ALT + XF86AudioPlay", "XF86AudioPause", "XF86AudioPlay", "XF86AudioPrev", "ALT + SHIFT + XF86AudioPlay", "XF86Eject"]
+desc = "Media transport"
+src = "media"
+status = "native"
+note = "Hardware keys handled by Windows."
+
+[[bind]]
+id = "touchpad"
+chords = ["XF86TouchpadToggle", "XF86TouchpadOn", "XF86TouchpadOff"]
+desc = "Touchpad toggles"
+src = "media"
+status = "native"
+note = "Hardware keys; desktop rig has none."
+
+[[bind]]
+id = "audio-output-switch"
+chord = "SHIFT + XF86AudioMute"
+desc = "Switch audio output"
+src = "media"
+status = "gap"
+note = "winsome-helper audio output switch is a v1 helper feature; chord assignment decided when the helper ships."
+
+[[bind]]
+id = "media-source-switch"
+chords = ["SHIFT + XF86AudioPause", "SHIFT + XF86AudioPlay"]
+desc = "Switch media source"
+src = "media"
+status = "omitted"
+note = "No analog."
+
+# ============================================================ voxtype.lua
+
+[[bind]]
+id = "dictation"
+chords = ["SUPER + CTRL + X", "F9"]
+desc = "Dictation (toggle / push-to-talk)"
+src = "voxtype"
+status = "native"
+note = "Win+H voice typing — stay-stock cut list."

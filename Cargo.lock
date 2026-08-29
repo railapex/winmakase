@@ -330,4 +330,13 @@ dependencies = [
  "serde_json",
  "toml",
  "windows-sys",
+ "winsome-keymap",
+]
+
+[[package]]
+name = "winsome-keymap"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "toml",
 ]

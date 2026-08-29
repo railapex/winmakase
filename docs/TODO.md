@@ -21,7 +21,7 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 
 ## M1 — Core stack
 
-- [ ] Full omarchy grammar → keymap mapping file (tiler-agnostic data) + GlazeWM YAML generator
+- [x] Full omarchy grammar → keymap mapping file + GlazeWM YAML generator: `keymap/omarchy.toml` (quattro, 226 chords — 73 mapped, rest explicit gap/native/app/omitted) + `crates/winsome-keymap` + `winsome keymap check|render`. Golden + pinned coverage counts as drift alarm. Deviations recorded in DESIGN.md (SUPER+ESCAPE = cycle-focus, Alt+Tab native, SUPER+TAB restored to next-workspace). NOT YET: rendered YAML live on the rig (spike config still hand-written) — adopt at supervisor/config-gen integration `[v]`
 - [ ] kanata config templates rendered from mode setting (`caps` | `apps`), game-foreground auto-suspend included
 - [x] caps→rwin is the DEFAULT (Sol review, source-verified in both codebases; live as v4.1): caps emits right Win, GlazeWM binds `rwin+X`, physical left Win fully native
 - [ ] **R5 fast-follow card**: tap-caps launcher via resident relay — winsome.exe holds warm WebSocket to GlazeWM IPC (persistent tokio server, no spawn) + TCP to kanata; requires small kanata patch adding a "notify TCP clients" action (scoped, upstreamable — its TCP server exists for exactly this). Single-digit ms. Blocked on supervisor landing; do NOT block M1 on it

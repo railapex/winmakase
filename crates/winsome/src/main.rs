@@ -65,6 +65,12 @@ enum Cmd {
         timeout: u64,
     },
 
+    /// Validate the keymap file or render its GlazeWM keybindings YAML.
+    Keymap {
+        #[command(subcommand)]
+        action: KeymapAction,
+    },
+
     /// Stand-in child process for supervisor tests. Not a user-facing verb.
     #[command(name = "_stub", hide = true)]
     Stub {
@@ -76,6 +82,25 @@ enum Cmd {
         code: i32,
         #[arg(long)]
         stderr: bool,
+    },
+}
+
+#[derive(Subcommand)]
+enum KeymapAction {
+    /// Check structural rules, chord conflicts, and print coverage.
+    Check {
+        /// Keymap file. Defaults to <home>/keymap/omarchy.toml.
+        #[arg(long, value_name = "FILE")]
+        keymap: Option<PathBuf>,
+    },
+    /// Render the GlazeWM `keybindings:` section from the mapped entries.
+    Render {
+        /// Keymap file. Defaults to <home>/keymap/omarchy.toml.
+        #[arg(long, value_name = "FILE")]
+        keymap: Option<PathBuf>,
+        /// Write to a file instead of stdout.
+        #[arg(long, value_name = "FILE")]
+        out: Option<PathBuf>,
     },
 }
 
@@ -154,6 +179,7 @@ fn main() -> ExitCode {
         Cmd::Status { json } => status(&paths, json),
         Cmd::Logs { component, lines } => logs(&paths, component, lines),
         Cmd::Down { timeout } => return down(&paths, timeout),
+        Cmd::Keymap { action } => keymap_cmd(&paths, action),
         Cmd::Stub { .. } => unreachable!("handled above"),
     };
 
@@ -226,6 +252,45 @@ fn logs(paths: &Paths, target: LogTarget, lines: usize) -> io::Result<()> {
             Ok(())
         }
         Err(e) => Err(e),
+    }
+}
+
+fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
+    let load = |explicit: Option<PathBuf>| -> io::Result<(PathBuf, winsome_keymap::KeymapFile)> {
+        let path = explicit.unwrap_or_else(|| paths.home().join("keymap").join("omarchy.toml"));
+        let text = std::fs::read_to_string(&path).map_err(|e| {
+            io::Error::new(e.kind(), format!("{}: {e}", path.display()))
+        })?;
+        let file = winsome_keymap::parse(&text)
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))?;
+        Ok((path, file))
+    };
+    let checked = |file: &winsome_keymap::KeymapFile| {
+        winsome_keymap::check(file).map_err(|errors| {
+            io::Error::new(io::ErrorKind::InvalidData, errors.join("\n"))
+        })
+    };
+
+    match action {
+        KeymapAction::Check { keymap } => {
+            let (path, file) = load(keymap)?;
+            let (_, coverage) = checked(&file)?;
+            println!("{}", path.display());
+            println!("{}", winsome_keymap::render_coverage(&file.meta, &coverage));
+            Ok(())
+        }
+        KeymapAction::Render { keymap, out } => {
+            let (_, file) = load(keymap)?;
+            let (expanded, _) = checked(&file)?;
+            let yaml = winsome_keymap::render_glazewm(&expanded);
+            match out {
+                Some(dest) => std::fs::write(dest, yaml),
+                None => {
+                    print!("{yaml}");
+                    Ok(())
+                }
+            }
+        }
     }
 }
 
