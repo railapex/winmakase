@@ -122,3 +122,13 @@ Local build of KhangHLe/glazewm main (@9e05bb6, default features) swapped into t
 3. **Cloak-leak incident (the night's real cost)**: the fork hides windows via the undocumented `IApplicationView::SetCloak` (HideMethod::Cloak + animation surrogates). On exit it left two pre-existing windows (muxel-live and a WT window) **shell-cloaked — invisible and unmanageable by stock**, with `DwmSetWindowAttribute(DWMWA_CLOAK)` access-denied as a repair path. Recovery needed a bespoke uncloak tool built from the fork's own wm-platform (`glazewm-khanghle/packages/wm/examples/uncloak.rs`, kept). The fork had also declined to manage those pre-existing cloaked windows at startup. Any future fork adoption requires an exit/panic decloak sweep; winsome's panic path would need one too.
 
 **Verdict: punted stays punted, but the ladder is real.** The build is trivially reproducible, runs under the supervisor, and the uiAccess constraint is gone — so 3.10.1 + surgical cherry-picks as a local default-features build is now a proven-viable route when a concrete need fires. KhangHLe main wholesale carries the animation latency and the cloak hygiene risk as-is.
+
+### Addendum, same night (~03:15): animations-off re-bench
+
+Chris asked whether the fork can actually be made fast. It can: animations are per-category config (`animations.window_move/resize/open/close/…`, each with `enabled`/`duration_ms`). Re-ran the bench on the fork with all six categories disabled (`config-khanghle-noanim.yaml`):
+
+- stock 3.10.1: 41-58ms typical (median 58)
+- fork, animations on: 163-225ms (median 213)
+- **fork, animations off: 20-35ms typical** (median 65 dragged by two outliers of the same flavor stock shows)
+
+**The batched-reposition work is real — roughly 2x faster than stock once the tweens stop sitting on it.** Revised picture: the fork offers snappier-than-stock relayout AND optional animations; the adoption blocker is now solely **cloak hygiene** — the exit leak reproduced on BOTH runs (animation-surrogate path and HideMethod::Cloak path; second run leaked four Chrome windows, recovered surgically — note that Settings/Notepad-tab/Input-Experience windows are *legitimately* cloaked UWP/tab machinery and must not be swept blindly). Any fork rung ships with an exit/panic decloak sweep, or an upstream-able fix in the fork's shutdown path. `uncloak.exe` and the noanim config are kept beside the clone.
