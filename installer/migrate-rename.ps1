@@ -69,12 +69,21 @@ foreach ($f in Get-ChildItem $zroot -Filter *.json -File -ErrorAction SilentlyCo
     if ($t.Contains('winsome')) { $t.Replace('winsome', 'winmakase') | Set-Content $f.FullName -NoNewline }
 }
 
-# 6. Deploy new-named binaries + register new tasks (elevated pass also
+# 6. Live GlazeWM config (spike artifact, not in repo): reflow/summon
+#    bindings call ~/.winsome/bin/winsome.exe and panic runs WinsomePanic.
+#    The stack is down here, and the restart re-reads the config.
+$glazeCfg = Join-Path $env:USERPROFILE '.glzr\glazewm\config.yaml'
+if (Test-Path $glazeCfg) {
+    (Get-Content $glazeCfg -Raw).Replace('winsome', 'winmakase').Replace('Winsome', 'Winmakase') |
+        Set-Content $glazeCfg -NoNewline
+}
+
+# 7. Deploy new-named binaries + register new tasks (elevated pass also
 #    refreshes the kanata/panic pair with $repoRoot paths).
 $reg = Join-Path $repoRoot 'installer\register-tasks.ps1'
 if ($BuildDir) { & $reg -RepoRoot $repoRoot -BuildDir $BuildDir } else { & $reg -RepoRoot $repoRoot }
 
-# 7. Back up.
+# 8. Back up.
 schtasks /run /tn 'WinmakaseSupervisor' | Out-Null
 Write-Output 'migrated - stack restarting under Winmakase names; check: winmakase status'
 Write-Output 'remaining button: gh repo rename winmakase -R railapex/winsome'
