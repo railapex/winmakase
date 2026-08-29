@@ -26,11 +26,14 @@ use std::time::{Duration, Instant, SystemTime};
 
 use crate::backoff::Backoff;
 use crate::component::Component;
-use crate::config::Config;
+use crate::config::{ComponentConfig, Config};
 use crate::control;
+use crate::display_watch::DisplayWatch;
 use crate::health::{ComponentHealth, Health, Status, SupervisorHealth};
 use crate::paths::Paths;
-use crate::process::{self, RunningChild};
+use crate::proc_alive;
+use crate::process::{self, ExternalProcess, Poll, ProcessHandle, RunningChild};
+use crate::procs;
 use crate::rolling_log::RollingLog;
 use crate::signal;
 use crate::timefmt;
@@ -57,10 +60,24 @@ const _: () = assert!(
 
 /// How many consecutive unreadable polls before a child is written off.
 ///
-/// `try_wait` failing means we have lost track of the process; retrying is
+/// A failing status poll means we have lost track of the process; retrying is
 /// right for a blip, but repeating forever would freeze that component's
 /// tracking and log four lines a second while the desktop sits broken.
 const WAIT_ERROR_LIMIT: u32 = 12;
+
+/// How long a kill gets to confirm the process is actually gone. Covers the
+/// `schtasks /end` round trip for a task-hosted component; TerminateProcess
+/// confirms in milliseconds.
+const KILL_PATIENCE_MS: u64 = 1_500;
+
+/// After `schtasks /run`, how long the task's process gets to appear before
+/// the start counts as failed.
+const TASK_START_DISCOVER_MS: u64 = 5_000;
+
+/// A display change is acted on only after the events go quiet for this long —
+/// a resolution change and a replug arrive as bursts, and bouncing the pair
+/// once per event would multiply the disruption the bounce exists to fix.
+const DISPLAY_DEBOUNCE_MS: u64 = 2_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StopReason {
@@ -141,6 +158,9 @@ pub struct Supervisor {
     /// Consecutive polls where a child's status could not be read.
     wait_errors: BTreeMap<Component, u32>,
     pending: Option<PendingRestart>,
+    display_watch: Option<DisplayWatch>,
+    /// Set when a display change arrives; acted on once the burst goes quiet.
+    display_event_at: Option<Instant>,
     started_at: SystemTime,
     shutting_down: bool,
 }
@@ -190,6 +210,8 @@ impl Supervisor {
             health,
             wait_errors: BTreeMap::new(),
             pending: None,
+            display_watch: None,
+            display_event_at: None,
             started_at: SystemTime::now(),
             shutting_down: false,
         };
@@ -201,6 +223,25 @@ impl Supervisor {
 
     /// Start the set and watch it until told to stop. Returns why it stopped.
     pub fn run(&mut self) -> io::Result<StopReason> {
+        // Two supervisors adopting the same pair would both claim it and race
+        // every restart. The logon task plus a curious `winsome supervise` in
+        // a console is exactly how that happens.
+        if let Ok(h) = Health::read(&self.paths.health()) {
+            let pid = h.supervisor.pid;
+            if h.supervisor.running
+                && pid != std::process::id()
+                && proc_alive::is_alive(pid) == Some(true)
+            {
+                return Err(io::Error::new(
+                    io::ErrorKind::AlreadyExists,
+                    format!(
+                        "a supervisor (pid {pid}) is already running against {}",
+                        self.paths.home().display()
+                    ),
+                ));
+            }
+        }
+
         self.log(format!(
             "supervisor starting (pid {}) home={}",
             std::process::id(),
@@ -208,6 +249,12 @@ impl Supervisor {
         ));
         // Anything left in the control file predates us and is not our order.
         control::clear(&self.paths)?;
+
+        match DisplayWatch::start() {
+            Ok(w) => self.display_watch = Some(w),
+            // Not fatal: the watch is #1233 insurance, the stack is the job.
+            Err(e) => self.log(format!("display watch could not start: {e}")),
+        }
 
         self.start_set(Component::START_ORDER.to_vec(), false);
 
@@ -222,9 +269,7 @@ impl Supervisor {
                 Err(e) => self.log(format!("control file ignored: {e}")),
             }
 
-            self.reap_exits();
-            self.fire_due_restart();
-            self.reset_recovered_backoffs();
+            self.tick();
             thread::sleep(poll);
         };
 
@@ -232,28 +277,111 @@ impl Supervisor {
         Ok(reason)
     }
 
+    /// One pass of the poll loop. Public (hidden) so tests can step the
+    /// supervisor deterministically instead of racing a thread.
+    #[doc(hidden)]
+    pub fn tick(&mut self) {
+        self.reap_exits();
+        self.check_display_changes();
+        self.fire_due_restart();
+        self.reset_recovered_backoffs();
+    }
+
+    /// Start the component set without entering the poll loop, for stepping
+    /// tests that drive `tick()` by hand.
+    #[doc(hidden)]
+    pub fn start_now(&mut self) {
+        self.start_set(Component::START_ORDER.to_vec(), false);
+    }
+
+    /// Pretend a display change happened and its debounce window has passed.
+    /// The window plumbing has its own tests; this exercises the response.
+    #[doc(hidden)]
+    pub fn simulate_display_change(&mut self) {
+        self.display_event_at =
+            Some(Instant::now() - Duration::from_millis(DISPLAY_DEBOUNCE_MS + 1));
+    }
+
+    /// Stop everything the way `run()` would on a control-file request.
+    #[doc(hidden)]
+    pub fn shutdown_now(&mut self) {
+        self.shutdown(StopReason::ControlFile);
+    }
+
+    /// Hand the supervisor an already-running component, for tests that need a
+    /// handle whose failures can be scripted.
+    #[doc(hidden)]
+    pub fn inject_running(&mut self, c: Component, handle: Box<dyn ProcessHandle>) {
+        let pid = handle.pid();
+        self.children.insert(
+            c,
+            RunningChild {
+                handle,
+                started: Instant::now(),
+            },
+        );
+        self.health_mut(c).set(Status::Running, Some(pid));
+        self.write_health();
+    }
+
     // -- child lifecycle ---------------------------------------------------
 
-    /// Returns false if the component could not be spawned.
+    /// Returns false if the component could not be brought up.
     fn start_component(&mut self, c: Component, is_restart: bool) -> bool {
         let ccfg = c.config(&self.cfg).clone();
+
+        // Adopt-first: the exact executable already running means the desktop
+        // is already using it — starting a second instance or bouncing the
+        // first is precisely what taking over a live machine must not do.
+        if ccfg.adopt {
+            match procs::pids_for_image_path(&ccfg.command) {
+                Ok(pids) if !pids.is_empty() => {
+                    if pids.len() > 1 {
+                        self.log(format!(
+                            "{c}: {} instances of {} are running ({pids:?}) — adopting the first",
+                            pids.len(),
+                            ccfg.command
+                        ));
+                    }
+                    match ExternalProcess::open(pids[0], ccfg.task.clone()) {
+                        Ok(ext) => {
+                            return self.record_started(
+                                c,
+                                RunningChild {
+                                    handle: Box::new(ext),
+                                    started: Instant::now(),
+                                },
+                                is_restart,
+                                "adopted — already running; output not captured until its next restart",
+                            );
+                        }
+                        Err(e) => {
+                            // Running but unwatchable: starting another anyway
+                            // would put two instances on the desktop. Fail the
+                            // start and let the backoff retry.
+                            self.health_mut(c).set(Status::Stopped, None);
+                            self.log(format!(
+                                "{c} FAILED to start: pid {} is running but cannot be watched ({e})",
+                                pids[0]
+                            ));
+                            return false;
+                        }
+                    }
+                }
+                Ok(_) => {}
+                Err(e) => self.log(format!(
+                    "{c}: could not scan for a running instance ({e}) — starting fresh"
+                )),
+            }
+        }
+
+        if let Some(task) = ccfg.task.clone() {
+            return self.start_via_task(c, &ccfg, &task, is_restart);
+        }
+
         let log = Arc::clone(&self.child_logs[&c]);
         match process::spawn(&ccfg, log) {
-            Ok(running) => {
-                let pid = running.pid;
-                self.children.insert(c, running);
-                let h = self.health_mut(c);
-                h.set(Status::Running, Some(pid));
-                if is_restart {
-                    h.restarts = h.restarts.saturating_add(1);
-                }
-                let n = self.health[&c].restarts;
-                self.log(format!(
-                    "{c} started (pid {pid}, restarts {n}): {}",
-                    process::render(&ccfg)
-                ));
-                true
-            }
+            Ok(running) => self.record_started(c, running, is_restart, &process::render(&ccfg)),
             Err(e) => {
                 self.health_mut(c).set(Status::Stopped, None);
                 self.log(format!(
@@ -265,14 +393,111 @@ impl Supervisor {
         }
     }
 
+    /// `schtasks /run`, then find the process the task started. The scheduler
+    /// hands back no pid, so the exact image path is the identity.
+    fn start_via_task(
+        &mut self,
+        c: Component,
+        ccfg: &ComponentConfig,
+        task: &str,
+        is_restart: bool,
+    ) -> bool {
+        let run = process::run_to_completion(
+            "schtasks",
+            &["/run".to_string(), "/tn".to_string(), task.to_string()],
+            Duration::from_millis(TASK_START_DISCOVER_MS),
+        );
+        match run {
+            Ok(Some(s)) if s.success() => {}
+            Ok(Some(s)) => {
+                self.health_mut(c).set(Status::Stopped, None);
+                self.log(format!(
+                    "{c} FAILED to start: schtasks /run /tn {task} exited with {s}"
+                ));
+                return false;
+            }
+            Ok(None) => {
+                self.health_mut(c).set(Status::Stopped, None);
+                self.log(format!(
+                    "{c} FAILED to start: schtasks /run /tn {task} did not finish in time"
+                ));
+                return false;
+            }
+            Err(e) => {
+                self.health_mut(c).set(Status::Stopped, None);
+                self.log(format!(
+                    "{c} FAILED to start: schtasks /run /tn {task} failed to run: {e}"
+                ));
+                return false;
+            }
+        }
+
+        let deadline = Instant::now() + Duration::from_millis(TASK_START_DISCOVER_MS);
+        loop {
+            match procs::pids_for_image_path(&ccfg.command) {
+                Ok(pids) if !pids.is_empty() => match ExternalProcess::open(pids[0], Some(task.to_string())) {
+                    Ok(ext) => {
+                        return self.record_started(
+                            c,
+                            RunningChild {
+                                handle: Box::new(ext),
+                                started: Instant::now(),
+                            },
+                            is_restart,
+                            &format!("via task {task}"),
+                        );
+                    }
+                    Err(e) => {
+                        self.health_mut(c).set(Status::Stopped, None);
+                        self.log(format!(
+                            "{c} FAILED to start: task {task} produced pid {} but it cannot be watched ({e})",
+                            pids[0]
+                        ));
+                        return false;
+                    }
+                },
+                Ok(_) => {}
+                Err(e) => self.log(format!("{c}: process scan failed ({e}) — retrying")),
+            }
+            if Instant::now() >= deadline {
+                self.health_mut(c).set(Status::Stopped, None);
+                self.log(format!(
+                    "{c} FAILED to start: task {task} ran but no {} process appeared within {}ms",
+                    ccfg.command, TASK_START_DISCOVER_MS
+                ));
+                return false;
+            }
+            thread::sleep(Duration::from_millis(100));
+        }
+    }
+
+    fn record_started(
+        &mut self,
+        c: Component,
+        running: RunningChild,
+        is_restart: bool,
+        how: &str,
+    ) -> bool {
+        let pid = running.pid();
+        self.children.insert(c, running);
+        let h = self.health_mut(c);
+        h.set(Status::Running, Some(pid));
+        if is_restart {
+            h.restarts = h.restarts.saturating_add(1);
+        }
+        let n = self.health[&c].restarts;
+        self.log(format!("{c} started (pid {pid}, restarts {n}): {how}"));
+        true
+    }
+
     fn reap_exits(&mut self) {
         let mut exited: Vec<(Component, Option<i32>, Duration)> = Vec::new();
         let mut unreadable: Vec<(Component, String, Duration)> = Vec::new();
         let mut healthy: Vec<Component> = Vec::new();
         for (c, running) in self.children.iter_mut() {
-            match running.child.try_wait() {
-                Ok(Some(status)) => exited.push((*c, status.code(), running.started.elapsed())),
-                Ok(None) => healthy.push(*c),
+            match running.handle.poll() {
+                Ok(Poll::Exited(code)) => exited.push((*c, code, running.started.elapsed())),
+                Ok(Poll::Running) => healthy.push(*c),
                 Err(e) => unreadable.push((*c, e.to_string(), running.started.elapsed())),
             }
         }
@@ -466,14 +691,13 @@ impl Supervisor {
         }
     }
 
-    /// Kill, reap, log, record. The tail of both stop paths.
-    fn kill_and_record(&mut self, c: Component, mut running: RunningChild) {
-        let pid = running.pid;
-        match running.child.kill() {
-            Ok(()) => {
-                let _ = running.child.wait();
-                self.log(format!("{c} stopped (pid {pid})"));
-            }
+    /// Kill, confirm, log, record. The tail of both stop paths. `patience` is
+    /// how long the kill gets to confirm death — bounded by the caller when a
+    /// shutdown budget is running.
+    fn kill_and_record(&mut self, c: Component, mut running: RunningChild, patience: Duration) {
+        let pid = running.pid();
+        match running.handle.kill(patience) {
+            Ok(()) => self.log(format!("{c} stopped (pid {pid})")),
             Err(e) => self.log(format!("{c} (pid {pid}) could not be killed: {e}")),
         }
         self.health_mut(c).set(Status::Stopped, None);
@@ -486,7 +710,7 @@ impl Supervisor {
             self.health_mut(c).set(Status::Stopped, None);
             return;
         };
-        self.kill_and_record(c, running);
+        self.kill_and_record(c, running, Duration::from_millis(KILL_PATIENCE_MS));
     }
 
     /// Ask nicely, then insist. GlazeWM's `wm-exit` lets its watcher restore
@@ -500,7 +724,7 @@ impl Supervisor {
             self.health_mut(c).set(Status::Stopped, None);
             return;
         };
-        let pid = running.pid;
+        let pid = running.pid();
         let ccfg = c.config(&self.cfg).clone();
         let configured = Duration::from_millis(self.cfg.supervisor.stop_timeout_ms);
         let left = || deadline.map(|d| d.saturating_duration_since(Instant::now()));
@@ -517,7 +741,7 @@ impl Supervisor {
                 Err(e) => self.log(format!("{c} stop command failed to run: {e}")),
             }
             let settle = bounded(configured, left());
-            if process::wait_for_exit(&mut running.child, settle).is_some() {
+            if process::wait_for_exit(running.handle.as_mut(), settle).is_some() {
                 self.log(format!("{c} exited cleanly (pid {pid})"));
                 self.health_mut(c).set(Status::Stopped, None);
                 return;
@@ -528,7 +752,11 @@ impl Supervisor {
             ));
         }
 
-        self.kill_and_record(c, running);
+        // Floor the confirmation window: a fully spent budget must still leave
+        // the kill enough time to observe the death it just caused.
+        let patience =
+            bounded(Duration::from_millis(KILL_PATIENCE_MS), left()).max(Duration::from_millis(100));
+        self.kill_and_record(c, running, patience);
     }
 
     fn shutdown(&mut self, reason: StopReason) {
@@ -551,6 +779,46 @@ impl Supervisor {
         self.write_health();
         self.log("shutdown complete");
         signal::mark_finished();
+    }
+
+    /// Display changes: always logged; the pair bounce only when configured
+    /// (glazewm#1233 insurance) and only after the event burst goes quiet.
+    fn check_display_changes(&mut self) {
+        let events = match &self.display_watch {
+            Some(w) => w.take_changes(),
+            None => 0,
+        };
+        if events > 0 {
+            self.log(format!(
+                "display change detected ({events} event{})",
+                if events == 1 { "" } else { "s" }
+            ));
+            self.display_event_at = Some(Instant::now());
+        }
+
+        let Some(at) = self.display_event_at else {
+            return;
+        };
+        if at.elapsed() < Duration::from_millis(DISPLAY_DEBOUNCE_MS) {
+            return;
+        }
+        self.display_event_at = None;
+
+        if !self.cfg.supervisor.bounce_on_display_change {
+            return;
+        }
+        if self.pending.is_some() {
+            self.log("display change: a restart is already scheduled — leaving it be");
+            return;
+        }
+        self.log("display change: bouncing the pair (bounce_on_display_change is on)");
+        // Down in the safe order — kanata first, so it never outlives GlazeWM
+        // synthesizing Win presses nothing consumes — then GlazeWM politely, so
+        // its watcher restores window positions.
+        self.force_stop(Component::Kanata);
+        self.stop_gracefully(Component::Glazewm, None);
+        self.schedule(Component::START_ORDER.to_vec(), Duration::ZERO, true);
+        self.write_health();
     }
 
     // -- state -------------------------------------------------------------
@@ -612,11 +880,12 @@ mod tests {
             "if the configured timeout already fit, the budget would be pointless"
         );
 
-        // Worst case: every wait times out in full. Four is more waits than the
-        // shutdown ever performs (stop command + settle, for each component).
+        // Worst case: every wait times out in full. Six is more waits than the
+        // shutdown ever performs (stop command + settle + kill confirmation,
+        // for each component).
         let mut remaining = budget;
         let mut spent = Duration::ZERO;
-        for _ in 0..4 {
+        for _ in 0..6 {
             let w = bounded(configured, Some(remaining));
             spent += w;
             remaining -= w;

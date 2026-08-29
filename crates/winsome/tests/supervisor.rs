@@ -7,16 +7,17 @@
 
 use std::fs;
 use std::io;
+use std::path::{Path, PathBuf};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use winsome::component::Component;
 use winsome::config::{ComponentConfig, Config, SupervisorConfig};
 use winsome::control;
-use winsome::health::{Health, Status};
+use winsome::health::{Health, Status, SupervisorHealth};
 use winsome::paths::Paths;
 use winsome::supervisor::{StopReason, Supervisor};
-use winsome::testutil::TempDir;
+use winsome::testutil::{FakeHandle, FakePoll, TempDir};
 
 const PATIENCE: Duration = Duration::from_secs(15);
 
@@ -37,6 +38,7 @@ fn fast_supervisor() -> SupervisorConfig {
         stop_timeout_ms: 300,
         log_max_bytes: 1 << 20,
         log_keep_files: 3,
+        bounce_on_display_change: false,
     }
 }
 
@@ -449,6 +451,262 @@ fn shutdown_stops_components_in_reverse_order_via_their_stop_command() {
     // Nothing left running.
     assert_eq!(winsome::proc_alive::is_alive(kanata), Some(false));
     assert_eq!(winsome::proc_alive::is_alive(glazewm), Some(false));
+}
+
+// -- adoption and external processes ----------------------------------------
+
+/// A copy of our binary under a unique name and directory, so full-image-path
+/// matching can never collide with the other tests' stub children.
+fn copy_of_our_binary(dir: &Path, name: &str) -> PathBuf {
+    let dest = dir.join(name);
+    fs::copy(env!("CARGO_BIN_EXE_winsome"), &dest).expect("copy test binary");
+    dest
+}
+
+#[test]
+fn a_running_component_is_adopted_not_started_again() {
+    let bin_dir = TempDir::new("adopt-bin");
+    let adoptee = copy_of_our_binary(bin_dir.path(), "winsome-adoptee.exe");
+    let adoptee_str = adoptee.to_str().unwrap().to_string();
+
+    // Running before the supervisor exists — the live-desktop takeover case.
+    let mut external = std::process::Command::new(&adoptee)
+        .args(["_stub", "--tick-ms", "100"])
+        .spawn()
+        .expect("start the adoptee");
+    let external_pid = external.id();
+
+    let mut cfg = pair_config();
+    cfg.kanata =
+        ComponentConfig::new(adoptee_str, &["_stub", "--tick-ms", "100"]).adopting();
+    let mut h = Harness::start("adopt", cfg);
+
+    let (kanata, _) = wait_for("both components to start", || h.both_running());
+    assert_eq!(
+        kanata, external_pid,
+        "the running process must be adopted, not replaced"
+    );
+    let log = h.supervisor_log();
+    assert!(
+        log.contains(&format!("kanata started (pid {external_pid}, restarts 0): adopted")),
+        "the log must say it adopted:\n{log}"
+    );
+
+    // Shutdown owns the adopted process like any other: it dies with the set.
+    h.stop();
+    assert_eq!(winsome::proc_alive::is_alive(external_pid), Some(false));
+    let _ = external.wait();
+}
+
+#[test]
+fn a_second_supervisor_against_the_same_home_is_refused() {
+    let dir = TempDir::new("singleton");
+    let paths = Paths::at(dir.path());
+
+    // A stand-in for the first supervisor: any process that stays alive.
+    let mut other = std::process::Command::new("cmd")
+        .args(["/c", "ping -n 30 127.0.0.1 > nul"])
+        .stdout(std::process::Stdio::null())
+        .spawn()
+        .unwrap();
+
+    let mut sup = Supervisor::new(pair_config(), paths.clone()).unwrap();
+    Health::new(
+        SupervisorHealth {
+            running: true,
+            pid: other.id(),
+            since: winsome::timefmt::now_iso8601(),
+        },
+        std::collections::BTreeMap::new(),
+    )
+    .write(&paths.health())
+    .unwrap();
+
+    let err = sup.run().expect_err("a live supervisor must be refused");
+    assert_eq!(err.kind(), io::ErrorKind::AlreadyExists);
+    assert!(err.to_string().contains(&other.id().to_string()));
+
+    kill(other.id());
+    let _ = other.wait();
+}
+
+// -- scripted-handle escalation (unreachable with real children) -------------
+
+#[test]
+fn an_unreadable_component_is_written_off_after_the_retry_budget() {
+    let dir = TempDir::new("unreadable");
+    let mut cfg = pair_config();
+    // Backoff so long the scheduled recovery can never fire mid-test.
+    cfg.supervisor.backoff_initial_ms = 600_000;
+    cfg.supervisor.backoff_max_ms = 600_000;
+    let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+
+    sup.inject_running(
+        Component::Kanata,
+        Box::new(FakeHandle::new(4242, vec![FakePoll::Error("scripted blip")])),
+    );
+    for _ in 0..12 {
+        sup.tick();
+    }
+
+    let log = fs::read_to_string(Paths::at(dir.path()).log_for("supervisor")).unwrap();
+    assert!(
+        log.contains("kanata: cannot read child status: scripted blip — retrying"),
+        "{log}"
+    );
+    assert_eq!(
+        log.matches("cannot read child status").count(),
+        1,
+        "the retry must not spam the log:\n{log}"
+    );
+    assert!(
+        log.contains("status unreadable for 12 polls"),
+        "after the budget it gives up:\n{log}"
+    );
+    assert!(log.contains("kanata stopped (pid 4242)"));
+    assert_eq!(
+        sup.snapshot().components["kanata"].status,
+        Status::Restarting,
+        "a written-off component goes through normal recovery"
+    );
+}
+
+#[test]
+fn glazewm_becoming_unreadable_still_triggers_the_linked_pair_rule() {
+    let dir = TempDir::new("unreadable-pair");
+    let mut cfg = pair_config();
+    cfg.supervisor.backoff_initial_ms = 600_000;
+    cfg.supervisor.backoff_max_ms = 600_000;
+    let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+
+    sup.inject_running(
+        Component::Kanata,
+        Box::new(FakeHandle::new(111, vec![FakePoll::Running])),
+    );
+    sup.inject_running(
+        Component::Glazewm,
+        Box::new(FakeHandle::new(222, vec![FakePoll::Error("scripted fault")])),
+    );
+    for _ in 0..12 {
+        sup.tick();
+    }
+
+    let log = fs::read_to_string(Paths::at(dir.path()).log_for("supervisor")).unwrap();
+    assert!(
+        log.contains("linked-pair: glazewm is down"),
+        "an unwatchable tiler is a down tiler:\n{log}"
+    );
+    assert!(log.contains("kanata stopped (pid 111)"), "{log}");
+    let snap = sup.snapshot();
+    assert_eq!(snap.components["kanata"].status, Status::Restarting);
+    assert_eq!(snap.components["glazewm"].status, Status::Restarting);
+}
+
+// -- display changes ---------------------------------------------------------
+
+#[test]
+fn a_display_change_bounces_the_pair_only_when_configured() {
+    let dir = TempDir::new("display-bounce");
+    let mut cfg = pair_config();
+    cfg.supervisor.bounce_on_display_change = true;
+    let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+    sup.start_now();
+
+    let before = sup.snapshot();
+    let old_kanata = before.components["kanata"].pid.unwrap();
+    sup.simulate_display_change();
+    sup.tick(); // bounce: both down, restart scheduled at zero delay
+    sup.tick(); // the scheduled restart fires
+
+    let log = fs::read_to_string(Paths::at(dir.path()).log_for("supervisor")).unwrap();
+    assert!(log.contains("display change: bouncing the pair"), "{log}");
+    let after = sup.snapshot();
+    let new_kanata = after.components["kanata"].pid.unwrap();
+    assert_ne!(new_kanata, old_kanata, "the pair must be new processes");
+    assert_eq!(after.components["kanata"].restarts, 1);
+    assert_eq!(after.components["glazewm"].restarts, 1);
+
+    sup.shutdown_now();
+}
+
+#[test]
+fn a_display_change_without_the_flag_changes_nothing() {
+    let dir = TempDir::new("display-quiet");
+    let mut sup = Supervisor::new(pair_config(), Paths::at(dir.path())).unwrap();
+    sup.start_now();
+
+    let before = sup.snapshot().components["kanata"].pid;
+    sup.simulate_display_change();
+    sup.tick();
+    sup.tick();
+
+    let log = fs::read_to_string(Paths::at(dir.path()).log_for("supervisor")).unwrap();
+    assert!(!log.contains("bouncing the pair"), "{log}");
+    assert_eq!(sup.snapshot().components["kanata"].pid, before);
+
+    sup.shutdown_now();
+}
+
+// -- task-hosted components ---------------------------------------------------
+
+/// The real `schtasks` round trip: /run starts it, discovery finds it, a crash
+/// restarts it through the task, /end stops it.
+///
+/// Ignored by default: a scheduled task launching a console binary flashes a
+/// console window on an interactive desktop. Run explicitly
+/// (`cargo test -- --ignored`) or in CI, where no one is watching the desktop.
+#[test]
+#[ignore = "registers and runs a real scheduled task; flashes a console window"]
+fn a_task_hosted_component_is_started_watched_and_stopped_through_its_task() {
+    let bin_dir = TempDir::new("task-bin");
+    let hosted = copy_of_our_binary(bin_dir.path(), "winsome-task-stub.exe");
+    let task = format!("WinsomeTest-{}", std::process::id());
+
+    let create = std::process::Command::new("schtasks")
+        .args([
+            "/create",
+            "/tn",
+            &task,
+            "/tr",
+            &format!("\"{}\" _stub --tick-ms 100", hosted.display()),
+            "/sc",
+            "once",
+            "/st",
+            "00:00",
+            "/f",
+        ])
+        .status()
+        .expect("run schtasks /create");
+    assert!(create.success(), "could not register the test task");
+
+    let result = std::panic::catch_unwind(|| {
+        let mut cfg = pair_config();
+        cfg.kanata = ComponentConfig::new(hosted.to_str().unwrap(), &[])
+            .hosted_by_task(&task);
+        let mut h = Harness::start("task-hosted", cfg);
+
+        let (kanata1, _) = wait_for("both components to start", || h.both_running());
+        assert!(
+            h.supervisor_log().contains(&format!("via task {task}")),
+            "kanata must have come up through the task"
+        );
+
+        // A crash must be recovered through the task as well.
+        kill(kanata1);
+        let kanata2 = wait_for("kanata to come back", || {
+            h.running_pid(Component::Kanata).filter(|p| *p != kanata1)
+        });
+
+        h.stop();
+        assert_eq!(winsome::proc_alive::is_alive(kanata2), Some(false));
+    });
+
+    let _ = std::process::Command::new("schtasks")
+        .args(["/delete", "/tn", &task, "/f"])
+        .status();
+    if let Err(p) = result {
+        std::panic::resume_unwind(p);
+    }
 }
 
 #[test]

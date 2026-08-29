@@ -32,18 +32,35 @@ stop_timeout_ms = 5000
 # (the live .log plus its archives — 3 means kanata.log, kanata.log.1, kanata.log.2).
 log_max_bytes = 5242880
 log_keep_files = 3
+# Restart the pair when the monitor set changes (glazewm#1233 insurance).
+# Off by default: the spike could not reproduce #1233 on 3.10.1, and a bounce
+# on every routine teleprompter toggle would be self-inflicted churn. Display
+# changes are logged either way.
+bounce_on_display_change = false
 
 # kanata and GlazeWM are a LINKED PAIR: both healthy or both down.
 # GlazeWM dying with kanata alive leaves raw Win+letter chords firing OS
 # shortcuts at a desktop nobody can tile. Start order is kanata first.
+#
+# `adopt = true`: a component whose exact executable is already running is
+# adopted (watched by pid) instead of started again — the supervisor can take
+# over a live desktop without bouncing it. An adopted process keeps whatever
+# stdio it had; its output is only captured from its next restart on.
 
 [kanata]
-command = "D:/dev/winsome/spike/tools/kanata/kanata_windows_gui_winIOv2_x64.exe"
-args = ["--cfg", "D:/dev/winsome/spike/caps.kbd"]
+# kanata must run ELEVATED (UIPI: a user-level hook goes deaf while an admin
+# window has focus), and this supervisor runs user-level, so kanata is hosted
+# by the pre-registered elevated `WinsomeKanata` scheduled task: `task` makes
+# start = `schtasks /run` and stop = `schtasks /end` (both UAC-free for the
+# task's owner). `command` is not executed — it names the exact image to watch.
+command = "D:/dev/winsome/spike/tools/kanata/kanata_windows_gui_winIOv2_cmd_allowed_x64.exe"
+task = "WinsomeKanata"
+adopt = true
 
 [glazewm]
 command = "C:/Program Files/glzr.io/GlazeWM/glazewm.exe"
 args = []
+adopt = true
 # Asking GlazeWM to exit through its own CLI lets glazewm-watcher restore every
 # window to where it was. Killing the process skips that and leaves the desktop
 # in tiled positions.
@@ -61,9 +78,22 @@ pub struct Config {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ComponentConfig {
+    /// The component's executable. Spawned directly — unless `task` is set, in
+    /// which case this is only the exact image path to find and watch.
     pub command: String,
     #[serde(default)]
     pub args: Vec<String>,
+    /// Host through this pre-registered scheduled task instead of spawning:
+    /// start = `schtasks /run`, stop = `schtasks /end`. The elevation door for
+    /// kanata — a user-level supervisor can neither spawn nor kill an elevated
+    /// process, but a task's owner can run and end its task UAC-free.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub task: Option<String>,
+    /// Adopt a running instance of `command` (matched on the full image path)
+    /// instead of starting a second one. What lets the supervisor slide under
+    /// a live desktop without bouncing it.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub adopt: bool,
     /// Optional graceful-stop command. Absent means "kill the process".
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub stop_command: Option<String>,
@@ -76,6 +106,8 @@ impl ComponentConfig {
         Self {
             command: command.into(),
             args: args.iter().map(|s| (*s).to_string()).collect(),
+            task: None,
+            adopt: false,
             stop_command: None,
             stop_args: Vec::new(),
         }
@@ -84,6 +116,16 @@ impl ComponentConfig {
     pub fn with_stop(mut self, command: impl Into<String>, args: &[&str]) -> Self {
         self.stop_command = Some(command.into());
         self.stop_args = args.iter().map(|s| (*s).to_string()).collect();
+        self
+    }
+
+    pub fn hosted_by_task(mut self, task: impl Into<String>) -> Self {
+        self.task = Some(task.into());
+        self
+    }
+
+    pub fn adopting(mut self) -> Self {
+        self.adopt = true;
         self
     }
 }
@@ -104,6 +146,11 @@ pub struct SupervisorConfig {
     pub log_max_bytes: u64,
     #[serde(default = "d_log_keep_files")]
     pub log_keep_files: usize,
+    /// Restart the pair on a monitor-set change (glazewm#1233 insurance).
+    /// Default off: the spike could not reproduce the bug, and the occasional
+    /// display here is toggled routinely. Events are logged regardless.
+    #[serde(default)]
+    pub bounce_on_display_change: bool,
 }
 
 fn d_poll_ms() -> u64 {
@@ -184,6 +231,7 @@ impl Default for SupervisorConfig {
             stop_timeout_ms: d_stop_timeout_ms(),
             log_max_bytes: d_log_max_bytes(),
             log_keep_files: d_log_keep_files(),
+            bounce_on_display_change: false,
         }
     }
 }
@@ -193,10 +241,13 @@ impl Default for Config {
         Self {
             supervisor: SupervisorConfig::default(),
             kanata: ComponentConfig::new(
-                "D:/dev/winsome/spike/tools/kanata/kanata_windows_gui_winIOv2_x64.exe",
-                &["--cfg", "D:/dev/winsome/spike/caps.kbd"],
-            ),
+                "D:/dev/winsome/spike/tools/kanata/kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
+                &[],
+            )
+            .hosted_by_task("WinsomeKanata")
+            .adopting(),
             glazewm: ComponentConfig::new("C:/Program Files/glzr.io/GlazeWM/glazewm.exe", &[])
+                .adopting()
                 .with_stop(
                     "C:/Program Files/glzr.io/GlazeWM/cli/glazewm.exe",
                     &["command", "wm-exit"],
@@ -255,6 +306,8 @@ mod tests {
         .unwrap();
         assert_eq!(cfg.supervisor, SupervisorConfig::default());
         assert!(cfg.kanata.args.is_empty());
+        assert_eq!(cfg.kanata.task, None);
+        assert!(!cfg.kanata.adopt, "adoption is opt-in");
         assert_eq!(cfg.glazewm.stop_command, None);
     }
 
@@ -301,6 +354,7 @@ mod tests {
             stop_timeout_ms: 0,
             log_max_bytes: 0,
             log_keep_files: 0,
+            bounce_on_display_change: false,
         };
         let notes = s.sanitize();
         // Not merely non-zero: fast enough to be a spin is still broken.
