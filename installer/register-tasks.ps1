@@ -33,9 +33,16 @@ $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 # Limited principal on purpose: GlazeWM and everything it ever spawns must stay
 # user-level. kanata gets its elevation from its own task, not from us.
 $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME
-Register-ScheduledTask -TaskName 'WinmakaseSupervisor' -Action $action -Trigger $trigger `
-    -Principal $principal -Settings $settings -Force | Out-Null
-Write-Output "WinmakaseSupervisor registered (at logon, user-level, windowless; binaries in $bin)"
+try {
+    Register-ScheduledTask -TaskName 'WinmakaseSupervisor' -Action $action -Trigger $trigger `
+        -Principal $principal -Settings $settings -Force -ErrorAction Stop | Out-Null
+    Write-Output "WinmakaseSupervisor registered (at logon, user-level, windowless; binaries in $bin)"
+} catch {
+    # A task registered from an elevated shell refuses a non-elevated -Force
+    # re-register. Its definition never changes between rebuilds, so a fresh
+    # binary deploy is the whole job - say that instead of failing.
+    Write-Output "WinmakaseSupervisor left as-is (non-elevated re-register denied; definition unchanged); binaries redeployed to $bin"
+}
 
 $elevated = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
     ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
