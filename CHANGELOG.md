@@ -5,6 +5,7 @@ All notable changes to Winsome. Format follows [Keep a Changelog](https://keepac
 ## [Unreleased]
 
 ### Added
+- Scratchpad spike pair on the live rig: `rwin+alt+s` banishes the focused window to a hidden `scratch` workspace (pure GlazeWM `move --workspace`); `rwin+s` runs `spike/summon.ps1` (shell-exec → IPC), pulling the newest scratch window back floated + centered + focused. Stand-in for the `winsome scratchpad` verb.
 - Supervisor hosts the live stack: adopt-first takeover (running components are watched, not restarted), kanata driven through the elevated `WinsomeKanata` scheduled task (`schtasks /run`//`/end` — the elevation door for a user-level supervisor), GlazeWM launched via `ShellExecuteExW` when its UIAccess manifest refuses plain `CreateProcess` (error 740), singleton guard against a second supervisor, and a display-change watch (always logged; `bounce_on_display_change` opt-in — glazewm#1233 insurance).
 - `winsomed.exe`: windowless (GUI-subsystem) supervisor for the `WinsomeSupervisor` logon task; session end arrives as `WM_ENDSESSION` and runs the same graceful shutdown as Ctrl+C.
 - `installer/register-tasks.ps1` / `unregister-tasks.ps1`: deploy binaries to `~/.winsome/bin` and register the logon task without elevation; an elevated run also refreshes the `WinsomeKanata`/`WinsomePanic` tasks.
