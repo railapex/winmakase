@@ -32,7 +32,8 @@ pub struct TempDir {
 impl TempDir {
     pub fn new(label: &str) -> Self {
         let n = COUNTER.fetch_add(1, Ordering::Relaxed);
-        let path = env::temp_dir().join(format!("winsome-theme-test-{}-{n}-{label}", process::id()));
+        let path =
+            env::temp_dir().join(format!("winsome-theme-test-{}-{n}-{label}", process::id()));
         let _ = fs::remove_dir_all(&path);
         fs::create_dir_all(&path).expect("create temp dir");
         Self { path }

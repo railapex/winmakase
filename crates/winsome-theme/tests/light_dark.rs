@@ -3,7 +3,7 @@ mod common;
 
 use std::fs;
 
-use winsome_theme::palette::{load_palette, Mode, Palette};
+use winsome_theme::palette::{Mode, Palette, load_palette};
 use winsome_theme::{is_light_theme, relative_luminance};
 
 // --- relativeLuminance ---
@@ -56,11 +56,17 @@ fn falls_back_to_background_luminance_when_palette_mode_is_absent() {
     let dir = common::TempDir::new("fallback-luminance");
     let p = load_palette(&common::fixtures_dir().join("tokyo-night")).unwrap();
 
-    let modeless: Palette = Palette { mode: None, ..p.clone() };
+    let modeless: Palette = Palette {
+        mode: None,
+        ..p.clone()
+    };
     assert!(!is_light_theme(dir.path(), &modeless).unwrap());
 
-    let light_background: Palette =
-        Palette { mode: None, background: "#ffffff".to_string(), ..p.clone() };
+    let light_background: Palette = Palette {
+        mode: None,
+        background: "#ffffff".to_string(),
+        ..p.clone()
+    };
     assert!(is_light_theme(dir.path(), &light_background).unwrap());
 }
 
@@ -68,7 +74,10 @@ fn falls_back_to_background_luminance_when_palette_mode_is_absent() {
 fn a_light_mode_marker_file_wins_over_luminance_when_mode_is_absent() {
     let dir = common::TempDir::new("marker-wins");
     let p = load_palette(&common::fixtures_dir().join("tokyo-night")).unwrap(); // dark background
-    let modeless: Palette = Palette { mode: None, ..p.clone() };
+    let modeless: Palette = Palette {
+        mode: None,
+        ..p.clone()
+    };
     fs::write(dir.path().join("light.mode"), "").unwrap();
     assert!(dir.path().join("light.mode").exists());
     assert!(is_light_theme(dir.path(), &modeless).unwrap());
@@ -80,8 +89,11 @@ fn errors_when_mode_is_absent_no_marker_file_and_background_is_invalid_hex() {
     // so an invalid background hex propagates out as a loud failure, not a silent "dark".
     let dir = common::TempDir::new("invalid-background");
     let p = load_palette(&common::fixtures_dir().join("tokyo-night")).unwrap();
-    let bad_background: Palette =
-        Palette { mode: None, background: "not-a-color".to_string(), ..p.clone() };
+    let bad_background: Palette = Palette {
+        mode: None,
+        background: "not-a-color".to_string(),
+        ..p.clone()
+    };
     let err = is_light_theme(dir.path(), &bad_background).unwrap_err();
     assert!(err.to_string().contains("not a 6-digit hex color"), "{err}");
 }

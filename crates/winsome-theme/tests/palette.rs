@@ -3,8 +3,8 @@ mod common;
 
 use std::fs;
 
-use winsome_theme::palette::{load_palette, parse_palette, Mode, Palette};
 use winsome_theme::ThemeError;
+use winsome_theme::palette::{Mode, Palette, load_palette, parse_palette};
 
 fn assert_all_hex_lowercase(p: &Palette) {
     let fields: [(&str, &str); 25] = [
@@ -38,8 +38,13 @@ fn assert_all_hex_lowercase(p: &Palette) {
         let bytes = value.as_bytes();
         let ok = bytes.len() == 7
             && bytes[0] == b'#'
-            && bytes[1..].iter().all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase());
-        assert!(ok, "field {name} = {value:?} is not a lowercase 6-digit hex color");
+            && bytes[1..]
+                .iter()
+                .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase());
+        assert!(
+            ok,
+            "field {name} = {value:?} is not a lowercase 6-digit hex color"
+        );
     }
 }
 
@@ -111,7 +116,10 @@ fn throws_on_a_3_digit_hex_shorthand() {
 
 #[test]
 fn throws_on_unparseable_toml() {
-    let msg = err_string(parse_palette("this = [is not, valid toml", "garbled colors.toml"));
+    let msg = err_string(parse_palette(
+        "this = [is not, valid toml",
+        "garbled colors.toml",
+    ));
     assert!(msg.contains("garbled colors.toml"), "{msg}");
     assert!(msg.contains("could not parse TOML"), "{msg}");
 }
@@ -127,7 +135,10 @@ fn throws_on_an_empty_file() {
 fn throws_on_a_missing_invalid_mode_value() {
     let bad_mode = tokyo_night_text().replace("mode = \"dark\"", "mode = \"midnight\"");
     let msg = err_string(parse_palette(&bad_mode, "broken-theme colors.toml"));
-    assert!(msg.contains("mode\" must be \"dark\" or \"light\""), "{msg}");
+    assert!(
+        msg.contains("mode\" must be \"dark\" or \"light\""),
+        "{msg}"
+    );
 }
 
 // --- loadPalette — fail-loud cases ---

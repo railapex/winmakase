@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/winsome", "crates/winsome-keymap"]
+members = ["crates/winsome", "crates/winsome-keymap", "crates/winsome-theme"]
 
 [workspace.package]
 version = "0.1.0"

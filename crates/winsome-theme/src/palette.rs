@@ -94,7 +94,12 @@ fn describe(value: Option<&TomlValue>) -> String {
 macro_rules! hex_field {
     ($table:expr, $toml_key:literal, $source_label:expr) => {{
         match $table.get($toml_key) {
-            None => return Err(fail($source_label, &format!("missing key \"{}\"", $toml_key))),
+            None => {
+                return Err(fail(
+                    $source_label,
+                    &format!("missing key \"{}\"", $toml_key),
+                ));
+            }
             Some(TomlValue::String(s)) if is_hex6(s) => s.to_lowercase(),
             other => {
                 return Err(fail(
@@ -104,7 +109,7 @@ macro_rules! hex_field {
                         $toml_key,
                         describe(other)
                     ),
-                ))
+                ));
             }
         }
     }};
@@ -114,14 +119,10 @@ macro_rules! hex_field {
 /// Pure — does no file I/O. Errors on any missing key, unparseable TOML, or non-hex value;
 /// never returns a partial or defaulted palette.
 pub fn parse_palette(toml_text: &str, source_label: &str) -> Result<Palette, ThemeError> {
-    let value: TomlValue = toml_text
-        .parse()
+    // toml::from_str::<Table> parses a *document*; `str::parse::<Value>` was
+    // redefined in toml 0.9 to parse a single value and rejects documents.
+    let table: toml::Table = toml::from_str(toml_text)
         .map_err(|e: toml::de::Error| fail(source_label, &format!("could not parse TOML: {e}")))?;
-
-    let table = match value {
-        TomlValue::Table(t) => t,
-        _ => return Err(fail(source_label, "expected a flat TOML table, got something else")),
-    };
 
     let mode = match table.get("mode") {
         Some(TomlValue::String(s)) if s == "dark" => Mode::Dark,
@@ -129,8 +130,11 @@ pub fn parse_palette(toml_text: &str, source_label: &str) -> Result<Palette, The
         other => {
             return Err(fail(
                 source_label,
-                &format!("field \"mode\" must be \"dark\" or \"light\", got {}", describe(other)),
-            ))
+                &format!(
+                    "field \"mode\" must be \"dark\" or \"light\", got {}",
+                    describe(other)
+                ),
+            ));
         }
     };
 
@@ -173,7 +177,11 @@ pub fn load_palette(theme_dir: &Path) -> Result<Palette, ThemeError> {
             &format!("no colors.toml found (expected {})", colors_path.display()),
         ));
     }
-    let text = std::fs::read_to_string(&colors_path)
-        .map_err(|e| fail(&colors_path.display().to_string(), &format!("could not read file: {e}")))?;
+    let text = std::fs::read_to_string(&colors_path).map_err(|e| {
+        fail(
+            &colors_path.display().to_string(),
+            &format!("could not read file: {e}"),
+        )
+    })?;
     parse_palette(&text, &colors_path.display().to_string())
 }

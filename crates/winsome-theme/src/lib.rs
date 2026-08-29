@@ -9,4 +9,4 @@ pub mod render;
 
 pub use error::ThemeError;
 pub use light_dark::{is_light_theme, relative_luminance};
-pub use palette::{load_palette, parse_palette, Mode, Palette};
+pub use palette::{Mode, Palette, load_palette, parse_palette};

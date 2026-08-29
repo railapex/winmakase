@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::error::ThemeError;
-use crate::palette::{is_hex6, Mode, Palette};
+use crate::palette::{Mode, Palette, is_hex6};
 
 /// WCAG relative luminance of a #rrggbb color, in [0, 1].
 /// https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
@@ -14,7 +14,8 @@ pub fn relative_luminance(hex: &str) -> Result<f64, ThemeError> {
 
     let channel = |offset: usize| -> f64 {
         let component = &hex[offset..offset + 2];
-        let raw = u8::from_str_radix(component, 16).expect("validated hex digit pair") as f64 / 255.0;
+        let raw =
+            u8::from_str_radix(component, 16).expect("validated hex digit pair") as f64 / 255.0;
         if raw <= 0.03928 {
             raw / 12.92
         } else {
