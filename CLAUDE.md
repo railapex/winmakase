@@ -5,7 +5,8 @@ Omakase omarchy-style desktop environment for Windows 11. Public repo (railapex/
 ## Session start
 
 1. Read `docs/TODO.md` — the work-state source of truth. Active milestone = first with unchecked items; pick up at the first unchecked item.
-2. Read `docs/DESIGN.md` for any area you're touching. **If code disagrees with DESIGN.md, one of them is wrong — fix whichever it is, in the same PR/commit.**
+2. Read `spike/NOTES.md` § LIVE MACHINE STATE — what is actually running on Chris's rig right now (dogfood config, scheduled tasks, known landmines). Machine state is NOT derivable from the repo.
+3. Read `docs/DESIGN.md` for any area you're touching. **If code disagrees with DESIGN.md, one of them is wrong — fix whichever it is, in the same PR/commit.**
 3. Check items in TODO.md **in the same commit as the work**. `[v]` items need verification on the real rig before checking.
 
 ## Hard rules

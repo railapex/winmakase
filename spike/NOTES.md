@@ -1,5 +1,14 @@
 # M0 Spike Notes — 2026-08-28
 
+## LIVE MACHINE STATE (handoff — read first in any new session)
+
+As of 2026-08-28 ~17:15 MST, Chris's rig is dogfooding **v4.1**:
+- kanata (cmd_allowed gui build, ELEVATED via `WinsomeKanata` scheduled task) running `spike/caps.kbd`: caps→rmet (right Win), scrlk→CapsLock hatch. GlazeWM binds `rwin+X` (physical left Win fully native). Launcher = Caps+Space (PT Run activation = Win+Space). Chrome profile chords: rwin+shift+enter = Default/ownerrez, rwin+shift+alt+enter = "Profile 1"/programcsharp.
+- GlazeWM 3.10.1 user-level, config at `~/.glzr/glazewm/config.yaml` (NOT in repo — spike artifact): workspaces 1-6, borders on, hide_title_bar OFF, cursor follows window focus, fullscreen=maximized, taskbar auto-hidden (session-scoped).
+- Scheduled tasks (elevated, UAC-free to trigger): `WinsomeKanata` (start kanata), `WinsomePanic` (kill stack + restore taskbar; bound rwin+shift+q, Start-menu "Winsome Panic" shortcut). Bring-up: `spike/winsome-up.ps1`. None of this survives reboot except the tasks — after reboot run winsome-up.
+- **LANDMINE: PowerToys KBM is ENABLED with its old Caps→Alt+Space remap** — shadowed only because kanata's hook currently wins the install-order race. A reboot can flip it (symptom: caps opens launcher instead of chording). Proper fix owed: remove KBM's caps remap (KEEP its ScrLk→Caps as the kanata-dead backup hatch), or M3 bootstrap disables the module. The supervisor (built, not yet hosting the live stack) is the real successor to the task/script pile.
+- The `winsome` binary (supervisor) is BUILT and tested but NOT yet running the live stack — adoption is next session's first move.
+
 Machine: Chris's triple-monitor desktop, Windows 11 Pro, PowerToys 0.100.2, winget 1.29, no scoop.
 
 ## Pinned versions
