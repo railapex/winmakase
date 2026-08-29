@@ -66,6 +66,14 @@ enum Cmd {
         timeout: u64,
     },
 
+    /// Ask a running supervisor to re-read config.toml, applying what it can
+    /// live and bouncing only the components whose configuration changed.
+    Reload {
+        /// How long to wait for the supervisor to act.
+        #[arg(long, default_value_t = 30, value_name = "SECONDS")]
+        timeout: u64,
+    },
+
     /// Validate the keymap file or render its GlazeWM keybindings YAML.
     Keymap {
         #[command(subcommand)]
@@ -231,6 +239,7 @@ fn main() -> ExitCode {
         Cmd::Status { json } => status(&paths, json),
         Cmd::Logs { component, lines } => logs(&paths, component, lines),
         Cmd::Down { timeout } => return down(&paths, timeout),
+        Cmd::Reload { timeout } => return reload(&paths, timeout),
         Cmd::Keymap { action } => keymap_cmd(&paths, action),
         Cmd::Kanata { action } => kanata_cmd(&paths, action),
         Cmd::Reflow { dry_run } => reflow_cmd(&paths, dry_run),
@@ -266,9 +275,50 @@ fn supervise(paths: &Paths, config: Option<PathBuf>) -> io::Result<()> {
         config_path.display(),
         paths.logs_dir().display()
     );
-    let reason = Supervisor::new(cfg, paths.clone())?.run()?;
+    let mut sup = Supervisor::new(cfg, paths.clone())?;
+    sup.set_config_path(config_path);
+    let reason = sup.run()?;
     println!("winmakase: stopped ({reason:?})");
     Ok(())
+}
+
+fn reload(paths: &Paths, timeout_secs: u64) -> ExitCode {
+    let deadline = Instant::now() + Duration::from_secs(timeout_secs);
+    let token = match control::request_reload(paths) {
+        Ok(t) => t,
+        Err(e) => return fail(e),
+    };
+    match control::wait_for_ack(paths, Duration::from_secs(timeout_secs)) {
+        Ok(true) => loop {
+            // The ack means the request was heard; the result file (under our
+            // token) is the reload actually being done.
+            if let Ok(text) = std::fs::read_to_string(paths.reload_result())
+                && text.lines().next() == Some(token.as_str())
+            {
+                let report: Vec<&str> = text.lines().skip(1).collect();
+                for line in &report {
+                    println!("winmakase: {line}");
+                }
+                return if report.iter().any(|l| l.starts_with("REJECTED")) {
+                    ExitCode::FAILURE
+                } else {
+                    ExitCode::SUCCESS
+                };
+            }
+            if Instant::now() >= deadline {
+                eprintln!("winmakase: reload was heard but no result arrived in time");
+                return ExitCode::FAILURE;
+            }
+            thread::sleep(Duration::from_millis(50));
+        },
+        Ok(false) => {
+            eprintln!(
+                "winmakase: no supervisor picked the reload up within {timeout_secs}s — is the stack running?"
+            );
+            ExitCode::FAILURE
+        }
+        Err(e) => fail(e),
+    }
 }
 
 fn status(paths: &Paths, json: bool) -> io::Result<()> {

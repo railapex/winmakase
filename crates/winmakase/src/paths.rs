@@ -59,6 +59,12 @@ impl Paths {
         self.state_dir().join("control")
     }
 
+    /// Where the supervisor writes a reload's outcome (first line: the
+    /// request token, so a stale result cannot be mistaken for this one).
+    pub fn reload_result(&self) -> PathBuf {
+        self.state_dir().join("reload-result")
+    }
+
     pub fn log_for(&self, name: &str) -> PathBuf {
         self.logs_dir().join(format!("{name}.log"))
     }

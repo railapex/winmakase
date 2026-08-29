@@ -1,9 +1,11 @@
-//! The `winmakase down` channel.
+//! The `winmakase down` / `winmakase reload` channel.
 //!
 //! **Mechanism: a polled control file** at `~/.winmakase/state/control`. `down`
-//! writes `stop <timestamp>`; the supervisor notices within one poll tick,
-//! deletes the file (which is the acknowledgement `down` waits on), and shuts
-//! down gracefully.
+//! writes `stop <timestamp>`; `reload` writes `reload <token>`. The supervisor
+//! notices within one poll tick, deletes the file (which is the
+//! acknowledgement the requester waits on), and acts. A reload additionally
+//! writes its outcome to `state/reload-result`, first line the token, so the
+//! CLI can tell this reload's report from a stale one.
 //!
 //! A named pipe would be lower latency and no more correct. The file wins on
 //! the properties that matter here: it survives the supervisor not being up
@@ -24,6 +26,14 @@ use crate::paths::Paths;
 use crate::timefmt;
 
 const STOP: &str = "stop";
+const RELOAD: &str = "reload";
+
+/// What a control file asked for.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Request {
+    Stop,
+    Reload { token: String },
+}
 
 /// Ask a running supervisor to stop.
 pub fn request_stop(paths: &Paths) -> io::Result<()> {
@@ -32,6 +42,20 @@ pub fn request_stop(paths: &Paths) -> io::Result<()> {
         paths.control(),
         format!("{STOP} {}\n", timefmt::now_iso8601()),
     )
+}
+
+/// Ask a running supervisor to re-read its config. Returns the token the
+/// supervisor will echo as the first line of the reload result.
+pub fn request_reload(paths: &Paths) -> io::Result<String> {
+    // The counter matters: two reloads inside one second from one process
+    // (a script, a test) must not share a token, or the second read of the
+    // result file matches the first reload's report.
+    static SEQ: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    let n = SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let token = format!("{}#{}-{n}", timefmt::now_iso8601(), std::process::id());
+    fs::create_dir_all(paths.state_dir())?;
+    fs::write(paths.control(), format!("{RELOAD} {token}\n"))?;
+    Ok(token)
 }
 
 /// Drop any request left over from a previous run. Called at supervisor
@@ -45,26 +69,37 @@ pub fn clear(paths: &Paths) -> io::Result<()> {
     }
 }
 
-/// True if a stop is pending. Consumes the request — removing the file is how
-/// `down` learns the supervisor heard it.
-pub fn take_stop_request(paths: &Paths) -> io::Result<bool> {
+/// The pending request, if any. Consumes it — removing the file is how the
+/// requester learns the supervisor heard it.
+pub fn take_request(paths: &Paths) -> io::Result<Option<Request>> {
     let path = paths.control();
     let text = match fs::read_to_string(&path) {
         Ok(t) => t,
-        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(false),
+        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(e) => return Err(e),
     };
-    let verb = text.split_whitespace().next().unwrap_or_default();
-    if verb == STOP {
-        clear(paths)?;
-        return Ok(true);
+    let mut fields = text.split_whitespace();
+    let verb = fields.next().unwrap_or_default();
+    match verb {
+        STOP => {
+            clear(paths)?;
+            Ok(Some(Request::Stop))
+        }
+        RELOAD => {
+            let token = fields.next().unwrap_or_default().to_string();
+            clear(paths)?;
+            Ok(Some(Request::Reload { token }))
+        }
+        _ => {
+            // Unknown verb: drop it rather than re-reading it every tick,
+            // but say so.
+            clear(paths)?;
+            Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("unknown control request {verb:?} (expected {STOP:?} or {RELOAD:?})"),
+            ))
+        }
     }
-    // Unknown verb: drop it rather than re-reading it every tick, but say so.
-    clear(paths)?;
-    Err(io::Error::new(
-        io::ErrorKind::InvalidData,
-        format!("unknown control request {verb:?} (expected {STOP:?})"),
-    ))
 }
 
 pub fn is_pending(paths: &Paths) -> bool {
@@ -98,12 +133,27 @@ mod tests {
     fn a_request_is_written_seen_once_and_consumed() {
         let dir = TempDir::new("control");
         let paths = Paths::at(dir.path());
-        assert!(!take_stop_request(&paths).unwrap());
+        assert_eq!(take_request(&paths).unwrap(), None);
         request_stop(&paths).unwrap();
         assert!(is_pending(&paths));
-        assert!(take_stop_request(&paths).unwrap());
+        assert_eq!(take_request(&paths).unwrap(), Some(Request::Stop));
         assert!(!is_pending(&paths));
-        assert!(!take_stop_request(&paths).unwrap());
+        assert_eq!(take_request(&paths).unwrap(), None);
+    }
+
+    #[test]
+    fn a_reload_request_carries_its_token_back() {
+        let dir = TempDir::new("control-reload");
+        let paths = Paths::at(dir.path());
+        let token = request_reload(&paths).unwrap();
+        assert!(!token.is_empty());
+        assert_eq!(
+            take_request(&paths).unwrap(),
+            Some(Request::Reload {
+                token: token.clone()
+            })
+        );
+        assert!(!is_pending(&paths));
     }
 
     #[test]
@@ -112,7 +162,7 @@ mod tests {
         let paths = Paths::at(dir.path());
         request_stop(&paths).unwrap();
         clear(&paths).unwrap();
-        assert!(!take_stop_request(&paths).unwrap());
+        assert_eq!(take_request(&paths).unwrap(), None);
     }
 
     #[test]
@@ -121,7 +171,7 @@ mod tests {
         let paths = Paths::at(dir.path());
         fs::create_dir_all(paths.state_dir()).unwrap();
         fs::write(paths.control(), "explode\n").unwrap();
-        assert!(take_stop_request(&paths).is_err());
+        assert!(take_request(&paths).is_err());
         assert!(!is_pending(&paths));
     }
 

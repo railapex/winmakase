@@ -159,6 +159,9 @@ struct PendingRestart {
 
 pub struct Supervisor {
     cfg: Config,
+    /// Where `reload` re-reads the config from. `paths.config()` unless
+    /// `supervise --config` pointed elsewhere.
+    config_path: std::path::PathBuf,
     paths: Paths,
     /// The components this supervisor actually runs: `START_ORDER` filtered to
     /// what the config declares (the bar is optional).
@@ -226,6 +229,7 @@ impl Supervisor {
 
         let supervisor = Self {
             cfg,
+            config_path: paths.config(),
             paths,
             active,
             log,
@@ -247,6 +251,11 @@ impl Supervisor {
             supervisor.log(format!("config: {note}"));
         }
         Ok(supervisor)
+    }
+
+    /// Point `reload` at a non-default config file (`supervise --config`).
+    pub fn set_config_path(&mut self, path: std::path::PathBuf) {
+        self.config_path = path;
     }
 
     /// Start the set and watch it until told to stop. Returns why it stopped.
@@ -295,19 +304,20 @@ impl Supervisor {
 
         self.start_set(self.active.clone(), false);
 
-        let poll = Duration::from_millis(self.cfg.supervisor.poll_ms.max(1));
         let reason = loop {
             if signal::shutdown_requested() {
                 break StopReason::ConsoleSignal;
             }
-            match control::take_stop_request(&self.paths) {
-                Ok(true) => break StopReason::ControlFile,
-                Ok(false) => {}
+            match control::take_request(&self.paths) {
+                Ok(Some(control::Request::Stop)) => break StopReason::ControlFile,
+                Ok(Some(control::Request::Reload { token })) => self.reload(&token),
+                Ok(None) => {}
                 Err(e) => self.log(format!("control file ignored: {e}")),
             }
 
             self.tick();
-            thread::sleep(poll);
+            // Read fresh each pass so a reloaded poll_ms takes effect.
+            thread::sleep(Duration::from_millis(self.cfg.supervisor.poll_ms.max(1)));
         };
 
         self.shutdown(reason);
@@ -368,6 +378,209 @@ impl Supervisor {
                 self.force_stop(Component::Zebar);
                 self.plan_recovery(Component::Zebar);
             }
+        }
+    }
+
+    // -- reload ------------------------------------------------------------
+
+    /// `winmakase reload`: re-read the config, apply what applies live, bounce
+    /// only what changed. The A/B-swap lesson: a one-line component-path edit
+    /// must not cost a full `winmakase down` plus a task re-run.
+    ///
+    /// A parse failure rejects the reload and keeps the running config — a
+    /// supervisor holding a desktop together never trades a working config
+    /// for a broken file. The outcome, either way, is written to
+    /// `state/reload-result` under the request's token.
+    fn reload(&mut self, token: &str) {
+        self.log(format!(
+            "reload requested ({token}) — re-reading {}",
+            self.config_path.display()
+        ));
+        let mut report: Vec<String> = Vec::new();
+
+        let parsed = std::fs::read_to_string(&self.config_path)
+            .map_err(|e| e.to_string())
+            .and_then(|t| Config::parse(&t).map_err(|e| e.to_string()));
+        let mut new_cfg = match parsed {
+            Ok(c) => c,
+            Err(e) => {
+                report.push(format!("REJECTED: {e} — keeping the running config"));
+                self.finish_reload(token, report);
+                return;
+            }
+        };
+        for note in new_cfg.supervisor.sanitize() {
+            report.push(format!("config: {note}"));
+        }
+
+        // Diffs against the running config, and any crash-restart already
+        // pending — taken now so the single pending slot cannot lose it.
+        let pair_changed = self.cfg.kanata != new_cfg.kanata || self.cfg.glazewm != new_cfg.glazewm;
+        let bar_was = self.cfg.zebar.clone();
+        let bar_now = new_cfg.zebar.clone();
+        let pending_order: Vec<Component> =
+            self.pending.take().map(|p| p.order).unwrap_or_default();
+        if !pending_order.is_empty() {
+            let names: Vec<&str> = pending_order.iter().map(|c| c.as_str()).collect();
+            report.push(format!(
+                "pending restart of {} folded into the reload",
+                names.join(", ")
+            ));
+        }
+
+        // Stops run against the OLD config (its stop_command is what the
+        // running instances answer to); starts run against the new one.
+        let mut bounce: Vec<Component> = Vec::new();
+        let mut is_restart = !pending_order.is_empty();
+        if pair_changed {
+            report.push("kanata/glazewm configuration changed — bouncing the pair".into());
+            self.force_stop(Component::Kanata);
+            self.stop_gracefully(Component::Glazewm, None);
+            bounce.extend([Component::Kanata, Component::Glazewm]);
+            is_restart = true;
+        }
+        let bar_change = match (&bar_was, &bar_now) {
+            (None, Some(_)) => Some("zebar added to the set — starting it"),
+            (Some(_), None) => {
+                report.push("zebar removed from the set — stopping it".into());
+                self.force_stop(Component::Zebar);
+                self.health.remove(&Component::Zebar);
+                self.child_logs.remove(&Component::Zebar);
+                self.backoff.remove(&Component::Zebar);
+                None
+            }
+            (Some(a), Some(b)) if a != b => {
+                self.force_stop(Component::Zebar);
+                is_restart = true;
+                Some("zebar configuration changed — bouncing the bar")
+            }
+            _ => None,
+        };
+
+        // Supervisor knobs. Most are read at use time, so swapping the config
+        // is the whole application; the exceptions get their own handling.
+        let old_s = self.cfg.supervisor.clone();
+        let new_s = new_cfg.supervisor.clone();
+        self.cfg = new_cfg;
+        self.active = Component::START_ORDER
+            .into_iter()
+            .filter(|c| c.config(&self.cfg).is_some())
+            .collect();
+        if old_s.backoff_initial_ms != new_s.backoff_initial_ms
+            || old_s.backoff_max_ms != new_s.backoff_max_ms
+        {
+            for b in self.backoff.values_mut() {
+                *b = Backoff::new(
+                    Duration::from_millis(new_s.backoff_initial_ms),
+                    Duration::from_millis(new_s.backoff_max_ms),
+                );
+            }
+            report.push("supervisor: backoff parameters changed — histories reset".into());
+        }
+        if old_s.hide_taskbar != new_s.hide_taskbar {
+            if new_s.hide_taskbar {
+                if self.prior_taskbar.is_none() {
+                    let prior = taskbar::get_state();
+                    taskbar::set_state(taskbar::AUTOHIDE);
+                    self.prior_taskbar = Some(prior);
+                }
+                report.push("supervisor: hide_taskbar on — taskbar auto-hidden".into());
+            } else if let Some(prior) = self.prior_taskbar.take() {
+                taskbar::set_state(prior);
+                report.push("supervisor: hide_taskbar off — taskbar state restored".into());
+            }
+        }
+        if old_s.log_max_bytes != new_s.log_max_bytes
+            || old_s.log_keep_files != new_s.log_keep_files
+        {
+            report.push(
+                "supervisor: log size/keep changes apply at the next supervisor start".into(),
+            );
+        }
+        let mut simple: Vec<&str> = Vec::new();
+        if old_s.poll_ms != new_s.poll_ms {
+            simple.push("poll_ms");
+        }
+        if old_s.stop_timeout_ms != new_s.stop_timeout_ms {
+            simple.push("stop_timeout_ms");
+        }
+        if old_s.healthy_reset_secs != new_s.healthy_reset_secs {
+            simple.push("healthy_reset_secs");
+        }
+        if old_s.bounce_on_display_change != new_s.bounce_on_display_change {
+            simple.push("bounce_on_display_change");
+        }
+        if !simple.is_empty() {
+            report.push(format!("supervisor: {} applied", simple.join(", ")));
+        }
+
+        // The added bar is seeded after the config swap so its log and
+        // backoff pick up the new settings.
+        if let Some(msg) = bar_change {
+            if self.active.contains(&Component::Zebar) && !self.seed_component(Component::Zebar) {
+                report.push("zebar: its log could not be opened — not starting it".into());
+            } else {
+                report.push(msg.into());
+                bounce.push(Component::Zebar);
+            }
+        }
+
+        for c in pending_order {
+            if self.active.contains(&c) && !bounce.contains(&c) {
+                bounce.push(c);
+            }
+        }
+        bounce.sort(); // Component's derive order is START_ORDER
+        bounce.dedup();
+
+        if report.is_empty() {
+            report.push("no changes".into());
+        }
+        if !bounce.is_empty() {
+            self.schedule(bounce, Duration::ZERO, is_restart);
+        }
+        self.write_health();
+        self.finish_reload(token, report);
+    }
+
+    /// Ensure a component (re)joining the set has its log, backoff, and
+    /// health entries. False if its log cannot be opened.
+    fn seed_component(&mut self, c: Component) -> bool {
+        if !self.child_logs.contains_key(&c) {
+            match RollingLog::open(
+                self.paths.log_for(c.as_str()),
+                self.cfg.supervisor.log_max_bytes,
+                self.cfg.supervisor.log_keep_files,
+            ) {
+                Ok(l) => {
+                    self.child_logs.insert(c, Arc::new(Mutex::new(l)));
+                }
+                Err(e) => {
+                    self.log(format!("{c}: could not open its log: {e}"));
+                    return false;
+                }
+            }
+        }
+        let (initial, max) = (
+            self.cfg.supervisor.backoff_initial_ms,
+            self.cfg.supervisor.backoff_max_ms,
+        );
+        self.backoff.entry(c).or_insert_with(|| {
+            Backoff::new(Duration::from_millis(initial), Duration::from_millis(max))
+        });
+        self.health
+            .entry(c)
+            .or_insert_with(ComponentHealth::stopped_now);
+        true
+    }
+
+    fn finish_reload(&mut self, token: &str, report: Vec<String>) {
+        for line in &report {
+            self.log(format!("reload: {line}"));
+        }
+        let body = format!("{token}\n{}\n", report.join("\n"));
+        if let Err(e) = std::fs::write(self.paths.reload_result(), &body) {
+            self.log(format!("could not write the reload result: {e}"));
         }
     }
 

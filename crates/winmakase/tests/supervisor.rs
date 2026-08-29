@@ -138,6 +138,20 @@ fn wait_for<T>(what: &str, mut f: impl FnMut() -> Option<T>) -> T {
     }
 }
 
+fn write_config(paths: &Paths, cfg: &Config) {
+    let text = toml::to_string(cfg).expect("serialize config");
+    fs::write(paths.config(), text).expect("write config");
+}
+
+/// Request a reload and wait for the supervisor's report under our token.
+fn reload_and_report(paths: &Paths) -> String {
+    let token = control::request_reload(paths).expect("write reload request");
+    wait_for("reload result", || {
+        let text = fs::read_to_string(paths.reload_result()).ok()?;
+        (text.lines().next() == Some(token.as_str())).then_some(text)
+    })
+}
+
 /// Kill a child from outside, the way a crash would.
 fn kill(pid: u32) {
     let status = std::process::Command::new("taskkill")
@@ -808,4 +822,75 @@ fn a_stale_stop_request_does_not_kill_the_next_supervisor() {
         StopReason::ControlFile,
         "a fresh request still stops it"
     );
+}
+
+// -- reload ------------------------------------------------------------------
+
+#[test]
+fn reload_with_no_changes_touches_nothing() {
+    let mut h = Harness::start("reload-nochange", pair_config());
+    let (k1, g1) = wait_for("both running", || h.both_running());
+    write_config(&h.paths, &pair_config());
+    let report = reload_and_report(&h.paths);
+    assert!(report.contains("no changes"), "{report}");
+    assert_eq!(h.both_running(), Some((k1, g1)), "pids must be untouched");
+    h.stop();
+}
+
+#[test]
+fn reload_bounces_the_pair_when_its_config_changes() {
+    let mut h = Harness::start("reload-pair", pair_config());
+    let (k1, g1) = wait_for("both running", || h.both_running());
+    let mut cfg2 = pair_config();
+    cfg2.kanata = stub(&["--tick-ms", "151"]);
+    write_config(&h.paths, &cfg2);
+    let report = reload_and_report(&h.paths);
+    assert!(report.contains("bouncing the pair"), "{report}");
+    wait_for("pair back with new pids", || {
+        let (k2, g2) = h.both_running()?;
+        (k2 != k1 && g2 != g1).then_some(())
+    });
+    h.stop();
+}
+
+#[test]
+fn reload_adds_and_removes_the_bar_without_touching_the_pair() {
+    let mut h = Harness::start("reload-bar", pair_config());
+    let (k1, g1) = wait_for("both running", || h.both_running());
+
+    let mut with_bar = pair_config();
+    with_bar.zebar = Some(stub(&["--tick-ms", "150"]));
+    write_config(&h.paths, &with_bar);
+    let report = reload_and_report(&h.paths);
+    assert!(report.contains("zebar added"), "{report}");
+    wait_for("bar running", || h.running_pid(Component::Zebar));
+    assert_eq!(
+        h.both_running(),
+        Some((k1, g1)),
+        "a bar change must not bounce the pair"
+    );
+
+    write_config(&h.paths, &pair_config());
+    let report = reload_and_report(&h.paths);
+    assert!(report.contains("zebar removed"), "{report}");
+    wait_for("bar gone from health", || {
+        h.component(Component::Zebar).is_none().then_some(())
+    });
+    assert_eq!(h.both_running(), Some((k1, g1)));
+    h.stop();
+}
+
+#[test]
+fn a_broken_config_is_rejected_and_the_stack_keeps_running() {
+    let mut h = Harness::start("reload-reject", pair_config());
+    let (k1, g1) = wait_for("both running", || h.both_running());
+    fs::write(h.paths.config(), "[kanata]\ncommand = ").unwrap();
+    let report = reload_and_report(&h.paths);
+    assert!(report.contains("REJECTED"), "{report}");
+    assert_eq!(
+        h.both_running(),
+        Some((k1, g1)),
+        "old config must keep running"
+    );
+    h.stop();
 }
