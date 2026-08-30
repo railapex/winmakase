@@ -6,7 +6,7 @@
 //! Two verbs share the machinery: `toggle <name>` is the config-driven named
 //! pad (match by process; summon, banish, or launch); `summon` is the
 //! anonymous rwin+s key — rescue the focused window if it is not presentable
-//! (DWM-cloaked, Win32-invisible, or parked on a non-displayed workspace),
+//! (DWM-cloaked or parked on a non-displayed workspace),
 //! else pull the most recent window out of scratch, else do nothing quietly.
 //!
 //! The GlazeWM config must define a workspace named `scratch` (unkeyed, last
@@ -197,12 +197,11 @@ fn launch(cfg: &ScratchpadConfig) -> io::Result<()> {
 
 // -- the anonymous summon key (rwin+s) ---------------------------------------
 
-/// What the focused window's Win32 probes said. Separated from the decision
-/// so the decision stays pure and testable.
+/// What the focused window's DWM probe said. Separated from the decision so
+/// the decision stays pure and testable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct FocusProbe {
     pub cloaked: bool,
-    pub visible: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -237,13 +236,24 @@ pub fn decide_summon(
             .iter()
             .find(|w| windows_under(&w.children).iter().any(|c| c.id == f.id));
         let parked_off_screen = own_ws.is_some_and(|w| !w.is_displayed);
-        let ghostly = probe.is_some_and(|p| p.cloaked || !p.visible);
+        // `IsWindowVisible` is not an authority for Glaze-managed windows:
+        // GPUI's healthy, displayed muxel window returns false and was
+        // incorrectly floated by this rescue path during W0 live testing.
+        // DWM cloak is the direct ghost signal; workspace display state owns
+        // the off-screen case above.
+        let ghostly = probe.is_some_and(|p| p.cloaked);
         if ghostly || parked_off_screen {
             let pull_to = if parked_off_screen {
                 let own = own_ws.expect("parked_off_screen implies own_ws");
                 workspaces
                     .iter()
                     .find(|w| w.parent_id == own.parent_id && w.is_displayed)
+                    // An unbound scratch workspace has no monitor parent. A
+                    // just-banished window can nevertheless remain Glaze's
+                    // focused window there, so fall back to the user's still
+                    // displayed workspace instead of "rescuing" it in place.
+                    .or_else(|| workspaces.iter().find(|w| w.has_focus && w.is_displayed))
+                    .or_else(|| workspaces.iter().find(|w| w.is_displayed))
                     .map(|w| w.name.clone())
             } else {
                 None
@@ -315,11 +325,9 @@ pub fn summon_key(client: &Client) -> io::Result<String> {
     }
 }
 
-/// Win32 probes the tree cannot answer: is the window DWM-cloaked (the
-/// ApplicationFrameHost ghost) or Win32-invisible?
+/// Probe the one ghost signal the Glaze tree cannot answer: DWM cloak.
 fn probe_window(handle: i64) -> FocusProbe {
     use windows_sys::Win32::Graphics::Dwm::{DWMWA_CLOAKED, DwmGetWindowAttribute};
-    use windows_sys::Win32::UI::WindowsAndMessaging::IsWindowVisible;
 
     let hwnd = handle as isize as windows_sys::Win32::Foundation::HWND;
     let mut cloaked: u32 = 0;
@@ -333,7 +341,6 @@ fn probe_window(handle: i64) -> FocusProbe {
         );
         FocusProbe {
             cloaked: cloaked != 0,
-            visible: IsWindowVisible(hwnd) != 0,
         }
     }
 }
@@ -465,8 +472,8 @@ mod tests {
         );
     }
 
-    fn probe(cloaked: bool, visible: bool) -> Option<FocusProbe> {
-        Some(FocusProbe { cloaked, visible })
+    fn probe(cloaked: bool) -> Option<FocusProbe> {
+        Some(FocusProbe { cloaked })
     }
 
     fn window(id: &str) -> Node {
@@ -481,7 +488,7 @@ mod tests {
         let ws = workspaces(WITH_SCRATCH);
         let f = window("c1");
         assert_eq!(
-            decide_summon(&ws, Some(&f), probe(true, true)),
+            decide_summon(&ws, Some(&f), probe(true)),
             SummonAction::Rescue {
                 window_id: "c1".into(),
                 pull_to: None
@@ -500,7 +507,7 @@ mod tests {
         let ws = workspaces(json);
         let f = window("g1");
         assert_eq!(
-            decide_summon(&ws, Some(&f), probe(false, true)),
+            decide_summon(&ws, Some(&f), probe(false)),
             SummonAction::Rescue {
                 window_id: "g1".into(),
                 pull_to: Some("1".into())
@@ -510,11 +517,31 @@ mod tests {
     }
 
     #[test]
+    fn a_focused_window_on_unbound_scratch_returns_to_the_displayed_workspace() {
+        let json = r#"[
+            {"type":"workspace","id":"ws3","name":"3","parentId":"mon3","isDisplayed":true,
+             "children":[{"type":"window","id":"other","state":{"type":"tiling"}}]},
+            {"type":"workspace","id":"wss","name":"scratch","isDisplayed":false,"hasFocus":true,
+             "children":[{"type":"window","id":"g1","state":{"type":"tiling"}}]}
+        ]"#;
+        let ws = workspaces(json);
+        let f = window("g1");
+        assert_eq!(
+            decide_summon(&ws, Some(&f), probe(false)),
+            SummonAction::Rescue {
+                window_id: "g1".into(),
+                pull_to: Some("3".into())
+            },
+            "unbound scratch has no same-monitor workspace; use a displayed one"
+        );
+    }
+
+    #[test]
     fn a_healthy_focus_falls_through_to_pocket_recall() {
         let ws = workspaces(WITH_SCRATCH);
         let f = window("c1");
         assert_eq!(
-            decide_summon(&ws, Some(&f), probe(false, true)),
+            decide_summon(&ws, Some(&f), probe(false)),
             SummonAction::Summon {
                 window_id: "t2".into(),
                 to: "1".into()
@@ -533,7 +560,7 @@ mod tests {
         let ws = workspaces(json);
         let f = window("c1");
         assert_eq!(
-            decide_summon(&ws, Some(&f), probe(false, true)),
+            decide_summon(&ws, Some(&f), probe(false)),
             SummonAction::Nothing
         );
     }
@@ -545,7 +572,7 @@ mod tests {
             serde_json::from_str(r#"{"type":"window","id":"m1","state":{"type":"minimized"}}"#)
                 .unwrap();
         assert!(matches!(
-            decide_summon(&ws, Some(&f), probe(true, false)),
+            decide_summon(&ws, Some(&f), probe(true)),
             SummonAction::Summon { .. }
         ));
     }

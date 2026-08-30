@@ -27,6 +27,7 @@ This track owns:
 This track does not own:
 
 - Monitor hardware identity, container grouping/tab semantics, atomic repositioning, cloak cleanup or animation internals. Those belong to `glazemakaze-core.md`.
+- Physical Caps tap/hold ownership or kanata retirement. That scope is parked separately in `glaze-caps-ownership.md`; W0-W4 keep the proven Caps -> right-Win path.
 - A fake tabbed container made from overlapping floats.
 - Stardock Groupy integration. Current Glaze reports show lost HWND tracking, broken focus and bar overlap when Groupy switches tabs.
 
@@ -43,10 +44,9 @@ Already shipped:
 - Caps+Tab is next workspace in both Omarchy and generated WinMakase policy.
 - Alt+Tab is deliberately native Windows, not intercepted.
 
-Outstanding or inconsistent:
+Outstanding after W0:
 
-- The live Glaze config is still the hand-written spike config. The generated keymap is not adopted live.
-- Therefore generated Caps+Escape → `wm-cycle-focus` exists in source but is absent from the live config. Floats/fullscreen layers can feel lost.
+- The generated Glaze config is adopted live; Caps+Escape → `wm-cycle-focus` and native Windows recovery keys passed the physical gate 2026-08-30.
 - There is no first-class app schema or generated app-home rule yet.
 - `focus-or-launch` is an unchecked M2 item.
 - The install/adoption policy for pre-existing, unknown windows is unresolved.
@@ -109,7 +109,7 @@ Optional `class` and `title` refine the match. Multiple-window policy is part of
 
 ## Session cuts
 
-### W0 — adopt the generated keymap on the dogfood rig
+### W0 — adopt the generated keymap on the dogfood rig — complete 2026-08-30
 
 - Render to a staging file and diff against the live spike config.
 - Preserve machine-local Chrome launch commands, monitor/workspace order, scratch workspace, Zebar ignore rule and panic bindings.
@@ -118,7 +118,7 @@ Optional `class` and `title` refine the match. Multiple-window policy is part of
 - Update the grouping-gap notice to describe the missing core primitive and Glazemakaze route; remove the stale claim that all upstream work is dormant.
 - Deploy through the existing render/reload path with backup and rollback. Do not hand-edit the generated copy after adoption.
 
-Exit: source and live config agree; Caps+Escape recovers a deliberately hidden float/fullscreen focus case.
+Exit passed: source and live config agree; Caps+Escape recovers a deliberately hidden float/fullscreen focus case.
 
 ### W1 — app schema and window-rule renderer
 

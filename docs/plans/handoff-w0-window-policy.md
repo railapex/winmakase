@@ -1,8 +1,16 @@
-# Handoff — WinMakase window policy W0
+# Handoff — WinMakase window policy W0 closeout
 
 Closed: 2026-08-30
 Next repo: `D:/dev/winmakase`
-Next cut: W0 only
+Next cut: W1 only
+
+## Closed state
+
+W0 is deployed and verified. The generated live config, v0.1.2 binary, reversible real-rig IPC acceptance suite and Chris's literal physical-key pass are green. Caps workspace navigation, reflow, float/layer cycle, scratch banish/summon, move+follow and silent move work; native Alt+Tab and physical left-Win+Tab remain untouched.
+
+Do not redo the deploy. Read `spike/NOTES.md` for the live hash, backup and findings. `D:/temp/verify-winmakase-w0-ipc.ps1` is the all-window snapshot/restore suite; it passed, but its daily-window fixture selection is not portable enough to become product UAT.
+
+The Caps-ownership question is now cleaved into parked `docs/plans/glaze-caps-ownership.md`. It concludes that a narrow dual-role leader primitive inside Glaze is the right end state and can retire kanata after live proof. Do not pull that plan into W0-W4; their live path remains Caps -> right-Win.
 
 ## Direction
 
@@ -38,9 +46,9 @@ The local `main` branch is ahead of `origin/main`; pushing `main` is Chris's but
 - The rig is back on stock Glaze. KhangHLe and the official animation branch are not live candidates in this cut.
 - `target/debug/muxel-live.exe` is Chris's primary session. Never stop, replace, overwrite or use it as a disposable WM fixture.
 
-## The inconsistency W0 closes
+## The inconsistency W0 closed in source and live config
 
-The generated Omarchy keymap is marked built, but `C:/Users/chris/.glzr/glazewm/config.yaml` is still the hand-written spike config. Generated Caps+Escape → `wm-cycle-focus` therefore is not live, which leaves no Glaze-native recovery across tiling/floating/fullscreen layers.
+`C:/Users/chris/.glzr/glazewm/config.yaml` is now generated from the repo keymap, machine-local keymap override and binding-free Glaze base. Generated Caps+Escape -> `wm-cycle-focus` is live and the physical hook/native escape paths passed.
 
 ## W0 procedure
 
@@ -89,8 +97,8 @@ The generated Omarchy keymap is marked built, but `C:/Users/chris/.glzr/glazewm/
 
 ## Other open work, deliberately outside this handoff
 
-The TODO still contains kanata apps-mode UAT, game foreground suspend, the warm relay/tap-caps launcher, helper verbs, theming, install and release work. None blocks W0. Do not absorb them because they are nearby.
+The TODO still contains kanata apps-mode UAT, game foreground suspend, the warm relay/tap-caps launcher, helper verbs, theming, install and release work. None blocks W1. Do not absorb them because they are nearby.
 
 ## Fresh-session prompt
 
-> Work in `D:/dev/winmakase`. Read `CLAUDE.md`, `docs/TODO.md`, `spike/NOTES.md` § LIVE MACHINE STATE, `docs/plans/winmakase-window-policy.md`, and `docs/plans/handoff-w0-window-policy.md`. Execute W0 only. Stage and diff the generated Glaze config before touching the live file; preserve every machine-local rule in source, deploy with rollback ready, verify the full W0 acceptance list on the real rig, then commit. Do not start W1, Glazemakaze, Groupy, or a switcher.
+> Work in `D:/dev/winmakase`. Read `CLAUDE.md`, `docs/TODO.md`, `spike/NOTES.md` § LIVE MACHINE STATE, `docs/plans/winmakase-window-policy.md`, and `docs/plans/handoff-w0-window-policy.md`. W0 is complete; execute W1 only: app definitions and deterministic generated Glaze window rules. Keep numeric workspace homes machine-local, observe Chromium identity before claiming profile support, and do not start W2, Glazemakaze, Groupy, or a switcher.

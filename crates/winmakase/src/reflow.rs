@@ -2,7 +2,8 @@
 //!
 //! GlazeWM's `toggle-tiling-direction` changes where the *next* window
 //! inserts; it never re-arranges an existing split (spike bench, 2026-08-28:
-//! IPC rect comparison, zero movement). Upstream is dormant, so the verb is
+//! IPC rect comparison, zero movement). Upstream's release/review lane is
+//! stalled, so the verb is
 //! the permanent route (docs/research/gap-features.md): compute a plan of
 //! `move --direction` commands that rebuilds the focused row in the other
 //! orientation, then execute it via the CLI.

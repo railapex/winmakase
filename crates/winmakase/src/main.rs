@@ -162,7 +162,7 @@ enum KeymapAction {
         #[arg(long, value_name = "FILE")]
         local: Option<PathBuf>,
     },
-    /// Render the GlazeWM `keybindings:` section from the mapped entries.
+    /// Render GlazeWM bindings, optionally composed with a binding-free base.
     Render {
         /// Keymap file. Defaults to <home>/keymap/omarchy.toml.
         #[arg(long, value_name = "FILE")]
@@ -171,6 +171,10 @@ enum KeymapAction {
         /// merged only when it exists.
         #[arg(long, value_name = "FILE")]
         local: Option<PathBuf>,
+        /// Binding-free GlazeWM base. When set, render a complete config;
+        /// without it, render only the `keybindings:` section.
+        #[arg(long, value_name = "FILE")]
+        base: Option<PathBuf>,
         /// Write to a file instead of stdout.
         #[arg(long, value_name = "FILE")]
         out: Option<PathBuf>,
@@ -437,10 +441,23 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
             );
             Ok(())
         }
-        KeymapAction::Render { keymap, local, out } => {
+        KeymapAction::Render {
+            keymap,
+            local,
+            base,
+            out,
+        } => {
             let (_, file, _) = load(keymap, local)?;
             let (expanded, _) = checked(&file)?;
-            let yaml = winmakase_keymap::render_glazewm(&expanded);
+            let yaml = match base {
+                Some(path) => {
+                    let text = std::fs::read_to_string(&path).map_err(|e| {
+                        io::Error::new(e.kind(), format!("{}: {e}", path.display()))
+                    })?;
+                    winmakase_keymap::render_glazewm_config(&text, &expanded).map_err(invalid)?
+                }
+                None => winmakase_keymap::render_glazewm(&expanded),
+            };
             match out {
                 Some(dest) => std::fs::write(dest, yaml),
                 None => {
@@ -457,10 +474,11 @@ fn gap_cmd(name: GapName) {
         GapName::Grouping => winmakase::notify::info(
             "Winmakase — window grouping",
             "Window grouping (omarchy's Super+G tabs) is a documented gap: \
-             GlazeWM has no grouping support and its upstream is dormant.\n\n\
-             The genuine route is the komorebi power option (bring-your-own-license), \
-             planned after v0.1.\n\n\
-             Details: docs/research/gap-features.md and DESIGN.md § Documented gaps.",
+             GlazeWM has no grouping/container primitive, and Winmakase cannot \
+             fake one from outside the window manager.\n\n\
+             The genuine product route is the parked Glazemakaze core track: \
+             add the primitive inside Glaze, then expose it here.\n\n\
+             Details: docs/plans/glazemakaze-core.md and DESIGN.md § Documented gaps.",
         ),
     }
 }
