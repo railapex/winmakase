@@ -6,6 +6,7 @@
 
 pub mod backoff;
 pub mod commands;
+pub mod commit_pressure;
 pub mod component;
 pub mod config;
 pub mod control;

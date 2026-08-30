@@ -4,6 +4,11 @@ All notable changes to Winmakase. Format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Fixed
+- Reboot recovery no longer drops Zebar when GlazeWM is already backing off: independent component recoveries now keep separate pending entries, with an integration test that kills GlazeWM and Zebar together and requires all three components to return.
+- The Zebar dock check now treats `[0, 0, 0]` as total dock failure instead of healthy consistency. A rendered bar with no work-area reservation is bounced just like a partial `[40, 0, 0]` dock.
+- GlazeWM starts and restarts only after Windows virtual-memory commit pressure falls below 50%. This avoids feeding pinned GlazeWM 3.10.1 into its known startup/wake `rust_oom -> __fastfail(7)` window and repeating the same `0xc0000409` crash.
+
 ### Added
 - Scratchpad `title` match rule: a named pad can now require a case-insensitive title substring on top of the process match, so a `wt` pad launched with a marker title (`wt -w -1 new-tab --title winmakase-pad`) never banishes the daily terminal. Untitled windows never satisfy a title rule.
 - `winmakase gap grouping` + keymap verb flips: SUPER+G now raises a native notice explaining the grouping gap (komorebi power option, post-v0.1) instead of dying silently, and the keymap catches up with the shipped verbs — SUPER+J renders to `winmakase reflow`, SUPER+S to `scratchpad summon`, SUPER+ALT+S to the pure-GlazeWM banish. A `{winmakase}` apps placeholder carries the CLI path (override it in keymap/local.toml until install owns PATH).

@@ -1,12 +1,11 @@
 //! Per-monitor working-area reserves — the evidence for the bar-dock check.
 //!
 //! Zebar's `dockToEdge` registers an appbar per bar window, and the
-//! registrations race (live findings, 2026-08-28: with the systray provider
-//! active, one or two of the three bars would reliably lose their dock — bars
-//! render, but windows tile underneath them). A lost dock shows up as a
-//! monitor whose working area starts at its bounds' top while its siblings
-//! are reserved. The supervisor reads this and bounces the bar; a restart
-//! demonstrably re-wins the race.
+//! registrations race (live findings, 2026-08-28 and 2026-08-30: with the
+//! systray provider active, one, two, or all three bars can lose their dock —
+//! bars render, but windows tile underneath them). A lost dock shows up as a
+//! monitor whose working area starts at its bounds' top. The supervisor reads
+//! this and bounces the bar; a restart demonstrably re-wins the race.
 
 use windows_sys::Win32::Foundation::{LPARAM, RECT};
 use windows_sys::Win32::Graphics::Gdi::{
@@ -47,17 +46,27 @@ pub fn top_reserves() -> Vec<i32> {
 /// What the reserves say about the bar dock.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DockVerdict {
-    /// Every monitor reserved, or none — either the dock fully took, or the
-    /// bar does not dock at all (also a consistent choice). Nothing to do.
+    /// Every enumerated monitor reserved space. Nothing to do.
     Consistent,
+    /// No enumerated monitor reserved space. A running configured bar should
+    /// dock, so all-zero is a total dock failure rather than consistency.
+    Missing,
     /// Some monitors reserved, some not: the dock race was lost somewhere.
     Partial,
+    /// Monitor enumeration returned no evidence. Do not churn the bar on an
+    /// unreadable state.
+    Unknown,
 }
 
 pub fn dock_verdict(reserves: &[i32]) -> DockVerdict {
+    if reserves.is_empty() {
+        return DockVerdict::Unknown;
+    }
     let reserved = reserves.iter().filter(|r| **r > 0).count();
-    if reserved == 0 || reserved == reserves.len() {
+    if reserved == reserves.len() {
         DockVerdict::Consistent
+    } else if reserved == 0 {
+        DockVerdict::Missing
     } else {
         DockVerdict::Partial
     }
@@ -68,11 +77,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn all_or_nothing_is_consistent() {
+    fn every_monitor_reserved_is_consistent() {
         assert_eq!(dock_verdict(&[40, 40, 40]), DockVerdict::Consistent);
-        assert_eq!(dock_verdict(&[0, 0, 0]), DockVerdict::Consistent);
-        assert_eq!(dock_verdict(&[]), DockVerdict::Consistent);
         assert_eq!(dock_verdict(&[48]), DockVerdict::Consistent);
+    }
+
+    #[test]
+    fn all_zero_is_a_total_dock_failure() {
+        assert_eq!(dock_verdict(&[0, 0, 0]), DockVerdict::Missing);
+        assert_eq!(dock_verdict(&[0]), DockVerdict::Missing);
+    }
+
+    #[test]
+    fn no_monitor_evidence_is_unknown() {
+        assert_eq!(dock_verdict(&[]), DockVerdict::Unknown);
     }
 
     #[test]

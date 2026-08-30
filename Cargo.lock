@@ -520,7 +520,7 @@ dependencies = [
 
 [[package]]
 name = "winmakase"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "serde",
@@ -533,7 +533,7 @@ dependencies = [
 
 [[package]]
 name = "winmakase-keymap"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "toml",
@@ -541,7 +541,7 @@ dependencies = [
 
 [[package]]
 name = "winmakase-theme"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",

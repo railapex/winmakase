@@ -25,6 +25,7 @@ use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use crate::backoff::Backoff;
+use crate::commit_pressure;
 use crate::component::Component;
 use crate::config::{ComponentConfig, Config};
 use crate::control;
@@ -88,6 +89,10 @@ const DOCK_CHECK_DELAY_MS: u64 = 12_000;
 /// A dock race that three bounces cannot win is not a race — stop churning
 /// the bar and leave the loud log line.
 const DOCK_BOUNCE_LIMIT: u32 = 3;
+
+/// Recheck commit pressure once a second instead of launching GlazeWM into the
+/// Windows startup/wake allocation spike that makes 3.10.1 fail-fast.
+const COMMIT_PRESSURE_RETRY_MS: u64 = 1_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StopReason {
@@ -173,7 +178,11 @@ pub struct Supervisor {
     health: BTreeMap<Component, ComponentHealth>,
     /// Consecutive polls where a child's status could not be read.
     wait_errors: BTreeMap<Component, u32>,
-    pending: Option<PendingRestart>,
+    /// Independent recoveries may be pending together: the linked pair and
+    /// the bar must never erase each other's restart.
+    pending: Vec<PendingRestart>,
+    /// Suppresses a repeated log line while GlazeWM waits for commit headroom.
+    commit_pressure_waiting: bool,
     display_watch: Option<DisplayWatch>,
     /// Set when a display change arrives; acted on once the burst goes quiet.
     display_event_at: Option<Instant>,
@@ -238,7 +247,8 @@ impl Supervisor {
             backoff,
             health,
             wait_errors: BTreeMap::new(),
-            pending: None,
+            pending: Vec::new(),
+            commit_pressure_waiting: false,
             display_watch: None,
             display_event_at: None,
             prior_taskbar: None,
@@ -363,16 +373,31 @@ impl Supervisor {
                 }
                 self.dock_bounces = 0;
             }
-            monitors::DockVerdict::Partial if self.dock_bounces >= DOCK_BOUNCE_LIMIT => {
+            monitors::DockVerdict::Unknown => {
+                self.log("zebar dock could not be checked — no monitors were enumerated");
+            }
+            verdict @ (monitors::DockVerdict::Missing | monitors::DockVerdict::Partial)
+                if self.dock_bounces >= DOCK_BOUNCE_LIMIT =>
+            {
                 self.log(format!(
-                    "zebar dock still partial after {DOCK_BOUNCE_LIMIT} bounces (reserves {reserves:?}) — giving up until its next restart"
+                    "zebar dock still {} after {DOCK_BOUNCE_LIMIT} bounces (reserves {reserves:?}) — giving up until its next restart",
+                    match verdict {
+                        monitors::DockVerdict::Missing => "missing",
+                        monitors::DockVerdict::Partial => "partial",
+                        _ => unreachable!(),
+                    }
                 ));
                 self.dock_bounces = 0;
             }
-            monitors::DockVerdict::Partial => {
+            verdict @ (monitors::DockVerdict::Missing | monitors::DockVerdict::Partial) => {
                 self.dock_bounces += 1;
                 self.log(format!(
-                    "zebar lost its dock on some monitors (reserves {reserves:?}) — bouncing the bar ({}/{DOCK_BOUNCE_LIMIT})",
+                    "zebar dock {} (reserves {reserves:?}) — bouncing the bar ({}/{DOCK_BOUNCE_LIMIT})",
+                    match verdict {
+                        monitors::DockVerdict::Missing => "missing on every monitor",
+                        monitors::DockVerdict::Partial => "missing on some monitors",
+                        _ => unreachable!(),
+                    },
                     self.dock_bounces
                 ));
                 self.force_stop(Component::Zebar);
@@ -413,13 +438,15 @@ impl Supervisor {
             report.push(format!("config: {note}"));
         }
 
-        // Diffs against the running config, and any crash-restart already
-        // pending — taken now so the single pending slot cannot lose it.
+        // Diffs against the running config, and any crash-restarts already
+        // pending — taken now so reload folds every outstanding recovery in.
         let pair_changed = self.cfg.kanata != new_cfg.kanata || self.cfg.glazewm != new_cfg.glazewm;
         let bar_was = self.cfg.zebar.clone();
         let bar_now = new_cfg.zebar.clone();
-        let pending_order: Vec<Component> =
-            self.pending.take().map(|p| p.order).unwrap_or_default();
+        let pending_order: Vec<Component> = std::mem::take(&mut self.pending)
+            .into_iter()
+            .flat_map(|p| p.order)
+            .collect();
         if !pending_order.is_empty() {
             let names: Vec<&str> = pending_order.iter().map(|c| c.as_str()).collect();
             report.push(format!(
@@ -914,7 +941,7 @@ impl Supervisor {
             // kanata alone: GlazeWM keeps tiling, chords come back in seconds.
             // The bar likewise restarts alone — a missing bar is cosmetic.
             Component::Kanata | Component::Zebar => {
-                if self.pending.is_some() {
+                if self.is_scheduled(c) {
                     self.log(format!("{c} restart already scheduled — leaving it be"));
                 } else {
                     let delay = self.backoff_mut(c).next_delay();
@@ -927,18 +954,50 @@ impl Supervisor {
     }
 
     fn schedule(&mut self, order: Vec<Component>, delay: Duration, is_restart: bool) {
-        for c in &order {
+        let mut merged_order = order;
+        let mut at = Instant::now() + delay;
+        let mut merged_is_restart = is_restart;
+
+        // Overlapping recoveries are one set; independent recoveries coexist.
+        // The linked pair can therefore be backing off while Zebar schedules
+        // its own restart, without either entry erasing the other.
+        let mut i = 0;
+        while i < self.pending.len() {
+            let overlaps = self.pending[i]
+                .order
+                .iter()
+                .any(|c| merged_order.contains(c));
+            if overlaps {
+                let existing = self.pending.remove(i);
+                at = at.min(existing.at);
+                merged_is_restart |= existing.is_restart;
+                for c in existing.order {
+                    if !merged_order.contains(&c) {
+                        merged_order.push(c);
+                    }
+                }
+            } else {
+                i += 1;
+            }
+        }
+        merged_order.sort();
+
+        for c in &merged_order {
             // A component that is still up is not restarting. Saying otherwise
             // puts a lie in health.json, which is what Zebar renders.
             if !self.children.contains_key(c) {
                 self.health_mut(*c).set(Status::Restarting, None);
             }
         }
-        self.pending = Some(PendingRestart {
-            at: Instant::now() + delay,
-            order,
-            is_restart,
+        self.pending.push(PendingRestart {
+            at,
+            order: merged_order,
+            is_restart: merged_is_restart,
         });
+    }
+
+    fn is_scheduled(&self, c: Component) -> bool {
+        self.pending.iter().any(|p| p.order.contains(&c))
     }
 
     /// Start a set in order, all or none.
@@ -951,6 +1010,26 @@ impl Supervisor {
     /// `children.insert` drops the old handle, and `Child`'s drop does not
     /// kill, leaving a second kanata holding the keyboard forever.
     fn start_set(&mut self, order: Vec<Component>, is_restart: bool) {
+        if order.contains(&Component::Glazewm) && commit_pressure::is_under_pressure() {
+            if !self.commit_pressure_waiting {
+                self.log(
+                    "Windows commit pressure is above 50% — delaying GlazeWM until headroom returns",
+                );
+                self.commit_pressure_waiting = true;
+            }
+            self.schedule(
+                order,
+                Duration::from_millis(COMMIT_PRESSURE_RETRY_MS),
+                is_restart,
+            );
+            self.write_health();
+            return;
+        }
+        if order.contains(&Component::Glazewm) && self.commit_pressure_waiting {
+            self.commit_pressure_waiting = false;
+            self.log("Windows commit pressure cleared — starting GlazeWM");
+        }
+
         let mut started_here: Vec<Component> = Vec::new();
         for (i, c) in order.iter().copied().enumerate() {
             if self.children.contains_key(&c) {
@@ -992,15 +1071,11 @@ impl Supervisor {
     }
 
     fn fire_due_restart(&mut self) {
-        let Some(p) = self.pending.as_ref() else {
+        let Some(i) = self.pending.iter().position(|p| Instant::now() >= p.at) else {
             return;
         };
-        if Instant::now() < p.at {
-            return;
-        }
-        let (order, is_restart) = (p.order.clone(), p.is_restart);
-        self.pending = None;
-        self.start_set(order, is_restart);
+        let pending = self.pending.remove(i);
+        self.start_set(pending.order, pending.is_restart);
     }
 
     /// A component that has held together for `healthy_reset_secs` counts as
@@ -1092,7 +1167,7 @@ impl Supervisor {
 
     fn shutdown(&mut self, reason: StopReason) {
         self.shutting_down = true;
-        self.pending = None;
+        self.pending.clear();
         let budget = reason.shutdown_budget();
         let deadline = budget.map(|b| Instant::now() + b);
         self.log(format!(
@@ -1142,7 +1217,7 @@ impl Supervisor {
         if !self.cfg.supervisor.bounce_on_display_change {
             return;
         }
-        if self.pending.is_some() {
+        if self.is_scheduled(Component::Kanata) || self.is_scheduled(Component::Glazewm) {
             self.log("display change: a restart is already scheduled — leaving it be");
             return;
         }

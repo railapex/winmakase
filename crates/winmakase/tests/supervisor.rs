@@ -513,6 +513,44 @@ fn zebar_joins_the_set_and_restarts_alone() {
 }
 
 #[test]
+fn simultaneous_pair_and_bar_crashes_recover_every_component() {
+    let mut cfg = pair_config();
+    // Leave enough room to kill both children before the next reap pass.
+    cfg.supervisor.poll_ms = 500;
+    cfg.zebar = Some(stub(&["--tick-ms", "150"]));
+    let mut h = Harness::start("pair-and-bar-recovery", cfg);
+
+    let (kanata1, glazewm1) = wait_for("the pair to start", || h.both_running());
+    let zebar1 = wait_for("zebar to start", || h.running_pid(Component::Zebar));
+
+    // Reproduce the boot race: GlazeWM and the bar are both observed dead in
+    // one supervisor pass. Their independent recoveries must coexist.
+    kill(zebar1);
+    kill(glazewm1);
+
+    let (kanata2, glazewm2) = wait_for("the pair to recover", || {
+        let (kanata, glazewm) = h.both_running()?;
+        (kanata != kanata1 && glazewm != glazewm1).then_some((kanata, glazewm))
+    });
+    let zebar2 = wait_for("zebar to recover", || {
+        h.running_pid(Component::Zebar).filter(|pid| *pid != zebar1)
+    });
+
+    assert_ne!(kanata2, kanata1);
+    assert_ne!(glazewm2, glazewm1);
+    assert_ne!(zebar2, zebar1);
+    let log = h.supervisor_log();
+    assert!(log.contains("restarting the pair"), "{log}");
+    assert!(log.contains("restarting zebar"), "{log}");
+    assert!(
+        !log.contains("zebar restart already scheduled — leaving it be"),
+        "the pair's recovery must not suppress the bar's:\n{log}"
+    );
+
+    h.stop();
+}
+
+#[test]
 fn a_config_without_zebar_runs_a_two_component_set() {
     let mut h = Harness::start("without-bar", pair_config());
     wait_for("the pair to start", || h.both_running());
