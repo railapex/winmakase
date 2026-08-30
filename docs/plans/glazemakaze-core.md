@@ -22,6 +22,7 @@ This track owns:
 This track does not own:
 
 - WinMakase supervision, task registration, keybindings, app homes, scratchpads, bars, themes or user-facing profiles.
+- Direct Caps leader semantics and kanata retirement; that is the separate `glaze-caps-ownership.md` patch track.
 - A fake tab UI outside the WM.
 - Replacing GlazeWM with komorebi, Seelen UI or Groupy.
 
