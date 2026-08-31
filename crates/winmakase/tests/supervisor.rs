@@ -55,6 +55,7 @@ fn pair_config() -> Config {
         kanata: stub(&["--tick-ms", "150"]),
         glazewm: stub(&["--tick-ms", "150"]),
         zebar: None,
+        apps: Default::default(),
         scratchpad: Default::default(),
     }
 }

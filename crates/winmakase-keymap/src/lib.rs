@@ -15,7 +15,7 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt::Write as _;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -252,11 +252,70 @@ pub fn render_glazewm(expanded: &[Expanded]) -> String {
     out
 }
 
-/// Compose a complete GlazeWM config from a machine/portable base and the
-/// generated bindings. The base must deliberately omit `keybindings:`: a
-/// replace-in-place merge would make ownership ambiguous and could preserve
-/// stale hand-written bindings.
-pub fn render_glazewm_config(base: &str, expanded: &[Expanded]) -> Result<String, String> {
+/// One typed app policy supplied by the product config. The launch command is
+/// deliberately absent: Glaze only needs the stable window identity and the
+/// creation-time policy.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AppWindowRule {
+    pub name: String,
+    pub process: String,
+    pub class: Option<String>,
+    pub title: Option<String>,
+    pub workspace: Option<String>,
+    pub state: WindowRuleState,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WindowRuleState {
+    Tiling,
+    Floating,
+    Ignored,
+}
+
+#[derive(Serialize)]
+struct RenderedWindowRule<'a> {
+    commands: Vec<String>,
+    #[serde(rename = "match")]
+    match_window: Vec<RenderedWindowMatch<'a>>,
+}
+
+#[derive(Serialize)]
+struct RenderedWindowMatch<'a> {
+    window_process: EqualsMatch<'a>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_class: Option<EqualsMatch<'a>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_title: Option<EqualsMatch<'a>>,
+}
+
+#[derive(Serialize)]
+struct EqualsMatch<'a> {
+    equals: &'a str,
+}
+
+#[derive(Debug)]
+struct BaseWindowRule {
+    commands: Vec<String>,
+    matches: Vec<BaseWindowMatch>,
+}
+
+#[derive(Debug)]
+struct BaseWindowMatch {
+    process: Option<String>,
+    class: Option<String>,
+    title: Option<String>,
+    exact: bool,
+}
+
+/// Compose a complete GlazeWM config from a machine/portable base, typed app
+/// creation rules, and generated bindings. The base owns narrow host/system
+/// rules; app config owns app policy; this function is the sole owner of the
+/// rendered `window_rules` list. A base `keybindings` owner remains forbidden.
+pub fn render_glazewm_config(
+    base: &str,
+    expanded: &[Expanded],
+    apps: &[AppWindowRule],
+) -> Result<String, String> {
     let normalized = base
         .strip_prefix('\u{feff}')
         .unwrap_or(base)
@@ -265,26 +324,368 @@ pub fn render_glazewm_config(base: &str, expanded: &[Expanded]) -> Result<String
     if normalized.trim().is_empty() {
         return Err("GlazeWM base is empty".into());
     }
-    if let Some((line, _)) = normalized
-        .lines()
-        .enumerate()
-        .find(|(_, text)| text.starts_with("keybindings:"))
-    {
+    let mut document: serde_yaml_ng::Value = serde_yaml_ng::from_str(&normalized)
+        .map_err(|error| format!("GlazeWM base is not valid YAML: {error}"))?;
+    let root = document
+        .as_mapping()
+        .ok_or_else(|| "GlazeWM base must be a top-level mapping".to_string())?;
+    let keybindings_key = serde_yaml_ng::Value::String("keybindings".into());
+    if root.contains_key(&keybindings_key) {
+        let line = normalized
+            .lines()
+            .position(|text| text.starts_with("keybindings:"))
+            .map_or_else(|| "an unknown".to_string(), |line| (line + 1).to_string());
         return Err(format!(
-            "GlazeWM base line {} contains keybindings:; remove that section because the keymap renderer owns it",
-            line + 1
+            "GlazeWM base line {line} contains keybindings:; remove that section because the keymap renderer owns it"
         ));
     }
+
+    let workspaces = workspace_names(root)?;
+    let base_rules = base_window_rules(root)?;
+    validate_apps(apps, &workspaces, &base_rules)?;
 
     let bindings = render_glazewm(expanded);
     let (_, bindings_body) = bindings
         .split_once('\n')
         .expect("the generated keybindings header always ends with a newline");
+
+    // Zero app definitions is the W0 compatibility contract: parse and
+    // validate the base, but leave its comments and bytes untouched.
+    let base_body = if apps.is_empty() {
+        normalized.trim_end().to_string()
+    } else {
+        let mut ordered = apps.to_vec();
+        ordered.sort_by(|left, right| {
+            app_order(left)
+                .cmp(&app_order(right))
+                .then_with(|| left.name.cmp(&right.name))
+        });
+        let generated = ordered
+            .iter()
+            .map(rendered_window_rule)
+            .map(serde_yaml_ng::to_value)
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|error| format!("could not serialize generated window rule: {error}"))?;
+
+        let root = document
+            .as_mapping_mut()
+            .expect("top-level mapping was checked above");
+        let rules_key = serde_yaml_ng::Value::String("window_rules".into());
+        match root.get_mut(&rules_key) {
+            Some(serde_yaml_ng::Value::Sequence(rules)) => rules.extend(generated),
+            Some(_) => unreachable!("base_window_rules checked the value's shape"),
+            None => {
+                root.insert(rules_key, serde_yaml_ng::Value::Sequence(generated));
+            }
+        }
+        serde_yaml_ng::to_string(&document)
+            .map_err(|error| format!("could not serialize composed GlazeWM base: {error}"))?
+            .trim_end()
+            .to_string()
+    };
+
     Ok(format!(
         "# Generated by `winmakase keymap render --base`; edit the base/keymap sources, not this file.\n{}\n\n{}",
-        normalized.trim_end(),
-        bindings_body
+        base_body, bindings_body
     ))
+}
+
+fn workspace_names(root: &serde_yaml_ng::Mapping) -> Result<HashSet<String>, String> {
+    let key = serde_yaml_ng::Value::String("workspaces".into());
+    let Some(value) = root.get(&key) else {
+        return Ok(HashSet::new());
+    };
+    let sequence = value
+        .as_sequence()
+        .ok_or_else(|| "GlazeWM base workspaces must be a list".to_string())?;
+    let mut names = HashSet::new();
+    for (index, workspace) in sequence.iter().enumerate() {
+        let mapping = workspace.as_mapping().ok_or_else(|| {
+            format!(
+                "GlazeWM base workspaces item {} must be a mapping",
+                index + 1
+            )
+        })?;
+        let name_key = serde_yaml_ng::Value::String("name".into());
+        let name = mapping
+            .get(&name_key)
+            .and_then(serde_yaml_ng::Value::as_str)
+            .ok_or_else(|| {
+                format!(
+                    "GlazeWM base workspaces item {} needs a string name",
+                    index + 1
+                )
+            })?;
+        if !names.insert(name.to_string()) {
+            return Err(format!("GlazeWM base declares workspace {name:?} twice"));
+        }
+    }
+    Ok(names)
+}
+
+fn base_window_rules(root: &serde_yaml_ng::Mapping) -> Result<Vec<BaseWindowRule>, String> {
+    let key = serde_yaml_ng::Value::String("window_rules".into());
+    let Some(value) = root.get(&key) else {
+        return Ok(Vec::new());
+    };
+    let sequence = value
+        .as_sequence()
+        .ok_or_else(|| "GlazeWM base window_rules must be a list".to_string())?;
+    sequence
+        .iter()
+        .enumerate()
+        .map(|(index, value)| parse_base_window_rule(index, value))
+        .collect()
+}
+
+fn parse_base_window_rule(
+    index: usize,
+    value: &serde_yaml_ng::Value,
+) -> Result<BaseWindowRule, String> {
+    let prefix = format!("GlazeWM base window_rules item {}", index + 1);
+    let mapping = value
+        .as_mapping()
+        .ok_or_else(|| format!("{prefix} must be a mapping"))?;
+    let commands_key = serde_yaml_ng::Value::String("commands".into());
+    let commands = mapping
+        .get(&commands_key)
+        .and_then(serde_yaml_ng::Value::as_sequence)
+        .ok_or_else(|| format!("{prefix}.commands must be a list"))?
+        .iter()
+        .map(|command| {
+            command
+                .as_str()
+                .map(str::to_string)
+                .ok_or_else(|| format!("{prefix}.commands must contain only strings"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    if commands.is_empty() {
+        return Err(format!("{prefix}.commands must not be empty"));
+    }
+
+    let match_key = serde_yaml_ng::Value::String("match".into());
+    let matches = mapping
+        .get(&match_key)
+        .and_then(serde_yaml_ng::Value::as_sequence)
+        .ok_or_else(|| format!("{prefix}.match must be a list"))?
+        .iter()
+        .enumerate()
+        .map(|(match_index, value)| parse_base_window_match(&prefix, match_index, value))
+        .collect::<Result<Vec<_>, _>>()?;
+    if matches.is_empty() {
+        return Err(format!("{prefix}.match must not be empty"));
+    }
+    Ok(BaseWindowRule { commands, matches })
+}
+
+fn parse_base_window_match(
+    prefix: &str,
+    index: usize,
+    value: &serde_yaml_ng::Value,
+) -> Result<BaseWindowMatch, String> {
+    let prefix = format!("{prefix}.match item {}", index + 1);
+    let mapping = value
+        .as_mapping()
+        .ok_or_else(|| format!("{prefix} must be a mapping"))?;
+    let mut exact = true;
+    let process = base_equals(mapping, "window_process", &prefix, &mut exact)?;
+    let class = base_equals(mapping, "window_class", &prefix, &mut exact)?;
+    let title = base_equals(mapping, "window_title", &prefix, &mut exact)?;
+    if process.is_none() && class.is_none() && title.is_none() && exact {
+        return Err(format!("{prefix} needs a process, class, or title matcher"));
+    }
+    Ok(BaseWindowMatch {
+        process,
+        class,
+        title,
+        exact,
+    })
+}
+
+fn base_equals(
+    mapping: &serde_yaml_ng::Mapping,
+    field: &str,
+    prefix: &str,
+    exact: &mut bool,
+) -> Result<Option<String>, String> {
+    let key = serde_yaml_ng::Value::String(field.into());
+    let Some(value) = mapping.get(&key) else {
+        return Ok(None);
+    };
+    let selector = value
+        .as_mapping()
+        .ok_or_else(|| format!("{prefix}.{field} must be a matcher mapping"))?;
+    let equals_key = serde_yaml_ng::Value::String("equals".into());
+    match selector.get(&equals_key) {
+        Some(value) => value
+            .as_str()
+            .map(|value| Some(value.to_string()))
+            .ok_or_else(|| format!("{prefix}.{field}.equals must be a string")),
+        None => {
+            *exact = false;
+            Ok(None)
+        }
+    }
+}
+
+fn validate_apps(
+    apps: &[AppWindowRule],
+    workspaces: &HashSet<String>,
+    base_rules: &[BaseWindowRule],
+) -> Result<(), String> {
+    let mut names = HashSet::new();
+    for app in apps {
+        if app.name.trim().is_empty() {
+            return Err("app rule name must not be empty".into());
+        }
+        if !names.insert(app.name.as_str()) {
+            return Err(format!("app rule name {:?} is duplicated", app.name));
+        }
+        if app.process.trim().is_empty() {
+            return Err(format!("app {:?} process must not be empty", app.name));
+        }
+        for (field, value) in [("class", &app.class), ("title", &app.title)] {
+            if value
+                .as_deref()
+                .is_some_and(|value| value.trim().is_empty())
+            {
+                return Err(format!("app {:?} {field} must not be empty", app.name));
+            }
+        }
+        if let Some(workspace) = &app.workspace
+            && !workspaces.contains(workspace)
+        {
+            return Err(format!(
+                "app {:?} uses workspace {:?}, which the GlazeWM base does not declare",
+                app.name, workspace
+            ));
+        }
+        if app.state == WindowRuleState::Ignored && app.workspace.is_some() {
+            return Err(format!(
+                "app {:?} is ignored and cannot have a workspace home",
+                app.name
+            ));
+        }
+    }
+
+    for (index, left) in apps.iter().enumerate() {
+        for right in &apps[index + 1..] {
+            validate_app_overlap(left, right)?;
+        }
+    }
+    for app in apps {
+        validate_base_overlap(app, base_rules)?;
+    }
+    Ok(())
+}
+
+fn validate_app_overlap(left: &AppWindowRule, right: &AppWindowRule) -> Result<(), String> {
+    if !app_matches_overlap(left, right) {
+        return Ok(());
+    }
+    if app_matches_equal(left, right) {
+        return Err(format!(
+            "apps {:?} and {:?} own the same GlazeWM match",
+            left.name, right.name
+        ));
+    }
+    if left.state == right.state && left.workspace == right.workspace {
+        return Ok(());
+    }
+    if ignore_exception_precedes(left, right) || ignore_exception_precedes(right, left) {
+        return Ok(());
+    }
+    Err(format!(
+        "apps {:?} and {:?} have overlapping matches with contradictory state/workspace policy",
+        left.name, right.name
+    ))
+}
+
+fn validate_base_overlap(app: &AppWindowRule, rules: &[BaseWindowRule]) -> Result<(), String> {
+    for rule in rules {
+        for base_match in &rule.matches {
+            if !base_match.exact || !base_match_overlaps_app(base_match, app) {
+                continue;
+            }
+            let base_is_narrow_ignore = rule.commands == ["ignore"]
+                && base_match_specificity(base_match) > app_specificity(app);
+            if base_is_narrow_ignore {
+                continue;
+            }
+            return Err(format!(
+                "app {:?} overlaps a base window_rules match; keep that policy in one source",
+                app.name
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn rendered_window_rule(app: &AppWindowRule) -> RenderedWindowRule<'_> {
+    let mut commands = Vec::new();
+    if let Some(workspace) = &app.workspace {
+        commands.push(format!("move --workspace {workspace}"));
+    }
+    commands.push(
+        match app.state {
+            WindowRuleState::Tiling => "set-tiling",
+            WindowRuleState::Floating => "set-floating",
+            WindowRuleState::Ignored => "ignore",
+        }
+        .to_string(),
+    );
+    RenderedWindowRule {
+        commands,
+        match_window: vec![RenderedWindowMatch {
+            window_process: EqualsMatch {
+                equals: &app.process,
+            },
+            window_class: app.class.as_deref().map(|equals| EqualsMatch { equals }),
+            window_title: app.title.as_deref().map(|equals| EqualsMatch { equals }),
+        }],
+    }
+}
+
+fn app_order(app: &AppWindowRule) -> (u8, std::cmp::Reverse<usize>) {
+    (
+        u8::from(app.state != WindowRuleState::Ignored),
+        std::cmp::Reverse(app_specificity(app)),
+    )
+}
+
+fn app_specificity(app: &AppWindowRule) -> usize {
+    1 + usize::from(app.class.is_some()) + usize::from(app.title.is_some())
+}
+
+fn base_match_specificity(base_match: &BaseWindowMatch) -> usize {
+    usize::from(base_match.process.is_some())
+        + usize::from(base_match.class.is_some())
+        + usize::from(base_match.title.is_some())
+}
+
+fn app_matches_overlap(left: &AppWindowRule, right: &AppWindowRule) -> bool {
+    left.process == right.process
+        && selectors_overlap(left.class.as_deref(), right.class.as_deref())
+        && selectors_overlap(left.title.as_deref(), right.title.as_deref())
+}
+
+fn base_match_overlaps_app(base_match: &BaseWindowMatch, app: &AppWindowRule) -> bool {
+    base_match.process.as_deref() == Some(app.process.as_str())
+        && selectors_overlap(base_match.class.as_deref(), app.class.as_deref())
+        && selectors_overlap(base_match.title.as_deref(), app.title.as_deref())
+}
+
+fn selectors_overlap(left: Option<&str>, right: Option<&str>) -> bool {
+    left.is_none() || right.is_none() || left == right
+}
+
+fn app_matches_equal(left: &AppWindowRule, right: &AppWindowRule) -> bool {
+    left.process == right.process && left.class == right.class && left.title == right.title
+}
+
+fn ignore_exception_precedes(exception: &AppWindowRule, broad: &AppWindowRule) -> bool {
+    exception.state == WindowRuleState::Ignored
+        && app_specificity(exception) > app_specificity(broad)
 }
 
 fn yaml_list(items: &[String]) -> String {
@@ -668,6 +1069,7 @@ mod tests {
         let yaml = render_glazewm_config(
             "\u{feff}general:\r\n  focus_follows_cursor: false\r\n",
             &expanded,
+            &[],
         )
         .expect("full config renders");
         assert_eq!(
@@ -690,11 +1092,11 @@ mod tests {
             "[[bind]]\nid = 'close'\nchord = 'SUPER + W'\ndesc = 'Close window'\nsrc = 't'\nmap = ['close']\n",
         );
         let (expanded, _) = check(&file).expect("valid");
-        let error = render_glazewm_config("general: {}\nkeybindings:\n", &expanded)
+        let error = render_glazewm_config("general: {}\nkeybindings:\n", &expanded, &[])
             .expect_err("base bindings must be rejected");
         assert!(error.contains("line 2 contains keybindings:"), "{error}");
 
-        let inline = render_glazewm_config("general: {}\nkeybindings: []\n", &expanded)
+        let inline = render_glazewm_config("general: {}\nkeybindings: []\n", &expanded, &[])
             .expect_err("inline base bindings must be rejected");
         assert!(inline.contains("line 2 contains keybindings:"), "{inline}");
     }

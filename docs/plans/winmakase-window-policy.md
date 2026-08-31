@@ -120,7 +120,7 @@ Optional `class` and `title` refine the match. Multiple-window policy is part of
 
 Exit passed: source and live config agree; Caps+Escape recovers a deliberately hidden float/fullscreen focus case.
 
-### W1 — app schema and window-rule renderer
+### W1 — app schema and window-rule renderer — complete 2026-08-30
 
 - Add parsed app definitions with `launch`, process/class/title match, optional workspace and state.
 - Validate unique app names, valid workspaces, at least one match field and supported states.
@@ -129,7 +129,7 @@ Exit passed: source and live config agree; Caps+Escape recovers a deliberately h
 - Add golden tests for tiled home, floating dialog, ignored bar, overlapping rules and invalid config.
 - Decide Chromium-profile identity from an observed window source; if no stable marker exists, explicitly leave profile homes unsupported.
 
-Exit: a test app opens directly on its configured workspace and state without visible move-after-open.
+Exit passed: a unique WinForms fixture's first Glaze state was `floating` on undisplayed workspace `7`; it never appeared on the active workspace. The source config, staged YAML and live YAML matched before reload. After targeted close, the fixture definition/file were removed, the original three window IDs/parents/states were unchanged, the no-app W0 SHA-256 returned to `3B2250505076453EF2521B3BD9A71E3EBD991DBA0F19D67C22C0A62AD58FAC36`, Zebar remained ignored and reserves were `[40, 40, 40]`. Separate `Default` and `Profile 1` launches both reported `chrome` / `Chrome_WidgetWin_1` / `Untitled - Google Chrome`, so W1 does not support profile-specific homes.
 
 ### W2 — focus-or-launch
 

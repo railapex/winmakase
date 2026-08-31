@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 
 use winmakase::commands;
 use winmakase::component::Component;
-use winmakase::config::Config;
+use winmakase::config::{AppState, Config};
 use winmakase::control;
 use winmakase::health::Health;
 use winmakase::paths::Paths;
@@ -171,6 +171,10 @@ enum KeymapAction {
         /// merged only when it exists.
         #[arg(long, value_name = "FILE")]
         local: Option<PathBuf>,
+        /// Product config containing `[apps]`. Defaults to
+        /// <home>/config.toml, created if absent.
+        #[arg(long, value_name = "FILE")]
+        config: Option<PathBuf>,
         /// Binding-free GlazeWM base. When set, render a complete config;
         /// without it, render only the `keybindings:` section.
         #[arg(long, value_name = "FILE")]
@@ -444,19 +448,44 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
         KeymapAction::Render {
             keymap,
             local,
+            config,
             base,
             out,
         } => {
             let (_, file, _) = load(keymap, local)?;
             let (expanded, _) = checked(&file)?;
+            let cfg = Config::load_or_create(&config.unwrap_or_else(|| paths.config()))?;
+            let apps = cfg
+                .apps
+                .iter()
+                .map(|(name, app)| winmakase_keymap::AppWindowRule {
+                    name: name.clone(),
+                    process: app.process.clone(),
+                    class: app.class.clone(),
+                    title: app.title.clone(),
+                    workspace: app.workspace.clone(),
+                    state: match app.state {
+                        AppState::Tiling => winmakase_keymap::WindowRuleState::Tiling,
+                        AppState::Floating => winmakase_keymap::WindowRuleState::Floating,
+                        AppState::Ignored => winmakase_keymap::WindowRuleState::Ignored,
+                    },
+                })
+                .collect::<Vec<_>>();
             let yaml = match base {
                 Some(path) => {
                     let text = std::fs::read_to_string(&path).map_err(|e| {
                         io::Error::new(e.kind(), format!("{}: {e}", path.display()))
                     })?;
-                    winmakase_keymap::render_glazewm_config(&text, &expanded).map_err(invalid)?
+                    winmakase_keymap::render_glazewm_config(&text, &expanded, &apps)
+                        .map_err(invalid)?
                 }
-                None => winmakase_keymap::render_glazewm(&expanded),
+                None if apps.is_empty() => winmakase_keymap::render_glazewm(&expanded),
+                None => {
+                    return Err(invalid(
+                        "configured app window rules require --base so workspaces and existing host rules can be validated"
+                            .into(),
+                    ));
+                }
             };
             match out {
                 Some(dest) => std::fs::write(dest, yaml),

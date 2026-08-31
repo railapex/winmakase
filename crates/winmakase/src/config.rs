@@ -91,6 +91,17 @@ command = "C:/Program Files/glzr.io/Zebar/zebar.exe"
 args = []
 adopt = true
 
+# Apps are named launch identities plus GlazeWM creation policy. Numeric
+# workspace homes are machine-local, so the portable default only shows the
+# shape:
+#
+# [apps.browser]
+# launch = "chrome --profile-directory=Default"
+# process = "chrome"
+# state = "tiling"
+# Add a workspace only in machine-local config; portable defaults do not own
+# anyone's numbered monitor map.
+
 # Named scratchpads for `winmakase scratchpad toggle <name>`: the matching
 # window is banished to the hidden 'scratch' workspace and summoned back
 # floated + centered + focused. The GlazeWM config must define a workspace
@@ -122,9 +133,73 @@ pub struct Config {
     /// Optional: a missing `[zebar]` section means no bar in the set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zebar: Option<ComponentConfig>,
+    /// Named apps: launch identity plus creation-time GlazeWM policy.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub apps: BTreeMap<String, AppConfig>,
     /// Named scratchpads for `winmakase scratchpad toggle <name>`.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub scratchpad: crate::scratchpad::ScratchpadMap,
+}
+
+/// `[apps.<name>]` — an app's launch command, strongest stable Glaze-visible
+/// identity, and optional creation-time workspace/state policy.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AppConfig {
+    pub launch: String,
+    pub process: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<String>,
+    #[serde(default)]
+    pub state: AppState,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AppState {
+    #[default]
+    Tiling,
+    Floating,
+    Ignored,
+}
+
+impl AppConfig {
+    fn validate(&self, name: &str) -> Result<(), String> {
+        let prefix = format!("apps.{name}");
+        if name.trim().is_empty() {
+            return Err("app name must not be empty".into());
+        }
+        if self.launch.trim().is_empty() {
+            return Err(format!("{prefix}.launch must not be empty"));
+        }
+        if self.process.trim().is_empty() {
+            return Err(format!("{prefix}.process must not be empty"));
+        }
+        for (field, value) in [("class", &self.class), ("title", &self.title)] {
+            if value
+                .as_deref()
+                .is_some_and(|value| value.trim().is_empty())
+            {
+                return Err(format!("{prefix}.{field} must not be empty"));
+            }
+        }
+        if self
+            .workspace
+            .as_deref()
+            .is_some_and(|workspace| workspace.trim().is_empty())
+        {
+            return Err(format!("{prefix}.workspace must not be empty"));
+        }
+        if self.state == AppState::Ignored && self.workspace.is_some() {
+            return Err(format!(
+                "{prefix} is ignored and cannot have a workspace home"
+            ));
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -354,6 +429,7 @@ impl Default for Config {
             zebar: Some(
                 ComponentConfig::new("C:/Program Files/glzr.io/Zebar/zebar.exe", &[]).adopting(),
             ),
+            apps: BTreeMap::new(),
             scratchpad: BTreeMap::from([(
                 "term".to_string(),
                 ScratchpadConfig {
@@ -372,8 +448,12 @@ impl Default for Config {
 }
 
 impl Config {
-    pub fn parse(text: &str) -> Result<Self, toml::de::Error> {
-        toml::from_str(text)
+    pub fn parse(text: &str) -> Result<Self, String> {
+        let config: Self = toml::from_str(text).map_err(|error| error.to_string())?;
+        for (name, app) in &config.apps {
+            app.validate(name)?;
+        }
+        Ok(config)
     }
 
     /// Read the config, writing the commented default first if the file is
@@ -487,6 +567,102 @@ mod tests {
         )
         .unwrap_err();
         assert!(err.to_string().contains("dvorak"), "got: {err}");
+    }
+
+    #[test]
+    fn app_definitions_parse_and_round_trip() {
+        let cfg = Config::parse(
+            r#"
+            [kanata]
+            command = "k.exe"
+            [glazewm]
+            command = "g.exe"
+            [apps.browser]
+            launch = "chrome --profile-directory=Default"
+            process = "chrome"
+            class = "Chrome_WidgetWin_1"
+            title = "Stable marker"
+            workspace = "2"
+            state = "floating"
+            "#,
+        )
+        .unwrap();
+        let app = &cfg.apps["browser"];
+        assert_eq!(app.launch, "chrome --profile-directory=Default");
+        assert_eq!(app.process, "chrome");
+        assert_eq!(app.class.as_deref(), Some("Chrome_WidgetWin_1"));
+        assert_eq!(app.title.as_deref(), Some("Stable marker"));
+        assert_eq!(app.workspace.as_deref(), Some("2"));
+        assert_eq!(app.state, AppState::Floating);
+
+        let serialized = toml::to_string(&cfg).unwrap();
+        assert_eq!(Config::parse(&serialized).unwrap(), cfg);
+    }
+
+    #[test]
+    fn invalid_app_definitions_fail_loud() {
+        let wrapper =
+            |app: &str| format!("[kanata]\ncommand = 'k.exe'\n[glazewm]\ncommand = 'g.exe'\n{app}");
+        for (app, expected) in [
+            (
+                "[apps.browser]\nprocess = 'chrome'\n",
+                "missing field `launch`",
+            ),
+            (
+                "[apps.browser]\nlaunch = 'chrome'\n",
+                "missing field `process`",
+            ),
+            (
+                "[apps.browser]\nlaunch = '   '\nprocess = 'chrome'\n",
+                "apps.browser.launch must not be empty",
+            ),
+            (
+                "[apps.browser]\nlaunch = 'chrome'\nprocess = ''\n",
+                "apps.browser.process must not be empty",
+            ),
+            (
+                "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nclass = ''\n",
+                "apps.browser.class must not be empty",
+            ),
+            (
+                "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nstate = 'parked'\n",
+                "parked",
+            ),
+            (
+                "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nstate = 'ignored'\nworkspace = '2'\n",
+                "ignored and cannot have a workspace home",
+            ),
+            (
+                "[apps.'']\nlaunch = 'chrome'\nprocess = 'chrome'\n",
+                "app name must not be empty",
+            ),
+        ] {
+            let error = Config::parse(&wrapper(app)).unwrap_err();
+            assert!(
+                error.contains(expected),
+                "expected {expected:?}, got {error:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn duplicate_app_names_are_rejected_by_toml() {
+        let error = Config::parse(
+            r#"
+            [kanata]
+            command = "k.exe"
+            [glazewm]
+            command = "g.exe"
+            [apps.browser]
+            launch = "chrome"
+            process = "chrome"
+            [apps.browser]
+            launch = "msedge"
+            process = "msedge"
+            "#,
+        )
+        .unwrap_err();
+        assert!(error.contains("duplicate key"), "got: {error}");
     }
 
     #[test]
