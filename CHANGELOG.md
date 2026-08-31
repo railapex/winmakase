@@ -5,6 +5,7 @@ All notable changes to Winmakase. Format follows [Keep a Changelog](https://keep
 ## [Unreleased]
 
 ### Fixed
+- Display-topology changes now re-arm Zebar's delayed dock check. Zebar can keep its backend alive while silently losing every widget window during its own monitor rebuild; the old start-only check had already passed and left all monitors at `0px` reserve.
 - `scratchpad summon` no longer treats `IsWindowVisible=false` as proof that a healthy Glaze-managed window is a ghost. GPUI exposed the proxy failure live: muxel was displayed and focused, yet Win32 reported invisible and the rescue path floated it. Rescue now trusts DWM cloak plus Glaze workspace display state; an unbound `scratch` workspace falls back to the focused displayed workspace.
 - Reboot recovery no longer drops Zebar when GlazeWM is already backing off: independent component recoveries now keep separate pending entries, with an integration test that kills GlazeWM and Zebar together and requires all three components to return.
 - The Zebar dock check now treats `[0, 0, 0]` as total dock failure instead of healthy consistency. A rendered bar with no work-area reservation is bounced just like a partial `[40, 0, 0]` dock.

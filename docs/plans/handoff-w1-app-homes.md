@@ -6,15 +6,16 @@ Next cut: W1 only — app definitions and generated workspace-home rules
 
 ## Resume state
 
-W0 is complete, committed and live. WinMakase v0.1.2 renders the complete Glaze config from the portable keymap, machine-local keymap overrides and a binding-free machine-local Glaze base. The rendered source and live config have the same SHA-256: `3B2250505076453EF2521B3BD9A71E3EBD991DBA0F19D67C22C0A62AD58FAC36`.
+W0 is complete, committed and live. WinMakase v0.1.3 renders the complete Glaze config from the portable keymap, machine-local keymap overrides and a binding-free machine-local Glaze base. The rendered source and live config have the same SHA-256: `3B2250505076453EF2521B3BD9A71E3EBD991DBA0F19D67C22C0A62AD58FAC36`.
 
 Live stack at close:
 
 - WinMakase supervisor, stock GlazeWM 3.10.1, kanata and Zebar are running with zero restarts.
+- Zebar's display-churn hole is closed: every settled display-change burst re-arms the delayed dock check. Fresh v0.1.3 live proof registered three appbars and produced `[40, 40, 40]` reserves.
 - W0 physical pass is green: Caps workspace navigation, reflow, float/layer cycle, scratch banish/summon, move+follow and silent move. Alt+Tab and physical left-Win+Tab remain native.
 - Workspace map is `1/4 -> Dell`, `2/5 -> ultrawide`, `3/6 -> DualUp`; `7` is the occasional-display fallback and `scratch` is last/unbound.
 - Main is clean. W0 is `0c8374f`; the separate parked Caps spike plan is `22c115c`. Pushing main remains Chris's button.
-- Baseline verification: 163 tests pass; two real-task/taskbar tests are deliberately ignored. `cargo fmt --all -- --check` and `git diff --check` pass.
+- Baseline verification: 164 tests pass; two real-task/taskbar tests are deliberately ignored. `cargo fmt --all -- --check`, Clippy with warnings denied and `git diff --check` pass.
 
 ## W1 outcome
 

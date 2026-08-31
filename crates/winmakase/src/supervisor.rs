@@ -82,8 +82,9 @@ const TASK_START_DISCOVER_MS: u64 = 5_000;
 /// once per event would multiply the disruption the bounce exists to fix.
 const DISPLAY_DEBOUNCE_MS: u64 = 2_000;
 
-/// How long after a zebar start to check that its dock actually took on every
-/// monitor. Bars need several seconds to create windows and register appbars.
+/// How long after a zebar start or settled display change to check that its
+/// dock actually took on every monitor. Bars need several seconds to create
+/// windows and register appbars.
 const DOCK_CHECK_DELAY_MS: u64 = 12_000;
 
 /// A dock race that three bounces cannot win is not a race — stop churning
@@ -188,7 +189,8 @@ pub struct Supervisor {
     display_event_at: Option<Instant>,
     /// Taskbar state found at startup, put back on shutdown.
     prior_taskbar: Option<u32>,
-    /// Set when zebar (re)starts; a pending dock-consistency check.
+    /// Set when zebar (re)starts or a display-change burst settles; a pending
+    /// dock-consistency check.
     dock_check_at: Option<Instant>,
     /// Consecutive bar bounces spent on a lost dock race.
     dock_bounces: u32,
@@ -1214,6 +1216,13 @@ impl Supervisor {
         }
         self.display_event_at = None;
 
+        // Zebar rebuilds its widget windows when the monitor topology changes.
+        // The start-time check may already have passed, so give the rebuilt
+        // appbars their own delayed consistency check.
+        if self.children.contains_key(&Component::Zebar) {
+            self.dock_check_at = Some(Instant::now());
+        }
+
         if !self.cfg.supervisor.bounce_on_display_change {
             return;
         }
@@ -1224,8 +1233,8 @@ impl Supervisor {
         self.log("display change: bouncing the pair (bounce_on_display_change is on)");
         // Down in the safe order — kanata first, so it never outlives GlazeWM
         // synthesizing Win presses nothing consumes — then GlazeWM politely, so
-        // its watcher restores window positions. The bar is not bounced: zebar
-        // handles monitor changes itself.
+        // its watcher restores window positions. The bar is not bounced
+        // eagerly: the delayed dock check above decides from live reserves.
         self.force_stop(Component::Kanata);
         self.stop_gracefully(Component::Glazewm, None);
         self.schedule(
@@ -1283,6 +1292,26 @@ impl Supervisor {
 mod tests {
     use super::*;
     use crate::config::SupervisorConfig;
+    use crate::testutil::{FakeHandle, FakePoll, TempDir};
+
+    #[test]
+    fn a_display_change_rearms_the_zebar_dock_check() {
+        let dir = TempDir::new("display-rearms-dock-check");
+        let mut sup = Supervisor::new(Config::default(), Paths::at(dir.path())).unwrap();
+        sup.inject_running(
+            Component::Zebar,
+            Box::new(FakeHandle::new(333, vec![FakePoll::Running])),
+        );
+        assert!(sup.dock_check_at.is_none());
+
+        sup.simulate_display_change();
+        sup.tick();
+
+        assert!(
+            sup.dock_check_at.is_some(),
+            "a later monitor rebuild needs a fresh dock check"
+        );
+    }
 
     #[test]
     fn a_console_shutdown_fits_inside_the_os_grace_period() {

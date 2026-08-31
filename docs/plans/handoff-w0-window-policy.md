@@ -6,7 +6,7 @@ Next cut: W1 only
 
 ## Closed state
 
-W0 is deployed and verified. The generated live config, v0.1.2 binary, reversible real-rig IPC acceptance suite and Chris's literal physical-key pass are green. Caps workspace navigation, reflow, float/layer cycle, scratch banish/summon, move+follow and silent move work; native Alt+Tab and physical left-Win+Tab remain untouched.
+W0 is deployed and verified. The generated live config, v0.1.3 binary, reversible real-rig IPC acceptance suite and Chris's literal physical-key pass are green. Caps workspace navigation, reflow, float/layer cycle, scratch banish/summon, move+follow and silent move work; native Alt+Tab and physical left-Win+Tab remain untouched.
 
 Do not redo the deploy. Read `spike/NOTES.md` for the live hash, backup and findings. `D:/temp/verify-winmakase-w0-ipc.ps1` is the all-window snapshot/restore suite; it passed, but its daily-window fixture selection is not portable enough to become product UAT.
 
@@ -38,9 +38,9 @@ The local `main` branch is ahead of `origin/main`; pushing `main` is Chris's but
 
 ## Proven live state
 
-- WinMakase v0.1.1 supervisor owns kanata, stock GlazeWM 3.10.1 and Zebar.
+- WinMakase v0.1.3 supervisor owns kanata, stock GlazeWM 3.10.1 and Zebar.
 - Reboot hardening is deployed: Glaze starts wait out high commit pressure; linked-pair and Zebar recoveries are independent.
-- Zebar starts under the supervisor and reserves 40px on all three monitors; the dock healer treats partial and all-zero reserves as failure.
+- Zebar starts under the supervisor and reserves 40px on all three monitors; the dock healer treats partial and all-zero reserves as failure after both startup and settled display changes. This closes the live v0.1.2 failure where monitor churn removed every bar after the one startup check had passed.
 - Daily workspace mapping is `1/4 -> Dell`, `2/5 -> ultrawide`, `3/6 -> DualUp`. Workspace 7 is the occasional-display fallback; `scratch` stays last and unbound.
 - Reflow and scratchpad verbs are live. The grouping chord shows a gap notice.
 - The rig is back on stock Glaze. KhangHLe and the official animation branch are not live candidates in this cut.
