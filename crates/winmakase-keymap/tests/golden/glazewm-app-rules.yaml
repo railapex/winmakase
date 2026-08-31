@@ -17,6 +17,8 @@ window_rules:
       equals: Chrome_WidgetWin_1
     window_title:
       equals: Picture in picture
+  on:
+  - manage
 - commands:
   - set-floating
   match:
@@ -26,11 +28,17 @@ window_rules:
       equals: AcmeDialog
     window_title:
       equals: Preferences
+  on:
+  - manage
 - commands:
   - move --workspace 2
   - set-tiling
   match:
   - window_process:
       equals: chrome
+    window_app_id:
+      equals: Chrome
+  on:
+  - manage
 
 keybindings:

@@ -24,6 +24,7 @@ use crate::glazewm::{Client, Node, Workspace, windows_under};
 pub const SCRATCH_WORKSPACE: &str = "scratch";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ScratchpadConfig {
     /// Command to launch when no matching window exists anywhere.
     pub launch: String,

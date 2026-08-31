@@ -91,13 +91,15 @@ command = "C:/Program Files/glzr.io/Zebar/zebar.exe"
 args = []
 adopt = true
 
-# Apps are named launch identities plus GlazeWM creation policy. Numeric
+# Apps are named launch identities plus GlazeWM manage-time policy. Numeric
 # workspace homes are machine-local, so the portable default only shows the
 # shape:
 #
 # [apps.browser]
-# launch = "chrome --profile-directory=Default"
+# launch = "chrome"
+# launch_args = ["--profile-directory=Default"]
 # process = "chrome"
+# app_id = "Chrome"
 # state = "tiling"
 # Add a workspace only in machine-local config; portable defaults do not own
 # anyone's numbered monitor map.
@@ -121,6 +123,7 @@ height = "60%"
 "#;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     #[serde(default)]
     pub supervisor: SupervisorConfig,
@@ -133,7 +136,7 @@ pub struct Config {
     /// Optional: a missing `[zebar]` section means no bar in the set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zebar: Option<ComponentConfig>,
-    /// Named apps: launch identity plus creation-time GlazeWM policy.
+    /// Named apps: launch identity plus manage-time GlazeWM policy.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub apps: BTreeMap<String, AppConfig>,
     /// Named scratchpads for `winmakase scratchpad toggle <name>`.
@@ -142,15 +145,21 @@ pub struct Config {
 }
 
 /// `[apps.<name>]` — an app's launch command, strongest stable Glaze-visible
-/// identity, and optional creation-time workspace/state policy.
+/// identity, and optional manage-time workspace/state policy.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct AppConfig {
     pub launch: String,
+    #[serde(default)]
+    pub launch_args: Vec<String>,
     pub process: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub class: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    /// Windows AppUserModelID, read from the window's property store.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub app_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub workspace: Option<String>,
     #[serde(default)]
@@ -178,7 +187,11 @@ impl AppConfig {
         if self.process.trim().is_empty() {
             return Err(format!("{prefix}.process must not be empty"));
         }
-        for (field, value) in [("class", &self.class), ("title", &self.title)] {
+        for (field, value) in [
+            ("class", &self.class),
+            ("title", &self.title),
+            ("app_id", &self.app_id),
+        ] {
             if value
                 .as_deref()
                 .is_some_and(|value| value.trim().is_empty())
@@ -203,6 +216,7 @@ impl AppConfig {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ComponentConfig {
     /// The component's executable. Spawned directly — unless `task` is set, in
     /// which case this is only the exact image path to find and watch.
@@ -259,6 +273,7 @@ impl ComponentConfig {
 /// `[keyboard]` — what `winmakase kanata render` produces. Which physical key
 /// carries the WM chord, and the apps-mode tap-hold window.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct KeyboardConfig {
     #[serde(default)]
     pub mode: KeyboardMode,
@@ -293,6 +308,7 @@ impl Default for KeyboardConfig {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SupervisorConfig {
     #[serde(default = "d_poll_ms")]
     pub poll_ms: u64,
@@ -466,6 +482,11 @@ impl Config {
             }
             fs::write(path, DEFAULT_CONFIG_TOML)?;
         }
+        Self::load(path)
+    }
+
+    /// Read an existing config without creating a default for a missing path.
+    pub fn load(path: &Path) -> io::Result<Self> {
         let text = fs::read_to_string(path)?;
         Self::parse(&text).map_err(|e| {
             io::Error::new(
@@ -578,20 +599,24 @@ mod tests {
             [glazewm]
             command = "g.exe"
             [apps.browser]
-            launch = "chrome --profile-directory=Default"
+            launch = "chrome"
+            launch_args = ["--profile-directory=Default"]
             process = "chrome"
             class = "Chrome_WidgetWin_1"
             title = "Stable marker"
+            app_id = "Chrome"
             workspace = "2"
             state = "floating"
             "#,
         )
         .unwrap();
         let app = &cfg.apps["browser"];
-        assert_eq!(app.launch, "chrome --profile-directory=Default");
+        assert_eq!(app.launch, "chrome");
+        assert_eq!(app.launch_args, ["--profile-directory=Default"]);
         assert_eq!(app.process, "chrome");
         assert_eq!(app.class.as_deref(), Some("Chrome_WidgetWin_1"));
         assert_eq!(app.title.as_deref(), Some("Stable marker"));
+        assert_eq!(app.app_id.as_deref(), Some("Chrome"));
         assert_eq!(app.workspace.as_deref(), Some("2"));
         assert_eq!(app.state, AppState::Floating);
 
@@ -625,6 +650,10 @@ mod tests {
                 "apps.browser.class must not be empty",
             ),
             (
+                "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\napp_id = ''\n",
+                "apps.browser.app_id must not be empty",
+            ),
+            (
                 "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nstate = 'parked'\n",
                 "parked",
             ),
@@ -638,6 +667,30 @@ mod tests {
             ),
         ] {
             let error = Config::parse(&wrapper(app)).unwrap_err();
+            assert!(
+                error.contains(expected),
+                "expected {expected:?}, got {error:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_config_keys_fail_loud() {
+        for (text, expected) in [
+            (
+                "[kanata]\ncommand = 'k.exe'\n[glazewm]\ncommand = 'g.exe'\n[appps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\n",
+                "appps",
+            ),
+            (
+                "[kanata]\ncommand = 'k.exe'\n[glazewm]\ncommand = 'g.exe'\n[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nworkpace = '2'\n",
+                "workpace",
+            ),
+            (
+                "[kanata]\ncommand = 'k.exe'\n[glazewm]\ncommand = 'g.exe'\n[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\ntitel = 'x'\n",
+                "titel",
+            ),
+        ] {
+            let error = Config::parse(text).expect_err("unknown keys must be rejected");
             assert!(
                 error.contains(expected),
                 "expected {expected:?}, got {error:?}"
@@ -679,6 +732,15 @@ mod tests {
         assert_eq!(written, Config::default());
         assert!(fs::read_to_string(&path).unwrap().contains("LINKED PAIR"));
         assert_eq!(Config::load_or_create(&path).unwrap(), Config::default());
+    }
+
+    #[test]
+    fn load_does_not_create_a_missing_explicit_config() {
+        let dir = crate::testutil::TempDir::new("cfg-explicit-missing");
+        let path = dir.path().join("mistyped.toml");
+        let error = Config::load(&path).expect_err("an explicit path must exist");
+        assert_eq!(error.kind(), io::ErrorKind::NotFound);
+        assert!(!path.exists());
     }
 
     #[test]

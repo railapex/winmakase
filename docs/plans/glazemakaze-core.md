@@ -1,14 +1,23 @@
 # Glazemakaze — core patch train
 
-Status: parked, cold-start ready
+Status: core track parked; bounded identity patch dogfooding
 Created: 2026-08-30
 Owner boundary: GlazeWM engine behavior only
 
 ## Outcome
 
-Keep stock GlazeWM 3.10.1 on the live rig. Build Glazemakaze as a thin, rebased patch train with upstream-sized commits. Do not publish or adopt a permanent hard fork until upstream rejection, release paralysis, or a concrete production need makes that cost real.
+Keep GlazeWM pinned to the 3.10.1 base. Carry only production-proven, upstream-sized patches on the live rig; do not publish or adopt a broad permanent fork until upstream rejection, release paralysis, or a concrete production need makes that cost real.
 
 The first work is recovery correctness. Speed comes next. Animations come last and stay off by default.
+
+Exception 2026-08-31: app homes found one bounded missing primitive before G0.
+Chrome already writes a profile-aware AppUserModelID to every HWND, but stock
+Glaze exposes only process/class/title. The isolated `app-user-model-id`
+worktree adds the property to native window state and IPC plus a
+`window_app_id` rule matcher. The `ui_access=false` build, watcher and matching
+CLI are deployed under `~/.winmakase/bin`; no certificate or trust-store change
+was needed. This is an upstream-sized identity seam, not the start of the
+recovery/animation fork train.
 
 ## Boundary
 

@@ -172,7 +172,7 @@ enum KeymapAction {
         #[arg(long, value_name = "FILE")]
         local: Option<PathBuf>,
         /// Product config containing `[apps]`. Defaults to
-        /// <home>/config.toml, created if absent.
+        /// <home>/config.toml, created if absent. An explicit path must exist.
         #[arg(long, value_name = "FILE")]
         config: Option<PathBuf>,
         /// Binding-free GlazeWM base. When set, render a complete config;
@@ -454,7 +454,10 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
         } => {
             let (_, file, _) = load(keymap, local)?;
             let (expanded, _) = checked(&file)?;
-            let cfg = Config::load_or_create(&config.unwrap_or_else(|| paths.config()))?;
+            let cfg = match config {
+                Some(path) => Config::load(&path)?,
+                None => Config::load_or_create(&paths.config())?,
+            };
             let apps = cfg
                 .apps
                 .iter()
@@ -463,6 +466,7 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
                     process: app.process.clone(),
                     class: app.class.clone(),
                     title: app.title.clone(),
+                    app_id: app.app_id.clone(),
                     workspace: app.workspace.clone(),
                     state: match app.state {
                         AppState::Tiling => winmakase_keymap::WindowRuleState::Tiling,

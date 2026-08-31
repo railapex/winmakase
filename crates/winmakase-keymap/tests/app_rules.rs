@@ -15,6 +15,7 @@ fn app(
     process: &str,
     class: Option<&str>,
     title: Option<&str>,
+    app_id: Option<&str>,
     workspace: Option<&str>,
     state: WindowRuleState,
 ) -> AppWindowRule {
@@ -23,6 +24,7 @@ fn app(
         process: process.into(),
         class: class.map(str::to_string),
         title: title.map(str::to_string),
+        app_id: app_id.map(str::to_string),
         workspace: workspace.map(str::to_string),
         state,
     }
@@ -36,6 +38,7 @@ fn deterministic_rules_match_the_golden() {
             "chrome",
             None,
             None,
+            Some("Chrome"),
             Some("2"),
             WindowRuleState::Tiling,
         ),
@@ -45,6 +48,7 @@ fn deterministic_rules_match_the_golden() {
             Some("AcmeDialog"),
             Some("Preferences"),
             None,
+            None,
             WindowRuleState::Floating,
         ),
         app(
@@ -52,6 +56,7 @@ fn deterministic_rules_match_the_golden() {
             "chrome",
             Some("Chrome_WidgetWin_1"),
             Some("Picture in picture"),
+            None,
             None,
             WindowRuleState::Ignored,
         ),
@@ -90,6 +95,7 @@ fn workspace_and_policy_conflicts_fail_loud() {
         "chrome",
         None,
         None,
+        None,
         Some("9"),
         WindowRuleState::Tiling,
     );
@@ -101,6 +107,7 @@ fn workspace_and_policy_conflicts_fail_loud() {
         "chrome",
         None,
         None,
+        None,
         Some("2"),
         WindowRuleState::Tiling,
     );
@@ -108,6 +115,7 @@ fn workspace_and_policy_conflicts_fail_loud() {
         "browser-dialog",
         "chrome",
         Some("Chrome_WidgetWin_1"),
+        None,
         None,
         None,
         WindowRuleState::Floating,
@@ -123,6 +131,7 @@ fn narrow_ignore_is_the_only_contradictory_overlap_with_defined_order() {
         "chrome",
         None,
         None,
+        None,
         Some("2"),
         WindowRuleState::Tiling,
     );
@@ -131,6 +140,7 @@ fn narrow_ignore_is_the_only_contradictory_overlap_with_defined_order() {
         "chrome",
         Some("Chrome_WidgetWin_1"),
         Some("Popup"),
+        None,
         None,
         WindowRuleState::Ignored,
     );
@@ -155,11 +165,86 @@ window_rules:
         "chrome",
         None,
         None,
+        None,
         Some("2"),
         WindowRuleState::Tiling,
     );
     let error = render_glazewm_config(base, &[], &[browser]).unwrap_err();
     assert!(error.contains("keep that policy in one source"), "{error}");
+}
+
+#[test]
+fn non_exact_base_conflicts_do_not_bypass_ownership_validation() {
+    let browser = app(
+        "browser",
+        "chrome",
+        None,
+        None,
+        None,
+        Some("2"),
+        WindowRuleState::Tiling,
+    );
+    for matcher in [
+        "window_process: { regex: '^chrome$' }",
+        "window_process: { includes: 'chrom' }",
+        "window_process: { not_equals: 'firefox' }",
+        "window_process: { not_regex: '^firefox$' }",
+    ] {
+        let base = format!(
+            "workspaces:\n  - name: '2'\nwindow_rules:\n  - commands: ['set-floating']\n    match:\n      - {matcher}\n"
+        );
+        let error = render_glazewm_config(&base, &[], std::slice::from_ref(&browser))
+            .expect_err("overlap must not be silently accepted");
+        assert!(error.contains("keep that policy in one source"), "{error}");
+    }
+}
+
+#[test]
+fn narrow_regex_ignore_remains_a_decisive_base_exception() {
+    let base = r#"
+workspaces:
+  - name: '2'
+window_rules:
+  - commands: ['ignore']
+    match:
+      - window_process: { equals: 'chrome' }
+        window_title: { regex: '[Pp]icture.in.[Pp]icture' }
+"#;
+    let browser = app(
+        "browser",
+        "chrome",
+        None,
+        None,
+        None,
+        Some("2"),
+        WindowRuleState::Tiling,
+    );
+    let rendered = render_glazewm_config(base, &[], &[browser]).unwrap();
+    assert!(rendered.find("regex:").unwrap() < rendered.find("move --workspace 2").unwrap());
+}
+
+#[test]
+fn app_ids_disambiguate_chromium_profiles() {
+    let ownerrez = app(
+        "ownerrez",
+        "chrome",
+        None,
+        None,
+        Some("Chrome"),
+        Some("1"),
+        WindowRuleState::Tiling,
+    );
+    let personal = app(
+        "personal",
+        "chrome",
+        None,
+        None,
+        Some("Chrome.UserData.Profile1"),
+        Some("2"),
+        WindowRuleState::Tiling,
+    );
+    let rendered = render_glazewm_config(BASE, &[], &[ownerrez, personal]).unwrap();
+    assert!(rendered.contains("equals: Chrome.UserData.Profile1"));
 }
 
 #[test]
@@ -169,6 +254,22 @@ fn malformed_or_ambiguous_base_fails_loud() {
         ("window_rules: nope\n", "window_rules must be a list"),
         ("window_rules: []\nwindow_rules: []\n", "not valid YAML"),
         ("workspaces:\n  - bind_to_monitor: 0\n", "string name"),
+        (
+            "window_rules:\n  - commands: ['ignore']\n    match:\n      - window_process: { starts_with: 'z' }\n",
+            "unknown matcher",
+        ),
+        (
+            "window_rules:\n  - commands: ['ignore']\n    match:\n      - window_process: { equals: 'zebar', regex: 'zebar' }\n",
+            "exactly one",
+        ),
+        (
+            "window_rules:\n  - commands: ['ignore']\n    match:\n      - window_process: { regex: '' }\n",
+            "must not be empty",
+        ),
+        (
+            "window_rules:\n  - commands: ['ignore']\n    match:\n      - window_process: { equals: 'zebar' }\n        window_titel: { equals: 'typo' }\n",
+            "unknown match field",
+        ),
     ] {
         let error = render_glazewm_config(base, &[], &[]).unwrap_err();
         assert!(

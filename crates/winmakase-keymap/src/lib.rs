@@ -254,13 +254,14 @@ pub fn render_glazewm(expanded: &[Expanded]) -> String {
 
 /// One typed app policy supplied by the product config. The launch command is
 /// deliberately absent: Glaze only needs the stable window identity and the
-/// creation-time policy.
+/// manage-time policy.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AppWindowRule {
     pub name: String,
     pub process: String,
     pub class: Option<String>,
     pub title: Option<String>,
+    pub app_id: Option<String>,
     pub workspace: Option<String>,
     pub state: WindowRuleState,
 }
@@ -277,6 +278,7 @@ struct RenderedWindowRule<'a> {
     commands: Vec<String>,
     #[serde(rename = "match")]
     match_window: Vec<RenderedWindowMatch<'a>>,
+    on: [&'static str; 1],
 }
 
 #[derive(Serialize)]
@@ -286,6 +288,8 @@ struct RenderedWindowMatch<'a> {
     window_class: Option<EqualsMatch<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     window_title: Option<EqualsMatch<'a>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_app_id: Option<EqualsMatch<'a>>,
 }
 
 #[derive(Serialize)]
@@ -301,14 +305,23 @@ struct BaseWindowRule {
 
 #[derive(Debug)]
 struct BaseWindowMatch {
-    process: Option<String>,
-    class: Option<String>,
-    title: Option<String>,
-    exact: bool,
+    process: Option<BaseSelector>,
+    class: Option<BaseSelector>,
+    title: Option<BaseSelector>,
+    app_id: Option<BaseSelector>,
+}
+
+#[derive(Debug)]
+enum BaseSelector {
+    Equals(String),
+    Includes(String),
+    Regex(String),
+    NotEquals(String),
+    NotRegex(String),
 }
 
 /// Compose a complete GlazeWM config from a machine/portable base, typed app
-/// creation rules, and generated bindings. The base owns narrow host/system
+/// manage rules, and generated bindings. The base owns narrow host/system
 /// rules; app config owns app policy; this function is the sole owner of the
 /// rendered `window_rules` list. A base `keybindings` owner remains forbidden.
 pub fn render_glazewm_config(
@@ -487,27 +500,43 @@ fn parse_base_window_match(
     let mapping = value
         .as_mapping()
         .ok_or_else(|| format!("{prefix} must be a mapping"))?;
-    let mut exact = true;
-    let process = base_equals(mapping, "window_process", &prefix, &mut exact)?;
-    let class = base_equals(mapping, "window_class", &prefix, &mut exact)?;
-    let title = base_equals(mapping, "window_title", &prefix, &mut exact)?;
-    if process.is_none() && class.is_none() && title.is_none() && exact {
-        return Err(format!("{prefix} needs a process, class, or title matcher"));
+    for key in mapping.keys() {
+        let key = key
+            .as_str()
+            .ok_or_else(|| format!("{prefix} field names must be strings"))?;
+        if ![
+            "window_process",
+            "window_class",
+            "window_title",
+            "window_app_id",
+        ]
+        .contains(&key)
+        {
+            return Err(format!("{prefix} contains unknown match field {key:?}"));
+        }
+    }
+    let process = base_selector(mapping, "window_process", &prefix)?;
+    let class = base_selector(mapping, "window_class", &prefix)?;
+    let title = base_selector(mapping, "window_title", &prefix)?;
+    let app_id = base_selector(mapping, "window_app_id", &prefix)?;
+    if process.is_none() && class.is_none() && title.is_none() && app_id.is_none() {
+        return Err(format!(
+            "{prefix} needs a process, class, title, or app ID matcher"
+        ));
     }
     Ok(BaseWindowMatch {
         process,
         class,
         title,
-        exact,
+        app_id,
     })
 }
 
-fn base_equals(
+fn base_selector(
     mapping: &serde_yaml_ng::Mapping,
     field: &str,
     prefix: &str,
-    exact: &mut bool,
-) -> Result<Option<String>, String> {
+) -> Result<Option<BaseSelector>, String> {
     let key = serde_yaml_ng::Value::String(field.into());
     let Some(value) = mapping.get(&key) else {
         return Ok(None);
@@ -515,17 +544,34 @@ fn base_equals(
     let selector = value
         .as_mapping()
         .ok_or_else(|| format!("{prefix}.{field} must be a matcher mapping"))?;
-    let equals_key = serde_yaml_ng::Value::String("equals".into());
-    match selector.get(&equals_key) {
-        Some(value) => value
-            .as_str()
-            .map(|value| Some(value.to_string()))
-            .ok_or_else(|| format!("{prefix}.{field}.equals must be a string")),
-        None => {
-            *exact = false;
-            Ok(None)
-        }
+    if selector.len() != 1 {
+        return Err(format!(
+            "{prefix}.{field} must contain exactly one GlazeWM matcher"
+        ));
     }
+    let (kind, value) = selector
+        .iter()
+        .next()
+        .expect("a one-item mapping has a first item");
+    let kind = kind
+        .as_str()
+        .ok_or_else(|| format!("{prefix}.{field} matcher name must be a string"))?;
+    let value = value
+        .as_str()
+        .ok_or_else(|| format!("{prefix}.{field}.{kind} must be a string"))?
+        .to_string();
+    if value.trim().is_empty() {
+        return Err(format!("{prefix}.{field}.{kind} must not be empty"));
+    }
+    let selector = match kind {
+        "equals" => BaseSelector::Equals(value),
+        "includes" => BaseSelector::Includes(value),
+        "regex" => BaseSelector::Regex(value),
+        "not_equals" => BaseSelector::NotEquals(value),
+        "not_regex" => BaseSelector::NotRegex(value),
+        _ => return Err(format!("{prefix}.{field} uses unknown matcher {kind:?}")),
+    };
+    Ok(Some(selector))
 }
 
 fn validate_apps(
@@ -544,7 +590,11 @@ fn validate_apps(
         if app.process.trim().is_empty() {
             return Err(format!("app {:?} process must not be empty", app.name));
         }
-        for (field, value) in [("class", &app.class), ("title", &app.title)] {
+        for (field, value) in [
+            ("class", &app.class),
+            ("title", &app.title),
+            ("app ID", &app.app_id),
+        ] {
             if value
                 .as_deref()
                 .is_some_and(|value| value.trim().is_empty())
@@ -604,7 +654,7 @@ fn validate_app_overlap(left: &AppWindowRule, right: &AppWindowRule) -> Result<(
 fn validate_base_overlap(app: &AppWindowRule, rules: &[BaseWindowRule]) -> Result<(), String> {
     for rule in rules {
         for base_match in &rule.matches {
-            if !base_match.exact || !base_match_overlaps_app(base_match, app) {
+            if !base_match_overlaps_app(base_match, app) {
                 continue;
             }
             let base_is_narrow_ignore = rule.commands == ["ignore"]
@@ -642,7 +692,12 @@ fn rendered_window_rule(app: &AppWindowRule) -> RenderedWindowRule<'_> {
             },
             window_class: app.class.as_deref().map(|equals| EqualsMatch { equals }),
             window_title: app.title.as_deref().map(|equals| EqualsMatch { equals }),
+            window_app_id: app.app_id.as_deref().map(|equals| EqualsMatch { equals }),
         }],
+        // Homes are manage-time policy. Glaze defaults rules to manage plus
+        // title changes, which can visibly move a window after its provisional
+        // title settles. Never inherit that default here.
+        on: ["manage"],
     }
 }
 
@@ -654,25 +709,54 @@ fn app_order(app: &AppWindowRule) -> (u8, std::cmp::Reverse<usize>) {
 }
 
 fn app_specificity(app: &AppWindowRule) -> usize {
-    1 + usize::from(app.class.is_some()) + usize::from(app.title.is_some())
+    1 + usize::from(app.class.is_some())
+        + usize::from(app.title.is_some())
+        + usize::from(app.app_id.is_some())
 }
 
 fn base_match_specificity(base_match: &BaseWindowMatch) -> usize {
     usize::from(base_match.process.is_some())
         + usize::from(base_match.class.is_some())
         + usize::from(base_match.title.is_some())
+        + usize::from(base_match.app_id.is_some())
 }
 
 fn app_matches_overlap(left: &AppWindowRule, right: &AppWindowRule) -> bool {
     left.process == right.process
         && selectors_overlap(left.class.as_deref(), right.class.as_deref())
         && selectors_overlap(left.title.as_deref(), right.title.as_deref())
+        && selectors_overlap(left.app_id.as_deref(), right.app_id.as_deref())
 }
 
 fn base_match_overlaps_app(base_match: &BaseWindowMatch, app: &AppWindowRule) -> bool {
-    base_match.process.as_deref() == Some(app.process.as_str())
-        && selectors_overlap(base_match.class.as_deref(), app.class.as_deref())
-        && selectors_overlap(base_match.title.as_deref(), app.title.as_deref())
+    base_selector_overlaps_exact(base_match.process.as_ref(), Some(&app.process))
+        && base_selector_overlaps_exact(base_match.class.as_ref(), app.class.as_deref())
+        && base_selector_overlaps_exact(base_match.title.as_ref(), app.title.as_deref())
+        && base_selector_overlaps_exact(base_match.app_id.as_ref(), app.app_id.as_deref())
+}
+
+fn base_selector_overlaps_exact(base: Option<&BaseSelector>, app: Option<&str>) -> bool {
+    let Some(base) = base else {
+        return true;
+    };
+    let Some(app) = app else {
+        // The generated rule leaves this property unconstrained. Any supported
+        // base matcher might therefore intersect it; reject unless a decisive
+        // narrow ignore owns the overlap.
+        return true;
+    };
+    match base {
+        BaseSelector::Equals(value) => value == app,
+        BaseSelector::Includes(value) => app.contains(value),
+        // Proving arbitrary regex intersection is the wrong problem here.
+        // Generated selectors are exact, so unknown regex behavior is treated
+        // as overlap and the two policy sources must be reconciled explicitly.
+        BaseSelector::Regex(value) | BaseSelector::NotRegex(value) => {
+            let _ = value;
+            true
+        }
+        BaseSelector::NotEquals(value) => value != app,
+    }
 }
 
 fn selectors_overlap(left: Option<&str>, right: Option<&str>) -> bool {
@@ -680,7 +764,10 @@ fn selectors_overlap(left: Option<&str>, right: Option<&str>) -> bool {
 }
 
 fn app_matches_equal(left: &AppWindowRule, right: &AppWindowRule) -> bool {
-    left.process == right.process && left.class == right.class && left.title == right.title
+    left.process == right.process
+        && left.class == right.class
+        && left.title == right.title
+        && left.app_id == right.app_id
 }
 
 fn ignore_exception_precedes(exception: &AppWindowRule, broad: &AppWindowRule) -> bool {

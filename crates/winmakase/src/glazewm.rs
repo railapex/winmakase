@@ -95,6 +95,10 @@ pub struct Node {
     #[serde(default)]
     pub process_name: Option<String>,
     #[serde(default)]
+    pub class_name: Option<String>,
+    #[serde(default)]
+    pub app_user_model_id: Option<String>,
+    #[serde(default)]
     pub title: Option<String>,
     /// Win32 HWND, for probes the tree cannot answer (cloak, visibility).
     #[serde(default)]
@@ -279,5 +283,17 @@ mod tests {
         let nodes: Vec<Node> = serde_json::from_str(json).unwrap();
         assert!(!nodes[0].is_window());
         assert_eq!(windows_under(&nodes).len(), 1);
+    }
+
+    #[test]
+    fn parses_windows_identity_fields() {
+        let json = r#"[{"type":"window","id":"w1","processName":"chrome","className":"Chrome_WidgetWin_1","appUserModelId":"Chrome.UserData.Profile1"}]"#;
+        let nodes: Vec<Node> = serde_json::from_str(json).unwrap();
+        assert_eq!(nodes[0].process_name.as_deref(), Some("chrome"));
+        assert_eq!(nodes[0].class_name.as_deref(), Some("Chrome_WidgetWin_1"));
+        assert_eq!(
+            nodes[0].app_user_model_id.as_deref(),
+            Some("Chrome.UserData.Profile1")
+        );
     }
 }

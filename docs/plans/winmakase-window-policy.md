@@ -69,22 +69,25 @@ Omarchy itself uses no graphical custom Alt+Tab switcher: Alt+Tab cycles windows
 
 ### App homes
 
-- A home is a creation rule, not saved pixel geometry: match an app, move the new window to workspace N, set tiling/floating/ignored state.
+- A home is a manage rule, not saved pixel geometry: match an app, move the window to workspace N, set tiling/floating/ignored state.
 - Portable WinMakase defaults do not assign common apps to numbered workspaces. Numbering is personal and monitor-dependent.
 - Machine-local config may assign homes such as browser → 2. The renderer compiles them into Glaze `window_rules` so placement happens at manage time.
-- Match with the strongest available identity: process + class, then title only where stable. Profile-specific Chromium homes need an explicit marker/correlation design; do not pretend `chrome.exe` identifies a profile.
+- Glaze replays `manage` rules for existing windows on config reload and process restart. `on: [manage]` prevents title-change moves; it does not make reload inert.
+- Match with the strongest available identity: process + AppUserModelID, then class/title only where stable. Chromium's HWND AppUserModelID already carries profile identity; `chrome.exe` alone still identifies nothing beyond the browser family.
 
 Proposed minimum shape; W1 freezes names after round-trip tests:
 
 ```toml
 [apps.browser]
-launch = 'chrome --profile-directory=Default'
+launch = 'chrome'
+launch_args = ['--profile-directory=Default']
 process = 'chrome'
+app_id = 'Chrome'
 workspace = '2'
 state = 'tiling'
 ```
 
-Optional `class` and `title` refine the match. Multiple-window policy is part of `focus-or-launch`, not the placement rule.
+Optional `app_id`, `class` and `title` refine the match. Multiple-window policy is part of `focus-or-launch`, not the placement rule.
 
 ### Slots and layouts
 
@@ -122,14 +125,14 @@ Exit passed: source and live config agree; Caps+Escape recovers a deliberately h
 
 ### W1 — app schema and window-rule renderer — complete 2026-08-30
 
-- Add parsed app definitions with `launch`, process/class/title match, optional workspace and state.
+- Add parsed app definitions with `launch` + args, process/class/title/AppUserModelID match, optional workspace and state.
 - Validate unique app names, valid workspaces, at least one match field and supported states.
 - Generate deterministic, ordered Glaze rules. `ignore` rules and system/dialog exceptions precede broad process rules.
 - Keep numeric homes in machine-local config; ship portable examples, not Chris's monitor map.
 - Add golden tests for tiled home, floating dialog, ignored bar, overlapping rules and invalid config.
-- Decide Chromium-profile identity from an observed window source; if no stable marker exists, explicitly leave profile homes unsupported.
+- Decide Chromium-profile identity from an observed window source; the HWND AppUserModelID is the stable seam and requires a thin Glaze matcher/IPC patch.
 
-Exit passed: a unique WinForms fixture's first Glaze state was `floating` on undisplayed workspace `7`; it never appeared on the active workspace. The source config, staged YAML and live YAML matched before reload. After targeted close, the fixture definition/file were removed, the original three window IDs/parents/states were unchanged, the no-app W0 SHA-256 returned to `3B2250505076453EF2521B3BD9A71E3EBD991DBA0F19D67C22C0A62AD58FAC36`, Zebar remained ignored and reserves were `[40, 40, 40]`. Separate `Default` and `Profile 1` launches both reported `chrome` / `Chrome_WidgetWin_1` / `Untitled - Google Chrome`, so W1 does not support profile-specific homes.
+Exit passed: a unique WinForms fixture's first Glaze state was `floating` on undisplayed workspace `7`; it never appeared on the active workspace. The source config, staged YAML and live YAML matched before reload. After targeted close, the fixture definition/file were removed, the original three window IDs/parents/states were unchanged, the no-app W0 SHA-256 returned to `3B2250505076453EF2521B3BD9A71E3EBD991DBA0F19D67C22C0A62AD58FAC36`, Zebar remained ignored and reserves were `[40, 40, 40]`. Correction 2026-08-31: the original probe stopped at stock Glaze's process/class/title DTO. Reading `System.AppUserModel.ID` from those HWNDs found `Chrome` for Default and `Chrome.UserData.Profile1` for Profile 1. The profile identity exists; stock Glaze merely did not expose it. W1.1 added that matcher and hardens config/overlap/event semantics. An isolated Chromium profile then matched `Chrome.winmakasechromeuserdata.W1Probe`; its first managed state was `floating` on hidden workspace `7`, all four daily windows stayed put, and cleanup restored the W0 YAML hash and `[40, 40, 40]` reserves. WinMakase v0.1.5 and the unsigned `ui_access=false` Glaze build plus watcher are live from `~/.winmakase/bin`.
 
 ### W2 — focus-or-launch
 

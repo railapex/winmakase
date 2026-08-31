@@ -4,6 +4,23 @@ Created: 2026-08-30
 Repo: `D:/dev/winmakase`
 Next cut: W1 only — app definitions and generated workspace-home rules
 
+## 2026-08-31 correction
+
+The original Chromium gate inspected only stock Glaze's process/class/title
+DTO and incorrectly generalized that absence to Windows. A same-session HWND
+property-store probe found stable AppUserModelIDs: `Chrome` for Default,
+`Chrome.UserData.Profile1` for Profile 1 and `Chrome.ember.Default` for an app
+window. W1.1 adds a thin Glaze `window_app_id` matcher plus IPC exposure and
+hardens unknown TOML keys, non-exact base overlap, explicit config paths and
+manage-only home events. Live acceptance used an isolated Chromium profile:
+exact AppID match, first state `floating` on hidden workspace `7`, four daily
+windows unchanged, W0 YAML restored. WinMakase v0.1.5 and the unsigned
+`ui_access=false` Glaze build plus watcher are deployed from
+`~/.winmakase/bin`; no certificate install occurred. Glaze config reloads and
+restarts replay `manage` rules against existing HWNDs. The historical
+instructions below remain the W1 record; `docs/plans/winmakase-window-policy.md`
+owns the corrected design.
+
 ## Resume state
 
 W0 is complete, committed and live. WinMakase v0.1.3 renders the complete Glaze config from the portable keymap, machine-local keymap overrides and a binding-free machine-local Glaze base. The rendered source and live config have the same SHA-256: `3B2250505076453EF2521B3BD9A71E3EBD991DBA0F19D67C22C0A62AD58FAC36`.
@@ -19,7 +36,7 @@ Live stack at close:
 
 ## W1 outcome
 
-Add first-class app definitions and compile their creation policy into deterministic Glaze `window_rules`:
+Add first-class app definitions and compile their manage policy into deterministic Glaze `window_rules`:
 
 - Ordinary app windows still tile by default.
 - An app may match by process plus optional class/title refinements.
@@ -109,7 +126,7 @@ Do not use arbitrary daily windows as fixtures. The W0 temp suite was reversible
 
 ## Chromium identity gate
 
-Before promising profile-specific homes, observe Glaze's actual `processName`, `className` and `title` for both Chrome profiles. `chrome.exe` alone does not identify a profile. If no stable marker survives normal navigation/title changes, explicitly leave profile homes unsupported in W1. Launch commands may remain profile-specific; creation rules must not pretend they can correlate the resulting HWND.
+Before promising profile-specific homes, observe Glaze's actual `processName`, `className` and `title` for both Chrome profiles. `chrome.exe` alone does not identify a profile. If no stable marker survives normal navigation/title changes, explicitly leave profile homes unsupported in W1. Launch commands may remain profile-specific; manage rules must not pretend they can correlate the resulting HWND.
 
 ## Live acceptance
 
@@ -127,7 +144,7 @@ Exit: a test app opens directly in its configured workspace/state; source, stage
 ## Guardrails
 
 - W1 only. Do not implement W2 `focus-or-launch` or retarget app keys yet.
-- App homes are creation rules, not persisted pixels, slots or layout geometry.
+- App homes are manage rules, not persisted pixels, slots or layout geometry.
 - Numeric homes remain machine-local.
 - Normal windows tile. Repeated overlays are scratchpads; loose floats are exceptions.
 - Do not intercept Alt+Tab or left-Win shortcuts.
@@ -136,4 +153,4 @@ Exit: a test app opens directly in its configured workspace/state; source, stage
 
 ## Fresh-session prompt
 
-> Work in `D:/dev/winmakase`. Read `CLAUDE.md`, `docs/TODO.md`, `spike/NOTES.md` § LIVE MACHINE STATE, `docs/plans/winmakase-window-policy.md`, and `docs/plans/handoff-w1-app-homes.md`. Execute W1 only: add typed app definitions and deterministic generated Glaze window rules, settle one-owner composition with the base's existing Zebar rule, keep numeric homes machine-local, and observe Chrome profile identity before claiming support. Stage/diff before live reload; use a disposable fixture and never touch muxel-live. Commit only after tests plus real-rig creation-state acceptance pass. Do not start W2 or any parked track.
+> Work in `D:/dev/winmakase`. Read `CLAUDE.md`, `docs/TODO.md`, `spike/NOTES.md` § LIVE MACHINE STATE, `docs/plans/winmakase-window-policy.md`, and `docs/plans/handoff-w1-app-homes.md`. Execute W1 only: add typed app definitions and deterministic generated Glaze window rules, settle one-owner composition with the base's existing Zebar rule, keep numeric homes machine-local, and observe Chrome profile identity before claiming support. Stage/diff before live reload; use a disposable fixture and never touch muxel-live. Commit only after tests plus real-rig first-managed-state acceptance pass. Do not start W2 or any parked track.
