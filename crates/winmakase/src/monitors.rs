@@ -43,6 +43,36 @@ pub fn top_reserves() -> Vec<i32> {
     out
 }
 
+/// Each monitor's full bounds (`rcMonitor`), virtual-screen coordinates.
+pub fn bounds() -> Vec<RECT> {
+    let mut out: Vec<RECT> = Vec::new();
+    unsafe extern "system" fn callback(
+        monitor: HMONITOR,
+        _hdc: HDC,
+        _rect: *mut RECT,
+        lparam: LPARAM,
+    ) -> i32 {
+        unsafe {
+            let out = &mut *(lparam as *mut Vec<RECT>);
+            let mut info: MONITORINFO = std::mem::zeroed();
+            info.cbSize = std::mem::size_of::<MONITORINFO>() as u32;
+            if GetMonitorInfoW(monitor, &mut info) != 0 {
+                out.push(info.rcMonitor);
+            }
+            1
+        }
+    }
+    unsafe {
+        EnumDisplayMonitors(
+            std::ptr::null_mut(),
+            std::ptr::null(),
+            Some(callback),
+            &mut out as *mut Vec<RECT> as LPARAM,
+        );
+    }
+    out
+}
+
 /// What the reserves say about the bar dock.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DockVerdict {
@@ -102,5 +132,6 @@ mod tests {
     #[test]
     fn the_real_machine_reports_at_least_one_monitor() {
         assert!(!top_reserves().is_empty());
+        assert_eq!(bounds().len(), top_reserves().len());
     }
 }

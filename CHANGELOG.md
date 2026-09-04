@@ -5,6 +5,7 @@ All notable changes to Winmakase. Format follows [Keep a Changelog](https://keep
 ## [Unreleased]
 
 ### Fixed
+- Taskbar autohide now actually collapses. `ABM_SETSTATE` was setting the flag (work area full, tiles under the bar) but Win11's XAML tray stayed painted after a hover; Start toggle hid it, mouse-leave did not. The supervisor still sets the autohide flag, then shows/hides `Shell_TrayWnd` / `Shell_SecondaryTrayWnd` itself: mouse the bottom edge to peek, cursor-leave collapses after 400ms. Shutdown and panic still restore the prior appbar state and show the windows.
 - App-home config now rejects unknown TOML keys instead of silently dropping misspelled identity/workspace fields; explicit `keymap render --config` paths must exist; generated homes run only on `manage`; and base `includes|regex|not_*` matchers can no longer bypass overlap validation.
 - Display-topology changes now re-arm Zebar's delayed dock check. Zebar can keep its backend alive while silently losing every widget window during its own monitor rebuild; the old start-only check had already passed and left all monitors at `0px` reserve.
 - `scratchpad summon` no longer treats `IsWindowVisible=false` as proof that a healthy Glaze-managed window is a ghost. GPUI exposed the proxy failure live: muxel was displayed and focused, yet Win32 reported invisible and the rescue path floated it. Rescue now trusts DWM cloak plus Glaze workspace display state; an unbound `scratch` workspace falls back to the focused displayed workspace.

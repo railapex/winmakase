@@ -6,10 +6,59 @@
 //! stack up. The supervisor hides on start and puts back whatever state it
 //! found on shutdown; `WinmakasePanic` restores independently as the belt to
 //! this suspender.
+//!
+//! `ABM_SETSTATE(ABS_AUTOHIDE)` is required so the work area includes the
+//! strip and GlazeWM tiles to the edge. On Windows 11 that flag does not
+//! actually collapse the XAML bar after a hover: Start toggle hides it,
+//! mouse-to-edge shows it, mouse-leave leaves it stuck painted over the tiles.
+//! The peek controller owns show/hide of `Shell_TrayWnd` /
+//! `Shell_SecondaryTrayWnd` so leave collapses and the edge still peeks.
 
+use std::time::{Duration, Instant};
+
+use windows_sys::Win32::Foundation::{HWND, LPARAM, POINT, RECT};
+use windows_sys::Win32::System::Threading::{
+    OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+};
 use windows_sys::Win32::UI::Shell::{
     ABM_GETSTATE, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA, SHAppBarMessage,
 };
+use windows_sys::Win32::UI::WindowsAndMessaging::{
+    EnumWindows, GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindowRect,
+    GetWindowThreadProcessId, IsWindowVisible, SetWindowPos, HWND_TOPMOST, SWP_HIDEWINDOW,
+    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
+};
+
+use crate::monitors;
+
+/// How close to a monitor's bottom edge counts as "peek" while the bar is gone.
+const PEEK_PX: i32 = 8;
+/// A fully-shown taskbar is ~48px; Explorer's collapsed autohide line is ~2px.
+/// Only the stuck-shown state is ours to collapse.
+const SHOWN_MIN_PX: i32 = 24;
+/// Pause after the cursor leaves before collapsing, so a click can land.
+const HIDE_AFTER: Duration = Duration::from_millis(400);
+
+const TRAY_CLASSES: &[&str] = &["Shell_TrayWnd", "Shell_SecondaryTrayWnd"];
+
+/// Flyouts / Start / overflow that should keep the bar up even if the cursor
+/// has left the tray rect.
+const HOLD_CLASSES: &[&str] = &[
+    "Shell_TrayWnd",
+    "Shell_SecondaryTrayWnd",
+    "NotifyIconOverflowWindow",
+    "TopLevelWindowForOverflowXamlIsland",
+    "XamlExplorerHostIslandWindow",
+    "TaskListOverlayWnd",
+    "TaskListThumbnailWnd",
+    "#32768",
+];
+
+const HOLD_PROCESSES: &[&str] = &[
+    "startmenuexperiencehost.exe",
+    "searchhost.exe",
+    "shellexperiencehost.exe",
+];
 
 /// The taskbar's current appbar state bits (`ABS_AUTOHIDE` is the one used).
 pub fn get_state() -> u32 {
@@ -35,12 +84,361 @@ fn zeroed() -> APPBARDATA {
     data
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Pt {
+    x: i32,
+    y: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Rect {
+    left: i32,
+    top: i32,
+    right: i32,
+    bottom: i32,
+}
+
+impl Rect {
+    fn from_win(r: RECT) -> Self {
+        Self {
+            left: r.left,
+            top: r.top,
+            right: r.right,
+            bottom: r.bottom,
+        }
+    }
+
+    fn width(self) -> i32 {
+        self.right - self.left
+    }
+
+    fn height(self) -> i32 {
+        self.bottom - self.top
+    }
+
+    fn contains(self, p: Pt) -> bool {
+        p.x >= self.left && p.x < self.right && p.y >= self.top && p.y < self.bottom
+    }
+
+    fn is_bar_shape(self) -> bool {
+        let w = self.width();
+        let h = self.height();
+        w > 0 && h > 0 && ((h <= 96 && w >= 200) || (w <= 96 && h >= 200))
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Tray {
+    hwnd: isize,
+    rect: Rect,
+    visible: bool,
+}
+
+impl Tray {
+    fn fully_shown(self) -> bool {
+        self.visible && self.rect.height() >= SHOWN_MIN_PX
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Action {
+    Show,
+    Hide,
+    None,
+}
+
+struct View {
+    cursor: Pt,
+    monitors: Vec<Rect>,
+    trays: Vec<Tray>,
+    hold_open: bool,
+}
+
+impl View {
+    fn want_open(&self) -> bool {
+        self.hold_open || self.cursor_in_peek() || self.cursor_over_shown_tray()
+    }
+
+    fn cursor_in_peek(&self) -> bool {
+        self.monitors.iter().any(|m| {
+            let strip = Rect {
+                left: m.left,
+                top: m.bottom - PEEK_PX,
+                right: m.right,
+                bottom: m.bottom,
+            };
+            strip.contains(self.cursor)
+        })
+    }
+
+    fn cursor_over_shown_tray(&self) -> bool {
+        self.trays
+            .iter()
+            .any(|t| t.fully_shown() && t.rect.contains(self.cursor))
+    }
+
+    fn any_fully_shown(&self) -> bool {
+        self.trays.iter().any(|t| t.fully_shown())
+    }
+}
+
+fn decide(view: &View, outside_since: Option<Instant>, now: Instant) -> (Action, Option<Instant>) {
+    if view.want_open() {
+        let action = if view.any_fully_shown() {
+            Action::None
+        } else {
+            Action::Show
+        };
+        return (action, None);
+    }
+    if view.any_fully_shown() {
+        let since = outside_since.unwrap_or(now);
+        if now.saturating_duration_since(since) >= HIDE_AFTER {
+            (Action::Hide, Some(since))
+        } else {
+            (Action::None, Some(since))
+        }
+    } else {
+        (Action::None, None)
+    }
+}
+
+/// Poll-loop peek controller. Collapse on leave; show on the bottom edge.
+pub struct Peek {
+    outside_since: Option<Instant>,
+}
+
+impl Peek {
+    pub fn new() -> Self {
+        Self {
+            outside_since: None,
+        }
+    }
+
+    /// Apply one decision. Returns a log line only when visibility changes.
+    pub fn tick(&mut self) -> Option<String> {
+        let view = snapshot();
+        let (action, since) = decide(&view, self.outside_since, Instant::now());
+        self.outside_since = since;
+        match action {
+            Action::Show => {
+                set_trays_shown(&view.trays, true);
+                Some("taskbar peeked (cursor on edge or flyout)".into())
+            }
+            Action::Hide => {
+                set_trays_shown(&view.trays, false);
+                Some("taskbar collapsed (cursor left)".into())
+            }
+            Action::None => None,
+        }
+    }
+
+    /// Hide every real tray window now (start / hide_taskbar on). No delay.
+    pub fn collapse_now(&mut self) -> Option<String> {
+        let view = snapshot();
+        self.outside_since = None;
+        if !view.any_fully_shown() {
+            return None;
+        }
+        set_trays_shown(&view.trays, false);
+        Some("taskbar collapsed".into())
+    }
+
+    /// Put the windows back (shutdown / hide_taskbar off). Does not touch the
+    /// appbar flag — the caller restores that.
+    pub fn release(&mut self) {
+        let view = snapshot();
+        self.outside_since = None;
+        set_trays_shown(&view.trays, true);
+    }
+}
+
+fn snapshot() -> View {
+    View {
+        cursor: cursor_pos(),
+        monitors: monitors::bounds().into_iter().map(Rect::from_win).collect(),
+        trays: tray_windows(),
+        hold_open: foreground_holds_open(),
+    }
+}
+
+fn cursor_pos() -> Pt {
+    let mut pt = POINT { x: 0, y: 0 };
+    if unsafe { GetCursorPos(&mut pt) } == 0 {
+        return Pt {
+            x: i32::MIN,
+            y: i32::MIN,
+        };
+    }
+    Pt { x: pt.x, y: pt.y }
+}
+
+fn tray_windows() -> Vec<Tray> {
+    let mut out: Vec<Tray> = Vec::new();
+    unsafe extern "system" fn callback(hwnd: HWND, lparam: LPARAM) -> i32 {
+        unsafe {
+            let out = &mut *(lparam as *mut Vec<Tray>);
+            let class = class_name(hwnd);
+            if !TRAY_CLASSES.iter().any(|c| class.eq_ignore_ascii_case(c)) {
+                return 1;
+            }
+            let mut rc = RECT {
+                left: 0,
+                top: 0,
+                right: 0,
+                bottom: 0,
+            };
+            if GetWindowRect(hwnd, &mut rc) == 0 {
+                return 1;
+            }
+            let rect = Rect::from_win(rc);
+            if !rect.is_bar_shape() {
+                return 1;
+            }
+            out.push(Tray {
+                hwnd: hwnd as isize,
+                rect,
+                visible: IsWindowVisible(hwnd) != 0,
+            });
+            1
+        }
+    }
+    unsafe {
+        EnumWindows(Some(callback), &mut out as *mut Vec<Tray> as LPARAM);
+    }
+    out
+}
+
+fn set_trays_shown(trays: &[Tray], shown: bool) {
+    let flags = SWP_NOMOVE
+        | SWP_NOSIZE
+        | SWP_NOACTIVATE
+        | if shown {
+            SWP_SHOWWINDOW
+        } else {
+            SWP_HIDEWINDOW
+        };
+    for t in trays {
+        unsafe {
+            SetWindowPos(t.hwnd as HWND, HWND_TOPMOST, 0, 0, 0, 0, flags);
+        }
+    }
+}
+
+fn foreground_holds_open() -> bool {
+    let hwnd = unsafe { GetForegroundWindow() };
+    if hwnd.is_null() {
+        return false;
+    }
+    let class = class_name(hwnd);
+    if HOLD_CLASSES
+        .iter()
+        .any(|c| class.eq_ignore_ascii_case(c))
+    {
+        return true;
+    }
+    if class.eq_ignore_ascii_case("Windows.UI.Core.CoreWindow") {
+        if let Some(name) = process_file_name(hwnd) {
+            return HOLD_PROCESSES
+                .iter()
+                .any(|p| name.eq_ignore_ascii_case(p))
+                || name.eq_ignore_ascii_case("explorer.exe");
+        }
+    }
+    if let Some(name) = process_file_name(hwnd) {
+        return HOLD_PROCESSES
+            .iter()
+            .any(|p| name.eq_ignore_ascii_case(p));
+    }
+    false
+}
+
+fn class_name(hwnd: HWND) -> String {
+    let mut buf = [0u16; 256];
+    let n = unsafe { GetClassNameW(hwnd, buf.as_mut_ptr(), buf.len() as i32) };
+    if n <= 0 {
+        return String::new();
+    }
+    String::from_utf16_lossy(&buf[..n as usize])
+}
+
+fn process_file_name(hwnd: HWND) -> Option<String> {
+    let mut pid = 0u32;
+    unsafe { GetWindowThreadProcessId(hwnd, &mut pid) };
+    if pid == 0 {
+        return None;
+    }
+    let handle = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) };
+    if handle.is_null() {
+        return None;
+    }
+    let mut buf = [0u16; 512];
+    let mut size = buf.len() as u32;
+    let ok = unsafe { QueryFullProcessImageNameW(handle, 0, buf.as_mut_ptr(), &mut size) };
+    unsafe {
+        windows_sys::Win32::Foundation::CloseHandle(handle);
+    }
+    if ok == 0 || size == 0 {
+        return None;
+    }
+    let path = String::from_utf16_lossy(&buf[..size as usize]);
+    path.rsplit('\\').next().map(str::to_string)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    /// Read-only: state bits are a small set; anything else means the call
-    /// itself is broken.
+    fn monitor() -> Rect {
+        Rect {
+            left: 0,
+            top: 0,
+            right: 3840,
+            bottom: 1600,
+        }
+    }
+
+    fn shown_tray() -> Tray {
+        Tray {
+            hwnd: 1,
+            rect: Rect {
+                left: 0,
+                top: 1552,
+                right: 3840,
+                bottom: 1600,
+            },
+            visible: true,
+        }
+    }
+
+    fn hidden_tray() -> Tray {
+        let mut t = shown_tray();
+        t.visible = false;
+        t
+    }
+
+    fn collapsed_tray() -> Tray {
+        Tray {
+            hwnd: 1,
+            rect: Rect {
+                left: 0,
+                top: 1598,
+                right: 3840,
+                bottom: 1600,
+            },
+            visible: true,
+        }
+    }
+
+    fn view(cursor: Pt, trays: Vec<Tray>, hold: bool) -> View {
+        View {
+            cursor,
+            monitors: vec![monitor()],
+            trays,
+            hold_open: hold,
+        }
+    }
+
     #[test]
     fn reading_the_state_returns_state_bits() {
         assert!(get_state() <= 0b11);
@@ -56,5 +454,94 @@ mod tests {
         assert_eq!(get_state(), AUTOHIDE);
         set_state(prior);
         assert_eq!(get_state(), prior);
+    }
+
+    #[test]
+    fn a_ghost_shell_tray_is_not_a_bar_shape() {
+        let ghost = Rect {
+            left: 261,
+            top: 301,
+            right: 3141,
+            bottom: 1450,
+        };
+        assert!(!ghost.is_bar_shape());
+        assert!(shown_tray().rect.is_bar_shape());
+    }
+
+    #[test]
+    fn hover_over_shown_bar_holds_it() {
+        let now = Instant::now();
+        let (action, since) = decide(
+            &view(Pt { x: 100, y: 1570 }, vec![shown_tray()], false),
+            None,
+            now,
+        );
+        assert_eq!(action, Action::None);
+        assert_eq!(since, None);
+    }
+
+    #[test]
+    fn cursor_on_bottom_edge_shows_a_hidden_bar() {
+        let now = Instant::now();
+        let (action, since) = decide(
+            &view(Pt { x: 100, y: 1596 }, vec![hidden_tray()], false),
+            None,
+            now,
+        );
+        assert_eq!(action, Action::Show);
+        assert_eq!(since, None);
+    }
+
+    #[test]
+    fn cursor_in_the_tile_strip_does_not_count_as_peek_while_hidden() {
+        // y=1570 is in the 48px the bar occupies when shown, but 30px above
+        // the edge — that's a tiled window, not the peek zone.
+        let now = Instant::now();
+        let (action, since) = decide(
+            &view(Pt { x: 100, y: 1570 }, vec![hidden_tray()], false),
+            None,
+            now,
+        );
+        assert_eq!(action, Action::None);
+        assert_eq!(since, None);
+    }
+
+    #[test]
+    fn leave_hides_only_after_the_delay() {
+        let t0 = Instant::now();
+        let v = view(Pt { x: 100, y: 800 }, vec![shown_tray()], false);
+        let (action, since) = decide(&v, None, t0);
+        assert_eq!(action, Action::None);
+        assert_eq!(since, Some(t0));
+
+        let (action, _) = decide(&v, Some(t0), t0 + Duration::from_millis(399));
+        assert_eq!(action, Action::None);
+
+        let (action, _) = decide(&v, Some(t0), t0 + Duration::from_millis(400));
+        assert_eq!(action, Action::Hide);
+    }
+
+    #[test]
+    fn start_or_flyout_holds_a_shown_bar() {
+        let now = Instant::now();
+        let (action, since) = decide(
+            &view(Pt { x: 100, y: 800 }, vec![shown_tray()], true),
+            Some(now),
+            now + Duration::from_secs(5),
+        );
+        assert_eq!(action, Action::None);
+        assert_eq!(since, None);
+    }
+
+    #[test]
+    fn explorer_collapsed_line_is_left_alone() {
+        let now = Instant::now();
+        let (action, since) = decide(
+            &view(Pt { x: 100, y: 800 }, vec![collapsed_tray()], false),
+            None,
+            now,
+        );
+        assert_eq!(action, Action::None);
+        assert_eq!(since, None);
     }
 }

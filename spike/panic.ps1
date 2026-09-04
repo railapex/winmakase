@@ -26,6 +26,28 @@ public static class AppBar {
 '@
 $d = New-Object AppBar+APPBARDATA; $d.cbSize = [System.Runtime.InteropServices.Marshal]::SizeOf($d); $d.lParam = 0
 [AppBar]::SHAppBarMessage(0x0000000A, [ref]$d) | Out-Null
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public static class TrayShow {
+  public delegate bool CB(IntPtr h, IntPtr l);
+  [DllImport("user32.dll")] public static extern bool EnumWindows(CB cb, IntPtr l);
+  [DllImport("user32.dll", CharSet=CharSet.Auto)] public static extern int GetClassName(IntPtr h, StringBuilder s, int n);
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int n);
+}
+'@
+$cb = [TrayShow+CB]{
+  param($h, $l)
+  $sb = New-Object System.Text.StringBuilder 256
+  [void][TrayShow]::GetClassName($h, $sb, 256)
+  $cls = $sb.ToString()
+  if ($cls -eq 'Shell_TrayWnd' -or $cls -eq 'Shell_SecondaryTrayWnd') {
+    [void][TrayShow]::ShowWindow($h, 5) # SW_SHOW
+  }
+  $true
+}
+[void][TrayShow]::EnumWindows($cb, [IntPtr]::Zero)
 $survivors = Get-Process winmakased,glazewm,kanata* -ErrorAction SilentlyContinue
 if ($survivors) { Write-Output "SURVIVORS: $($survivors.ProcessName -join ', ')" }
 else { Write-Output 'stock restored: supervisor down, kanata dead, GlazeWM exited, taskbar visible' }

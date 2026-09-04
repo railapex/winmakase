@@ -189,6 +189,9 @@ pub struct Supervisor {
     display_event_at: Option<Instant>,
     /// Taskbar state found at startup, put back on shutdown.
     prior_taskbar: Option<u32>,
+    /// Live peek controller while `hide_taskbar` is on. Collapses the Win11
+    /// tray on cursor-leave; mouse-to-edge still peeks.
+    taskbar_peek: Option<taskbar::Peek>,
     /// Set when zebar (re)starts or a display-change burst settles; a pending
     /// dock-consistency check.
     dock_check_at: Option<Instant>,
@@ -254,6 +257,7 @@ impl Supervisor {
             display_watch: None,
             display_event_at: None,
             prior_taskbar: None,
+            taskbar_peek: None,
             dock_check_at: None,
             dock_bounces: 0,
             started_at: SystemTime::now(),
@@ -306,12 +310,7 @@ impl Supervisor {
         }
 
         if self.cfg.supervisor.hide_taskbar {
-            let prior = taskbar::get_state();
-            taskbar::set_state(taskbar::AUTOHIDE);
-            self.prior_taskbar = Some(prior);
-            self.log(format!(
-                "taskbar auto-hidden (prior state {prior}, restored on shutdown)"
-            ));
+            self.take_taskbar();
         }
 
         self.start_set(self.active.clone(), false);
@@ -343,8 +342,42 @@ impl Supervisor {
         self.reap_exits();
         self.check_display_changes();
         self.check_bar_dock();
+        self.tick_taskbar_peek();
         self.fire_due_restart();
         self.reset_recovered_backoffs();
+    }
+
+    fn tick_taskbar_peek(&mut self) {
+        if let Some(peek) = self.taskbar_peek.as_mut() {
+            if let Some(msg) = peek.tick() {
+                self.log(msg);
+            }
+        }
+    }
+
+    fn take_taskbar(&mut self) {
+        let prior = taskbar::get_state();
+        taskbar::set_state(taskbar::AUTOHIDE);
+        self.prior_taskbar = Some(prior);
+        let mut peek = taskbar::Peek::new();
+        let collapsed = peek.collapse_now();
+        self.taskbar_peek = Some(peek);
+        self.log(format!(
+            "taskbar auto-hidden (prior state {prior}, restored on shutdown)"
+        ));
+        if let Some(msg) = collapsed {
+            self.log(msg);
+        }
+    }
+
+    fn release_taskbar(&mut self) {
+        if let Some(mut peek) = self.taskbar_peek.take() {
+            peek.release();
+        }
+        if let Some(prior) = self.prior_taskbar.take() {
+            taskbar::set_state(prior);
+            self.log(format!("taskbar state restored ({prior})"));
+        }
     }
 
     /// Zebar's per-window appbar registrations race and sometimes lose (live
@@ -508,14 +541,10 @@ impl Supervisor {
         }
         if old_s.hide_taskbar != new_s.hide_taskbar {
             if new_s.hide_taskbar {
-                if self.prior_taskbar.is_none() {
-                    let prior = taskbar::get_state();
-                    taskbar::set_state(taskbar::AUTOHIDE);
-                    self.prior_taskbar = Some(prior);
-                }
+                self.take_taskbar();
                 report.push("supervisor: hide_taskbar on — taskbar auto-hidden".into());
-            } else if let Some(prior) = self.prior_taskbar.take() {
-                taskbar::set_state(prior);
+            } else {
+                self.release_taskbar();
                 report.push("supervisor: hide_taskbar off — taskbar state restored".into());
             }
         }
@@ -1184,10 +1213,7 @@ impl Supervisor {
         for c in self.active.clone().into_iter().rev() {
             self.stop_gracefully(c, deadline);
         }
-        if let Some(prior) = self.prior_taskbar.take() {
-            taskbar::set_state(prior);
-            self.log(format!("taskbar state restored ({prior})"));
-        }
+        self.release_taskbar();
         self.write_health();
         self.log("shutdown complete");
         signal::mark_finished();

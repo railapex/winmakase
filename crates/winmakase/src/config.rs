@@ -42,6 +42,9 @@ log_keep_files = 3
 bounce_on_display_change = false
 # Auto-hide the taskbar while the stack runs (Zebar replaces it); whatever
 # state the taskbar had is put back on shutdown. Panic restores it too.
+# Sets the autohide flag so tiles use the full work area, then collapses
+# the Win11 tray on cursor-leave (Explorer's own hide-on-leave does not).
+# Mouse the bottom edge to peek.
 hide_taskbar = true
 
 # The rendered kanata config (`winmakase kanata render`): which physical key
@@ -332,7 +335,9 @@ pub struct SupervisorConfig {
     /// Auto-hide the taskbar while the stack runs; restore its prior state on
     /// shutdown. On by default — a hidden taskbar is the product's end state,
     /// and before the supervisor owned this, a reboot brought the taskbar
-    /// back even though the logon task brought the stack up.
+    /// back even though the logon task brought the stack up. Sets the autohide
+    /// flag (work area includes the strip) and collapses the Win11 tray on
+    /// cursor-leave; mouse-to-edge still peeks.
     #[serde(default = "d_hide_taskbar")]
     pub hide_taskbar: bool,
 }
