@@ -13,10 +13,19 @@
 //! mouse-to-edge shows it, mouse-leave leaves it stuck painted over the tiles.
 //! The peek controller owns show/hide of `Shell_TrayWnd` /
 //! `Shell_SecondaryTrayWnd` so leave collapses and the edge still peeks.
+//!
+//! Live finding (2026-09-04): while Start is open, `EnumWindows` in this
+//! process hands over the secondaries and Zebar's fake `Shell_TrayWnd` but
+//! never the real primary, so the primary was never shown for Start.
+//! `FindWindowExW` by class finds it every time — that is how trays are
+//! enumerated now. A hold-open is also re-asserted every tick on whichever
+//! trays still lag, so one missed show is a 250ms delay, not a stuck bar.
+//! Explorer parks a collapsed bar just past the monitor edge and slides it
+//! back on its own ~75ms after a show; moving it ourselves is ignored.
 
 use std::time::{Duration, Instant};
 
-use windows_sys::Win32::Foundation::{HWND, LPARAM, POINT, RECT};
+use windows_sys::Win32::Foundation::{GetLastError, HWND, POINT, RECT};
 use windows_sys::Win32::System::Threading::{
     OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
 };
@@ -24,7 +33,7 @@ use windows_sys::Win32::UI::Shell::{
     ABM_GETSTATE, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA, SHAppBarMessage,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    EnumWindows, GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindowRect,
+    FindWindowExW, GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindowRect,
     GetWindowThreadProcessId, IsWindowVisible, SetWindowPos, HWND_TOPMOST, SWP_HIDEWINDOW,
     SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
 };
@@ -180,11 +189,21 @@ impl View {
     fn any_fully_shown(&self) -> bool {
         self.trays.iter().any(|t| t.fully_shown())
     }
+
+    fn all_fully_shown(&self) -> bool {
+        !self.trays.is_empty() && self.trays.iter().all(|t| t.fully_shown())
+    }
+
+    fn lagging(&self) -> Vec<Tray> {
+        self.trays.iter().copied().filter(|t| !t.fully_shown()).collect()
+    }
 }
 
 fn decide(view: &View, outside_since: Option<Instant>, now: Instant) -> (Action, Option<Instant>) {
     if view.want_open() {
-        let action = if view.any_fully_shown() {
+        // Every tray, not any: Explorer can swallow the primary's show while
+        // Start opens, and the secondaries alone would otherwise satisfy us.
+        let action = if view.all_fully_shown() {
             Action::None
         } else {
             Action::Show
@@ -206,12 +225,15 @@ fn decide(view: &View, outside_since: Option<Instant>, now: Instant) -> (Action,
 /// Poll-loop peek controller. Collapse on leave; show on the bottom edge.
 pub struct Peek {
     outside_since: Option<Instant>,
+    /// One "re-shown" line per hold-open episode, not one per tick.
+    lag_logged: bool,
 }
 
 impl Peek {
     pub fn new() -> Self {
         Self {
             outside_since: None,
+            lag_logged: false,
         }
     }
 
@@ -222,11 +244,32 @@ impl Peek {
         self.outside_since = since;
         match action {
             Action::Show => {
-                set_trays_shown(&view.trays, true);
-                Some("taskbar peeked (cursor on edge or flyout)".into())
+                let first = !view.any_fully_shown();
+                let lagging = view.lagging();
+                if lagging.is_empty() {
+                    return None;
+                }
+                let failed = show_trays(&lagging);
+                let mut msg = if first {
+                    self.lag_logged = false;
+                    Some("taskbar peeked (cursor on edge or flyout)".to_string())
+                } else if !self.lag_logged {
+                    self.lag_logged = true;
+                    Some(format!(
+                        "taskbar re-shown ({} tray(s) lagged the first show)",
+                        lagging.len()
+                    ))
+                } else {
+                    None
+                };
+                if !failed.is_empty() && msg.is_some() {
+                    msg = msg.map(|m| format!("{m}; SetWindowPos failed: {failed:?}"));
+                }
+                msg
             }
             Action::Hide => {
-                set_trays_shown(&view.trays, false);
+                self.lag_logged = false;
+                hide_trays(&view.trays);
                 Some("taskbar collapsed (cursor left)".into())
             }
             Action::None => None,
@@ -240,7 +283,7 @@ impl Peek {
         if !view.any_fully_shown() {
             return None;
         }
-        set_trays_shown(&view.trays, false);
+        hide_trays(&view.trays);
         Some("taskbar collapsed".into())
     }
 
@@ -249,7 +292,7 @@ impl Peek {
     pub fn release(&mut self) {
         let view = snapshot();
         self.outside_since = None;
-        set_trays_shown(&view.trays, true);
+        show_trays(&view.trays);
     }
 }
 
@@ -260,6 +303,10 @@ fn snapshot() -> View {
         trays: tray_windows(),
         hold_open: foreground_holds_open(),
     }
+}
+
+fn wide(s: &str) -> Vec<u16> {
+    s.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
 fn cursor_pos() -> Pt {
@@ -273,14 +320,21 @@ fn cursor_pos() -> Pt {
     Pt { x: pt.x, y: pt.y }
 }
 
+/// The tray windows, found by class with `FindWindowExW` — not
+/// `EnumWindows`. Live 2026-09-04: while Start is opening, EnumWindows in
+/// this process hands over the secondaries and Zebar's fake `Shell_TrayWnd`
+/// but never the real primary; FindWindowEx by class finds it every time.
 fn tray_windows() -> Vec<Tray> {
     let mut out: Vec<Tray> = Vec::new();
-    unsafe extern "system" fn callback(hwnd: HWND, lparam: LPARAM) -> i32 {
-        unsafe {
-            let out = &mut *(lparam as *mut Vec<Tray>);
-            let class = class_name(hwnd);
-            if !TRAY_CLASSES.iter().any(|c| class.eq_ignore_ascii_case(c)) {
-                return 1;
+    for class in TRAY_CLASSES {
+        let wclass = wide(class);
+        let mut hwnd: HWND = std::ptr::null_mut();
+        loop {
+            hwnd = unsafe {
+                FindWindowExW(std::ptr::null_mut(), hwnd, wclass.as_ptr(), std::ptr::null())
+            };
+            if hwnd.is_null() {
+                break;
             }
             let mut rc = RECT {
                 left: 0,
@@ -288,36 +342,41 @@ fn tray_windows() -> Vec<Tray> {
                 right: 0,
                 bottom: 0,
             };
-            if GetWindowRect(hwnd, &mut rc) == 0 {
-                return 1;
+            if unsafe { GetWindowRect(hwnd, &mut rc) } == 0 {
+                continue;
             }
             let rect = Rect::from_win(rc);
+            // Zebar hosts the systray in its own `Shell_TrayWnd`; shape
+            // tells the real bars from that and any other impostor.
             if !rect.is_bar_shape() {
-                return 1;
+                continue;
             }
             out.push(Tray {
                 hwnd: hwnd as isize,
                 rect,
-                visible: IsWindowVisible(hwnd) != 0,
+                visible: unsafe { IsWindowVisible(hwnd) } != 0,
             });
-            1
         }
-    }
-    unsafe {
-        EnumWindows(Some(callback), &mut out as *mut Vec<Tray> as LPARAM);
     }
     out
 }
 
-fn set_trays_shown(trays: &[Tray], shown: bool) {
-    let flags = SWP_NOMOVE
-        | SWP_NOSIZE
-        | SWP_NOACTIVATE
-        | if shown {
-            SWP_SHOWWINDOW
-        } else {
-            SWP_HIDEWINDOW
-        };
+/// Show each tray in place. Returns (hwnd, Win32 error) for every call that
+/// failed, so a refusal shows up in the log instead of as a missing bar.
+fn show_trays(trays: &[Tray]) -> Vec<(isize, u32)> {
+    let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW;
+    let mut failed = Vec::new();
+    for t in trays {
+        let ok = unsafe { SetWindowPos(t.hwnd as HWND, HWND_TOPMOST, 0, 0, 0, 0, flags) };
+        if ok == 0 {
+            failed.push((t.hwnd, unsafe { GetLastError() }));
+        }
+    }
+    failed
+}
+
+fn hide_trays(trays: &[Tray]) {
+    let flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_HIDEWINDOW;
     for t in trays {
         unsafe {
             SetWindowPos(t.hwnd as HWND, HWND_TOPMOST, 0, 0, 0, 0, flags);
@@ -530,6 +589,21 @@ mod tests {
             now + Duration::from_secs(5),
         );
         assert_eq!(action, Action::None);
+        assert_eq!(since, None);
+    }
+
+    #[test]
+    fn start_re_shows_a_tray_that_lagged_the_first_show() {
+        // Live 2026-09-04: the primary was missing from one enumeration while
+        // Start opened; the two secondaries were up. `any` would have stopped
+        // here and left the primary hidden for the whole Start session.
+        let now = Instant::now();
+        let (action, since) = decide(
+            &view(Pt { x: 100, y: 800 }, vec![shown_tray(), hidden_tray()], true),
+            None,
+            now,
+        );
+        assert_eq!(action, Action::Show);
         assert_eq!(since, None);
     }
 
