@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-08T17:14:05Z",
+  "planBaseCommit": "ab32da1",
+  "lastVerifiedBuild": null,
+  "stage": "Planning ready; v1 implementation rounds pending",
+  "currentSlice": {
+    "id": "P0.1",
+    "status": "Queued",
+    "title": "Baseline and disposable Windows test environment",
+    "nextAction": "Record component provenance and prepare the isolated test environment before running integration proofs."
+  },
+  "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
+  "decisions": [],
+  "blockers": [],
+  "recentDecisions": [
+    {
+      "title": "Chosen stack retained",
+      "detail": "GlazeWM, Zebar, Kanata and PowerToys. App catalog and replacement platforms remain deferred."
+    },
+    {
+      "title": "Tray and calendar specified",
+      "detail": "Dropdown overflow, user-pinned icons and a real month calendar. Implementation proof pending."
+    },
+    {
+      "title": "W3–W5 reconciled",
+      "detail": "Float recovery and one daily layout are assigned; switcher need is reviewed after a week."
+    },
+    {
+      "title": "Bounded execution",
+      "detail": "Astra lead, Sol builders, independent review, at most two writing scopes; no build started by this report."
+    }
+  ],
+  "evidence": [
+    {
+      "label": "V1 plan and verification design",
+      "href": "README.md",
+      "detail": "Plans complete; execution cases remain open."
+    },
+    {
+      "label": "Source-checked desktop behavior",
+      "href": "../../research/desktop-interactions-2026-09-08.md",
+      "detail": "Current splits, scratch and pin limits; not live acceptance."
+    },
+    {
+      "label": "Engineering review",
+      "href": "../../research/v1-engineering-review-2026-09-08.md",
+      "detail": "Two documentation review rounds completed before this follow-up."
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": "2026-09-08",
+      "summary": "Planning follow-up: tray/calendar and lost W cuts incorporated. Next action is P0.1; no product build is active."
+    }
+  ]
+}

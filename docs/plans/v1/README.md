@@ -6,6 +6,8 @@ Deliver a solid daily desktop on **GlazeWM + Zebar + Kanata + PowerToys Run**: l
 
 [Design](../../DESIGN.md) owns contracts. [TODO](../../TODO.md) owns completion. [Engineering review](../../research/v1-engineering-review-2026-09-08.md) records evidence and uncertainty. These plans supersede the older W0/W1/W2/core roadmap; completed work is retained.
 
+[Execution procedure](execution.md) defines bounded sessions, model roles, handoffs and check-ins. [Progress report](progress.html) is a generated snapshot, not a live controller. [Desktop interactions](../../research/desktop-interactions-2026-09-08.md) answers the tray/calendar/split/scratch questions and maps every old W cut.
+
 ## Delivery order
 
 | Package | Work | Dependencies | Exit |
@@ -24,9 +26,11 @@ Each package is split into reviewable changes, not one large feature branch. Imp
 ## V1 acceptance
 
 - Main windows tile; dialogs/utilities behave deliberately; existing layouts survive routine reload.
+- Loose floats are listable/recoverable; split-next controls and one daily role layout work; a dedicated terminal pad is discoverable.
 - Work/personal Chrome actions identify the right profile; launch-new and focus-or-launch have separate predictable semantics.
 - Keyboard and mouse can launch apps, find running windows, access tray/settings/audio/notifications, inspect bindings and recover without edge-peeking a native taskbar.
 - Bar and popup work offline on the supported display/DPI matrix.
+- Tray overflow is a dropdown with configurable visible icons; date/time opens a working month calendar.
 - Two visual presets are complete, readable and reversibly applied across declared surfaces.
 - Failures yield a usable native desktop, truthful status and bounded recovery.
 - Clean install, interrupted update and uninstall preserve prior settings and later user edits.

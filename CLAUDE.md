@@ -8,6 +8,7 @@ Opinionated Windows 11 desktop. Public repository: railapex/winmakase.
 2. Read [spike/NOTES.md](spike/NOTES.md), especially LIVE MACHINE STATE, before any machine action. A commit is not proof of deployment; recheck relevant live facts.
 3. Read [docs/DESIGN.md](docs/DESIGN.md) for the touched area. It distinguishes shipped behavior from accepted targets. Update work state and design in the same commit as implementation.
 4. An unchecked verification gate stays unchecked until its evidence exists. Plans, source review and unit tests are not live acceptance.
+5. Build sessions follow [execution.md](docs/plans/v1/execution.md). At handoff, update the slice/decision state and regenerate the progress report; TODO remains package/round completion truth. Reconcile every old requirement when restructuring plans.
 
 ## Scope and safety
 

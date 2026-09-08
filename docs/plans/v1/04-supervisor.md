@@ -52,6 +52,10 @@ On loss of bar/launcher, restore native taskbar while the healthy pair continues
 
 Use P0's smallest passing suppression method. Remove all hover/peek/flyout exception behavior after the P2 replacement matrix passes. Explorer remains running. Reconcile TaskbarCreated and topology/DPI events with fresh geometry; never rely on ABM_SETSTATE's return value as visual proof.
 
+Zebar's tray backend creates its own Shell_TrayWnd and broadcasts TaskbarCreated. Identify actual Explorer-owned taskbars before suppressing/restoring; class names alone are insufficient. Treat the notification as a request to re-observe, not an unconditional bar restart. Test synthetic and real shell events without a feedback loop or damage to the tray provider.
+
+Validate the HWND's actual owning process/image/session and re-resolve after Explorer recreation; never trust a stale HWND/PID or filename alone. Debounce repeated broadcasts, inspect actual changed state and act idempotently. Repeated synthetic notifications cause zero TraySpy suppression and zero component restart loop. Restoration does not broadcast TaskbarCreated itself.
+
 ### D. Retire temporary compensations
 
 Measure pinned Glaze's allocation failure at startup/wake. Remove the pressure workaround if the pinned build no longer needs it; otherwise cap its wait, report the reason and distinguish available process commit from system-wide usage. Repeated failure yields native fallback, not permanent hidden startup.

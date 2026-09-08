@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winmakase v1 · Build progress</title>
+<style>
+:root{color-scheme:dark light;--bg:#171922;--panel:#20232f;--fg:#e4e7ef;--muted:#adb4c8;--line:#393f53;--accent:#9db9ff;--warm:#f0cb88}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,Segoe UI,sans-serif}
+main{max-width:1100px;margin:auto;padding:42px 24px 64px}h1{font-size:clamp(30px,5vw,48px);line-height:1.1;letter-spacing:-.035em;margin:12px 0}h2{font-size:21px;margin:0 0 18px}h3{font-size:17px;margin:0 0 8px}p{margin:8px 0 16px}a{color:var(--accent);text-underline-offset:3px}a:focus-visible,summary:focus-visible{outline:3px solid var(--warm);outline-offset:4px}.eyebrow{color:var(--accent);letter-spacing:.1em;text-transform:uppercase;font-size:12px;font-weight:700}.subtle,time{color:var(--muted);font-size:14px}.stage{font-size:19px;max-width:760px}.notice{border-left:3px solid var(--warm);padding:9px 16px;color:var(--warm);margin:24px 0}.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:24px}.panel{padding:24px;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:24px 0 0}.lead{border-top:3px solid var(--accent)}.small-label{color:var(--muted);font-size:13px;margin-bottom:4px}.slice{font-size:23px;line-height:1.3;margin:8px 0}.pill{display:inline-block;border:1px solid var(--line);border-radius:99px;padding:2px 9px;font-size:12px;color:var(--warm);margin-left:8px}table{width:100%;border-collapse:collapse}td,th{padding:13px 9px;border-top:1px solid var(--line);text-align:left;font-size:14px}th{font-weight:600}td:last-child{color:var(--muted);white-space:nowrap}.rounds{list-style:none;padding:0;margin:0}.rounds li{display:grid;grid-template-columns:34px 1fr auto;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:14px}.rounds em{font-style:normal;color:var(--muted);font-size:12px}.list{list-style:none;margin:0;padding:0}.list>li{padding:12px 0;border-top:1px solid var(--line)}.list p{font-size:14px;color:var(--muted);margin:5px 0}.decision{margin:16px 0;padding-top:12px;border-top:1px solid var(--line)}.footer{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}summary{cursor:pointer;font-weight:600}.meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:24px}
+@media(max-width:720px){main{padding:24px 16px}.grid{grid-template-columns:1fr;gap:0}.panel{padding:18px}td,th{padding:11px 5px}table{table-layout:fixed}th:first-child{width:42px}td:last-child{width:76px}.rounds li{gap:8px}}
+@media(prefers-color-scheme:light){:root{--bg:#f4f5f9;--panel:#fff;--fg:#252936;--muted:#596277;--line:#d9deea;--accent:#285bb4;--warm:#8b5500}}
+@media print{body{background:white;color:black}.panel{break-inside:avoid}.grid{display:block}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div class="eyebrow">Winmakase / v1</div>
+<h1>Build progress</h1>
+<p class="stage">Planning ready; v1 implementation rounds pending</p>
+<p class="subtle">Updated <time id="updated" datetime="09/08/2026 17:14:05">09/08/2026 17:14:05</time> · Read-only build snapshot</p>
+<p class="notice" id="freshness">This report records evidence. It does not run builds, change the desktop or submit decisions.</p>
+<nav aria-label="Build references"><a href="README.md">Plan</a> · <a href="execution.md">Build procedure</a> · <a href="verification.md">Verification</a> · <a href="../../research/desktop-interactions-2026-09-08.md">Desktop behavior</a></nav>
+</header>
+<div class="grid">
+<section class="panel lead"><div class="small-label">Current slice</div><h2 class="slice">P0.1 · Baseline and disposable Windows test environment<span class="pill">Queued</span></h2><p>Record component provenance and prepare the isolated test environment before running integration proofs.</p><div class="small-label">Next check-in</div><p>R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.</p></section>
+<section class="panel"><h2>Decisions for Chris</h2><p>No decisions awaiting Chris. The next checkpoint will show concrete options and evidence.</p><div class="small-label">Blockers</div><p>No active build blocker recorded. Prerequisite experiments are queued, not passed.</p></section>
+</div>
+<div class="grid">
+<section class="panel"><h2>Build packages</h2><table><thead><tr><th>ID</th><th>Outcome</th><th>Status</th></tr></thead><tbody><tr><th scope="row"><a href="../../../docs/plans/v1/00-baseline.md">P0</a></th><td>Baseline and integration proofs</td><td>Pending</td></tr>
+<tr><th scope="row"><a href="../../../docs/plans/v1/01-window-policy.md">P1</a></th><td>Window policy and app actions</td><td>Pending</td></tr>
+<tr><th scope="row"><a href="../../../docs/plans/v1/02-launcher-controls.md">P2</a></th><td>Launcher and controls</td><td>Pending</td></tr>
+<tr><th scope="row"><a href="../../../docs/plans/v1/03-appearance.md">P3</a></th><td>Appearance</td><td>Pending</td></tr>
+<tr><th scope="row"><a href="../../../docs/plans/v1/04-supervisor.md">P4</a></th><td>Supervisor and taskbar retirement</td><td>Pending</td></tr>
+<tr><th scope="row"><a href="../../../docs/plans/v1/05-package.md">P5</a></th><td>Distribution and release</td><td>Pending</td></tr></tbody></table></section>
+<section class="panel"><h2>Verification · 0 / 7 passed</h2><ul class="rounds"><li><strong>R0</strong><span>baseline and bounded experiments</span><em>Pending</em></li>
+<li><strong>R1</strong><span>window/dialog/profile behavior</span><em>Pending</em></li>
+<li><strong>R2</strong><span>launcher, controls and monitor behavior</span><em>Pending</em></li>
+<li><strong>R3</strong><span>appearance, reload and rollback</span><em>Pending</em></li>
+<li><strong>R4</strong><span>failure injection and taskbar takeover</span><em>Pending</em></li>
+<li><strong>R5</strong><span>clean install, update, uninstall and offline operation</span><em>Pending</em></li>
+<li><strong>R6</strong><span>integrated use and release review</span><em>Pending</em></li></ul></section>
+</div>
+<div class="grid">
+<section class="panel"><h2>Scope decisions</h2><ul class="list"><li><strong>Chosen stack retained</strong><p>GlazeWM, Zebar, Kanata and PowerToys. App catalog and replacement platforms remain deferred.</p></li>
+<li><strong>Tray and calendar specified</strong><p>Dropdown overflow, user-pinned icons and a real month calendar. Implementation proof pending.</p></li>
+<li><strong>W3–W5 reconciled</strong><p>Float recovery and one daily layout are assigned; switcher need is reviewed after a week.</p></li>
+<li><strong>Bounded execution</strong><p>Astra lead, Sol builders, independent review, at most two writing scopes; no build started by this report.</p></li></ul></section>
+<section class="panel"><h2>Evidence</h2><ul class="list"><li><a href="README.md">V1 plan and verification design</a><p>Plans complete; execution cases remain open.</p></li>
+<li><a href="../../research/desktop-interactions-2026-09-08.md">Source-checked desktop behavior</a><p>Current splits, scratch and pin limits; not live acceptance.</p></li>
+<li><a href="../../research/v1-engineering-review-2026-09-08.md">Engineering review</a><p>Two documentation review rounds completed before this follow-up.</p></li></ul><div class="meta"><div><div class="small-label">Last verified build</div>No v1 build has passed these rounds</div><div><div class="small-label">Planning base</div>ab32da1</div></div></section>
+</div>
+<section class="panel"><details><summary>Checkpoint history</summary><ul class="list"><li><time>2026-09-08</time><p>Planning follow-up: tray/calendar and lost W cuts incorporated. Next action is P0.1; no product build is active.</p></li></ul></details></section>
+<footer class="footer">Generated from docs/TODO.md and execution-state.json. Answer decisions in the active session; the lead records the decision and updates this snapshot. No hidden build is running behind this page.</footer>
+</main>
+<script>
+const stamp = Date.parse(document.getElementById('updated').dateTime);
+if (Number.isFinite(stamp) && Date.now() - stamp > 86400000) {
+  document.getElementById('freshness').textContent = 'Stale snapshot: last updated more than 24 hours ago. Check the latest handoff before relying on this status.';
+}
+</script>
+</body>
+</html>

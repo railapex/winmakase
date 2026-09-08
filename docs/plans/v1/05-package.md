@@ -32,6 +32,8 @@ Status: not started. Skeleton/ownership design may begin earlier; completion dep
 
 Use the integrated candidate for five working days, including three cold logins, five sleep/wakes, ten occasional-monitor cycles and both visual presets. Record every native taskbar access and its reason; each required workflow must have a verified replacement before hover retirement is accepted.
 
+Run the restored W5 window-discovery decision after at least seven elapsed days with app actions and W3 float recovery. This can share the dogfood period. Record whether a current-workspace window switcher is needed; a need finding proposes a bounded follow-up, not automatic scope expansion.
+
 Finish with independent review of user workflows, unresolved defects, recovery evidence, supported-build matrix, provenance/licenses and documentation. Run full required CI against the release commit. Existing baseline lint failures must be triaged and resolved or explicitly scoped with evidence; they are not a permanent excuse for a red release.
 
 V1 is the product milestone. Choose the release number at release preparation; do not mechanically reuse the old v0.1.0 checklist after later dogfood versions already shipped. No tag or distribution claim until R0–R6 pass.

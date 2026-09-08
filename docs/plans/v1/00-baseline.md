@@ -22,6 +22,10 @@ Status: not started. Exit: R0. Research findings are not experiment results.
 | Crash restoration | Worker/guard prototype, durable baseline, kill each separately during takeover; verify exact cleanup without recursive restarting | Refine the narrow owner contract; no readiness claim from PID alone |
 | Commit-pressure workaround | Test pinned Glaze start/adoption/wake at measured available commit levels; retain crash evidence and distinguish adoption from new allocation | Keep a bounded documented mitigation pending a Glaze fix; do not indefinitely block a healthy adoption |
 | Appearance primitives | Verify Terminal scheme fragment/selection reload, native modes/accent response in Run, wallpaper per monitor and opt-out behavior | Publish a precise supported-target matrix; no promise based on registry writes alone |
+| Tray dropdown and preferences | Prove persistent owner plus transient popup, native menu handoff/keyboard anchoring, pin identity across restarts and app update, late IDs/duplicates, no dock change | Bounded helper/provider patch; label ambiguous identity, never claim universal persistence |
+| Synthetic taskbar interaction | Zebar tray creates a Shell_TrayWnd and broadcasts TaskbarCreated; identify actual Explorer-owned trays and test re-observation without feedback loops | Tighten ownership/event handling before suppression |
+| Date/calendar | Civil month grid, locale/weekday/zone, midnight/wake refresh and popup placement | Fix in bundled date/UI layer; no account-sync dependency |
+| Practical splits and terminal pad | Three-window main-left/right-stacked construction; split-next action; named terminal hide/summon; native quake only if selected | Document current limitations; no second WM or fake multi-window overlay |
 
 ## Completion evidence
 

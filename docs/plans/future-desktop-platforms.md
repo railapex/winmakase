@@ -1,6 +1,6 @@
 # Future desktop platforms and Omarchy gaps
 
-Status: parked until coherent v1 passes. Reviewed 2026-09-08.
+Status: platform implementations parked until coherent v1 passes. The W5 discovery decision runs during v1 dogfood after at least one week of app/float use. Reviewed 2026-09-08.
 
 V1 commits to GlazeWM, Zebar, Kanata and PowerToys. The user explicitly wants later versions to keep moving toward Omarchy patterns and capabilities. This file preserves future routes without turning them into prerequisites.
 
@@ -10,6 +10,9 @@ V1 commits to GlazeWM, Zebar, Kanata and PowerToys. The user explicitly wants la
 |---|---|
 | Bounded Glaze improvements | Can an upstreamable/local patch add the needed primitive while retaining the current configuration and recovery model? |
 | Native grouping/tabs | What WM-owned state, focus and visibility semantics are required for Omarchy's grouping family? No overlapping-floating-window substitute |
+| Cross-workspace pinning | Add true workspace-independent visibility for intentional PiP/tools. Current O is one-way centered topmost on the current workspace, not a pin toggle |
+| Special scratch workspace | Add a WM-owned multi-window show/hide overlay over the current monitor. Current S retrieves one parked window; do not extend HWND shuffling into an overlay engine |
+| Window discovery/switcher (old W5) | During v1 dogfood, after at least one week using app actions and W3 float recovery, record whether finding current-workspace windows still fails. If it does, design only the missing interaction; otherwise close without code |
 | Whim | Does a measured prototype improve a named limitation, and what configuration, API, licensing, maintenance and migration work does it add? |
 | Quickshell on Windows | Is a maintained port available, or what platform work would monitors, shell/window access, tray, audio, notifications and packaging require? |
 | PowerToys launcher evolution | Does Command Palette offer a demonstrated gain over the verified Run integration without adding another bar? |

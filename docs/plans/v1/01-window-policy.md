@@ -48,7 +48,19 @@ Launch-new skips selection and opens another requested profile/app window using 
 
 Make SUPER+F true fullscreen and SUPER+Alt+F maximized. The current bare Glaze toggle uses the configured default, which is maximized in the dogfood base, so the two chords currently converge. Use explicit supported state arguments and verify against pinned Glaze. Preserve previous tile/float state on F exit; T always returns either fullscreen mode directly to tile. Keep unsupported tiled-fullscreen semantics recorded as a gap.
 
-## Verification
+### 5. Float recovery, splits and one daily layout
+
+Restore W3: list managed loose floats for current/all workspaces, showing app/title/workspace/focus; focus current-workspace floats forward/reverse without borrowing Omarchy group chords. Dialogs stay attached to parents; scratch tools are a separate category. No always-on-top default for manual floats. P2 shows a count only when nonzero. Every eligible float must be recoverable even when covered by tiles.
+
+Expose Glaze's split-next direction through catalog/help and a deliberate binding decision at the interaction checkpoint. Label choices by result (side by side / stacked), not ambiguous divider orientation. Keep J for reflow of existing siblings. Verify a main-left/right-stacked layout from both new insertion and existing windows; document the current J + directional move route and reflow's nested-sibling refusal.
+
+Restore W4 as one bounded v1 daily composition after role identity is stable: logical main/side/lower roles, machine-local assignments, a preview and idempotent cold/warm invocation. Use targeted Glaze tree commands and bounded waits; no saved HWNDs/pixels or general layout engine. Never select, rehome or change the explicit state of unrelated windows. Ordinary tiling may resize neighbors on source/target workspaces; show those affected workspaces in the preview, rather than promising unchanged geometry. Verify twice-run no duplicates, slow/missing role, occupied targets and shared mutation/user-context rules. The original roadmap deferred W4; this reconciliation deliberately includes one preset, not arbitrary layout authoring.
+
+Make the existing named terminal pad discoverable as one summon/hide toggle with a dedicated identity. It must never capture the normal terminal. Centered scratch is the default; classic top-edge Windows Terminal quake is an optional integration proof, not an alias for the current pad. Keep anonymous S behavior honestly labeled as summon/rescue until a real special-workspace primitive exists. Cross-workspace pinning and multi-window scratch overlay remain explicit future core work.
+
+Reuse P1's per-identity serialization and in-flight launch handling for the named toggle. Concurrent/held cold activation creates one terminal; late startup must not take focus after the user changes context. Verify hide/summon repeatedly, closed-target recovery and ordinary-terminal exclusion. The existing scratch command does not yet prove these launch-race guarantees.
+
+## Verification cases
 
 R1 covers main/dialog windows, modal Open/Save/auth/settings, floating utilities, utility child windows, scratchpad and fullscreen history. Use at least one traditional Win32 and one modern application, plus ordinary disposable Muxel windows only if relevant.
 

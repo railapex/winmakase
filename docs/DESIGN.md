@@ -38,6 +38,10 @@ Omarchy's generic browser/terminal bindings invoke launch commands; selected app
 
 Float/tile already uses current state: tiled becomes centered floating; floating/fullscreen/minimized returns to tiled. Fullscreen's separate toggle retains its own restore semantics.
 
+Manual floats remain on the current workspace. Known dialogs belong with their parent, not in scratch. Current O is one-way centered topmost, not cross-workspace pinning. Current S summons/rescues one window; named pads provide a dedicated one-window toggle. A true pinned tool or multi-window special workspace needs a future Glaze core primitive. The [interaction guide](research/desktop-interactions-2026-09-08.md) separates current behavior from these targets.
+
+Glaze supports nested splits today. J reflows existing siblings; split-next direction is a distinct operation. P1 adds discoverable split controls, restores loose-float recovery, exposes a named terminal toggle and implements one idempotent daily layout using logical roles. It does not become a general layout engine. After a week with app actions and float recovery, W5 decides whether another switcher is needed.
+
 ## Window policy and application roles — target
 
 Main application windows tile by default. Owned dialogs, modal surfaces and non-resizable utilities float by default; explicit utility rules can float or ignore. Process name alone cannot distinguish a main window from its dialogs. Keep splash windows, launchers, Zebar, shell surfaces and elevation boundaries out of main-window matching.
@@ -68,6 +72,8 @@ Retain PowerToys Run. Generate owned Start Menu shortcuts for role actions and f
 One undocked Zebar popup hosts controls, theme selection and key help. Escape restores the original surviving target only while the popup still owns focus; click-away keeps the clicked window focused; an action that opens another surface keeps its destination focused. Prove these transitions, keyboard navigation, fullscreen behavior, mixed DPI and zero added work-area reserve before building on it. Audio volume/mute and media use the pinned provider APIs; default-output selection and Bluetooth/network/display/power settings can open native Windows surfaces.
 
 Taskbar independence means app search, running-window access, tray/context menus, audio/device settings, notifications, time/calendar and recovery are reachable by keyboard and mouse. Shutdown/restart actions retain confirmation. Persistent bars must never steal focus.
+
+Tray overflow is an undocked dropdown, not inline bar expansion. Users choose and order always-visible icons. One persistent tray provider owner serves both bar and popup; transient views cannot stop/recreate it. Preferences use verified GUID/app identity rather than transient HWNDs, with explicit ambiguity handling. Calendar is a real month grid with date navigation, locale/weekday choices and midnight/wake updates; external calendar launch is optional and event sync is deferred.
 
 Use fresh monitor identity after topology changes; x-coordinate is not a primary-monitor test. Replace per-monitor status process polling with one shared source using existing files/events or one primary producer. No new daemon solely for status. Offline startup, absent optional providers and useful failure labels are mandatory.
 

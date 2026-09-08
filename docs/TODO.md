@@ -17,8 +17,8 @@ These checks do not imply clean installation, dialog safety, focus-or-launch, co
 ## Active packages
 
 - [ ] [P0 — Baseline and integration proofs](plans/v1/00-baseline.md): exact provenance, key-pattern comparison, Run shortcut indexing, popup/focus/dock capability, classification and suppression probes. Exit: R0.
-- [ ] [P1 — Window policy and app actions](plans/v1/01-window-policy.md): dialog-safe defaults, explicit homes, work/personal roles, launch-new/focus-or-launch and safe adoption/reload. Exit: R1.
-- [ ] [P2 — Launcher and controls](plans/v1/02-launcher-controls.md): shared command entries, offline bar, real monitor identity, accessible controls/help. Exit: R2.
+- [ ] [P1 — Window policy and app actions](plans/v1/01-window-policy.md): dialog-safe defaults, homes/profiles, launch modes, safe adoption/reload, loose-float recovery, practical splits, named terminal and one daily layout. Exit: R1.
+- [ ] [P2 — Launcher and controls](plans/v1/02-launcher-controls.md): shared entries, offline bar, monitor identity, dropdown tray with user pinning, month calendar, float indicator and accessible controls/help. Exit: R2.
 - [ ] [P3 — Appearance](plans/v1/03-appearance.md): two complete presets, staged apply/rollback, owned settings. Exit: R3.
 - [ ] [P4 — Supervisor and taskbar retirement](plans/v1/04-supervisor.md): lifecycle correctness, crash restoration, privileged-path boundary, delete hover controller after replacement proof. Exit: R4.
 - [ ] [P5 — Distribution and release](plans/v1/05-package.md): install/update/uninstall, provenance/licenses, clean Windows verification and dogfood. Exit: R5–R6.
@@ -36,3 +36,5 @@ P1 and offline-bar work can proceed after their P0 proofs. P4 correctness and pr
 - [ ] R6 — integrated use and release review.
 
 Record build, environment, observations and artifacts under the [verification contract](plans/v1/verification.md). No release tag until all blocking cases pass. Future WM/shell/grouping work lives in [future platforms](plans/future-desktop-platforms.md).
+
+Use the [execution procedure](plans/v1/execution.md) and [generated progress report](plans/v1/progress.html) for session handoffs and check-ins. Package/round checkboxes here remain the completion source; execution-state.json records only current slice, decisions and evidence. W5 gets a written need/no-need verdict after at least one week with app actions and float recovery.

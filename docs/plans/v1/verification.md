@@ -19,12 +19,14 @@ Record which Sandbox/VM hardware limitations exclude sleep, GPU, audio or physic
 | Round | Required cases | Exit evidence |
 |---|---|---|
 | R0 — baseline | Exact provenance; pinned Omarchy comparison; Run indexing; popup; profile/classification; theme reload; suppression; guard; pressure; baseline performance | Resolved proof reports and supported environment matrix |
-| R1 — windows/apps | Dialog/utility hierarchy, home precedence, reload preservation, controlled restart snapshot versus unplanned reconstruction, profiles, hidden/minimized/scratch selection, concurrent/slow focus-or-launch, launch-new capability, F/Alt+F/T transitions, held keys and native collisions | Correct identity/state/focus with no extra or misrouted window |
-| R2 — launcher/controls | Every taskbar replacement row; fullscreen/elevated/keyboard/mouse; offline cold assets; popup focus/docks; mixed DPI/topology; tray/provider failure | All workflows reachable, correct widgets/tray, input-ready measurements |
+| R1 — windows/apps | Dialog/home/reload/adoption contracts; profile/launch races; hidden/minimized/scratch selection; float recovery; nested split construction; named terminal; cold/warm/repeated daily layout; F/Alt+F/T and native collisions | Correct identity/state/focus with no extra or misrouted window |
+| R2 — launcher/controls | Every replacement row; offline/fullscreen/elevated; popup focus/docks; mixed displays; tray dropdown/pins/identity/menu anchoring; 100 popup cycles; month calendar/date boundaries; float indicator | All workflows reachable, correct widgets/tray, input-ready measurements |
 | R3 — appearance | Both full presets; screenshots at scales; ten theme alternations; preserved layout/focus; concurrent/interrupted/failing applies; apply versus update/off/uninstall; local edits | Visual approval and exact restoration/conflict evidence |
 | R4 — lifecycle | Pair/bar failures; singleton/request/generation races; failed kill; worker/host death or hang during blocking calls; recovery task failure; missing/recreated Explorer; pressure; retry exhaustion; baseline/later-edit variants; logoff during takeover | Truthful ownership, bounded recovery and taskbar takeover proof |
 | R5 — distribution | Clean install/repair/update/rollback/uninstall; ACLs and tampered journal; interrupted/concurrent mutation ownership; preexisting/later-edited settings; missing optional apps; offline runtime | Manifest/ACL/settings comparisons; no orphan ownership |
 | R6 — integrated release | Five working days; three cold logins; five sleep/wakes; ten monitor cycles; full CI; independent workflow review | All prior gates pass, no blocking defect, release decision recorded |
+
+W5 is a written switcher need/no-need decision after at least one week with verified app actions and float recovery. It is not an automatic switcher implementation or a reason to extend v1 without evidence.
 
 ## Measurable gates
 
