@@ -1,0 +1,890 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-09-08T22:30:49.4105008Z",
+  "readOnly": true,
+  "sanitization": "Allowlisted component images only; no unrelated process paths, titles, command lines, account names, serial numbers or config content.",
+  "os": {
+    "caption": "Microsoft Windows 11 Pro",
+    "version": "10.0.26200",
+    "build": "26200",
+    "ubr": 9278,
+    "architecture": "64-bit",
+    "lastBootUtc": "2026-09-08T11:25:26.5000730Z"
+  },
+  "source": {
+    "winmakaseHead": "b73f48f52c50036673a8c77baaa705653e7a58e9",
+    "winmakaseDirty": true,
+    "glazeHead": "6d62d6616e6acdfd1c1d35ad42ba468f9bb7972e",
+    "glazeDirty": false
+  },
+  "artifacts": [
+    {
+      "id": "winmakase-cli-deployed",
+      "path": "<user>/.winmakase/bin/winmakase.exe",
+      "present": true,
+      "bytes": 2823680,
+      "sha256": "F65B7B00559DE6110A3448A8CBDC64217CBFF5301235F04A81A92A263EA2B4A0",
+      "fileVersion": null,
+      "productVersion": null,
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "winmakase-supervisor-deployed",
+      "path": "<user>/.winmakase/bin/winmakased.exe",
+      "present": true,
+      "bytes": 1104896,
+      "sha256": "0E77EA6A7C5BFDBB477B0DE5DDA012669E1232A430198D2A7C56C8FCC529414B",
+      "fileVersion": null,
+      "productVersion": null,
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "winmakase-cli-local-release",
+      "path": "<repo>/target/release/winmakase.exe",
+      "present": true,
+      "bytes": 2823680,
+      "sha256": "F65B7B00559DE6110A3448A8CBDC64217CBFF5301235F04A81A92A263EA2B4A0",
+      "fileVersion": null,
+      "productVersion": null,
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "winmakase-supervisor-local-release",
+      "path": "<repo>/target/release/winmakased.exe",
+      "present": true,
+      "bytes": 1104896,
+      "sha256": "0E77EA6A7C5BFDBB477B0DE5DDA012669E1232A430198D2A7C56C8FCC529414B",
+      "fileVersion": null,
+      "productVersion": null,
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "glaze-deployed",
+      "path": "<user>/.winmakase/bin/glazewm.exe",
+      "present": true,
+      "bytes": 8382976,
+      "sha256": "4EA8BFD012915907628A21C8E1907F096BDA7253BEDFCD7D55952232C6F79988",
+      "fileVersion": "0.0.0.0",
+      "productVersion": "0.0.0.0",
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": [
+        "<requestedExecutionLevel level=\"asInvoker\" uiAccess=\"false\" />"
+      ]
+    },
+    {
+      "id": "glaze-cli-deployed",
+      "path": "<user>/.winmakase/bin/glazewm-cli.exe",
+      "present": true,
+      "bytes": 4253184,
+      "sha256": "BDF9E48405B14275AA73BE661AECCF29AE6D195AC5F04C9546199398DCB83650",
+      "fileVersion": "0.0.0.0",
+      "productVersion": "0.0.0.0",
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "glaze-watcher-deployed",
+      "path": "<user>/.winmakase/bin/glazewm-watcher.exe",
+      "present": true,
+      "bytes": 4099584,
+      "sha256": "3C29C42030C034BB9030177384945B26EB1E8900BEF0F98DB8CFFB2DF7E665B6",
+      "fileVersion": "0.0.0.0",
+      "productVersion": "0.0.0.0",
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "glaze-local-release",
+      "path": "<glaze-source>/target/release/glazewm.exe",
+      "present": true,
+      "bytes": 8382976,
+      "sha256": "4EA8BFD012915907628A21C8E1907F096BDA7253BEDFCD7D55952232C6F79988",
+      "fileVersion": "0.0.0.0",
+      "productVersion": "0.0.0.0",
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": [
+        "<requestedExecutionLevel level=\"asInvoker\" uiAccess=\"false\" />"
+      ]
+    },
+    {
+      "id": "glaze-cli-local-release",
+      "path": "<glaze-source>/target/release/glazewm-cli.exe",
+      "present": true,
+      "bytes": 4253184,
+      "sha256": "BDF9E48405B14275AA73BE661AECCF29AE6D195AC5F04C9546199398DCB83650",
+      "fileVersion": "0.0.0.0",
+      "productVersion": "0.0.0.0",
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "glaze-watcher-local-release",
+      "path": "<glaze-source>/target/release/glazewm-watcher.exe",
+      "present": true,
+      "bytes": 4099584,
+      "sha256": "3C29C42030C034BB9030177384945B26EB1E8900BEF0F98DB8CFFB2DF7E665B6",
+      "fileVersion": "0.0.0.0",
+      "productVersion": "0.0.0.0",
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "kanata-task-path-candidate",
+      "path": "<repo>/spike/tools/kanata/kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
+      "present": true,
+      "bytes": 2574336,
+      "sha256": "FE7FF97656F1C4309874036A5878EDE5B2C51BD16AFA5EEF468A44FF10BB50F2",
+      "fileVersion": null,
+      "productVersion": null,
+      "signatureStatus": "NotSigned",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "zebar-installed",
+      "path": "C:/Program Files/glzr.io/Zebar/zebar.exe",
+      "present": true,
+      "bytes": 32541504,
+      "sha256": "16EF0B5B586F30DF132DE93CFB31C4D9105571EC3525685B4BDA6D8D6D5C84D0",
+      "fileVersion": "0.0.0",
+      "productVersion": "0.0.0",
+      "signatureStatus": "Valid",
+      "executionManifestSnippets": []
+    },
+    {
+      "id": "powertoys-run-installed",
+      "path": "C:/Program Files/PowerToys/PowerToys.PowerLauncher.exe",
+      "present": true,
+      "bytes": 192312,
+      "sha256": "062ED25AA8F343C83641277111BCCAC366B25EBF80021B1E4D783EEF25D2E688",
+      "fileVersion": "0.100.2.0",
+      "productVersion": "0.100.2.0",
+      "signatureStatus": "Valid",
+      "executionManifestSnippets": [
+        "<requestedExecutionLevel  level=\"asInvoker\" uiAccess=\"false\" />",
+        "<requestedExecutionLevel  level=\"highestAvailable\" uiAccess=\"false\" />",
+        "<requestedExecutionLevel  level=\"requireAdministrator\" uiAccess=\"false\" />",
+        "<requestedExecutionLevel level=\"asInvoker\" uiAccess=\"false\" />"
+      ]
+    }
+  ],
+  "artifactMethod": "Explicit candidate file paths. Compare each path with task/process facts; a matching local release is not proof of source-to-binary provenance. An unreadable elevated process path remains unverified.",
+  "configs": [
+    {
+      "id": "supervisor",
+      "path": "<user>/.winmakase/config.toml",
+      "present": true,
+      "bytes": 3123,
+      "sha256": "825CB3C6AA1FF5F6355D2031B2E1C6F9645878CF0375BE9238295DC581B04D60"
+    },
+    {
+      "id": "local-keymap",
+      "path": "<user>/.winmakase/keymap/local.toml",
+      "present": true,
+      "bytes": 2669,
+      "sha256": "25C29937C4182154BD0FAA783AD1EFD3480F0AC332C39F1BC629F3DA9C56A861"
+    },
+    {
+      "id": "glaze-base",
+      "path": "<user>/.winmakase/glazewm/base.yaml",
+      "present": true,
+      "bytes": 1700,
+      "sha256": "00B150462E3A3137AF3A3A53647C20BA66C77F1FE377876151CC01887A6FE468"
+    },
+    {
+      "id": "glaze-generated",
+      "path": "<user>/.glzr/glazewm/config.yaml",
+      "present": true,
+      "bytes": 11183,
+      "sha256": "F5A800E6310EF44E335781390D68CD71B080374629EDACDCF8629F43AB1E7387"
+    },
+    {
+      "id": "kanata",
+      "path": "<repo>/spike/caps.kbd",
+      "present": true,
+      "bytes": 691,
+      "sha256": "B56F36AD5F3AD73B2DD5F563CCB72B96D55239B05635EB890644881E7CE8013C"
+    },
+    {
+      "id": "panic",
+      "path": "<repo>/spike/panic.ps1",
+      "present": true,
+      "bytes": 2954,
+      "sha256": "D17E2C06AC72962E5D3AEF44C756A956972BEDB00EF5723AAD3EDC56AE8D602C"
+    },
+    {
+      "id": "stock-keymap",
+      "path": "<repo>/keymap/omarchy.toml",
+      "present": true,
+      "bytes": 24523,
+      "sha256": "1FB8B92FEBDB694A41189DDEBE1CE48CB5D2A866E896C83B7B4C54598AA2A4F0"
+    },
+    {
+      "id": "winmakase-lock",
+      "path": "<repo>/Cargo.lock",
+      "present": true,
+      "bytes": 14887,
+      "sha256": "54671A7465065DF747534C8EEE6B3A42111B7366B94300163EA47878FFD94B86"
+    },
+    {
+      "id": "glaze-lock",
+      "path": "<glaze-source>/Cargo.lock",
+      "present": true,
+      "bytes": 87624,
+      "sha256": "8881BF13179AA3CC9C7ADE85F7D584D9AA118DB0767C3C2B50F469999794B49A"
+    }
+  ],
+  "tasks": [
+    {
+      "name": "WinmakaseKanata",
+      "state": "Running",
+      "runLevel": "Highest",
+      "logonType": "Interactive",
+      "actions": [
+        {
+          "executable": "<repo>/spike/tools/kanata/kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
+          "argumentsSha256": "33E91783473170B37BB93EE32F32D6DB0B8D74BAE74B5BD9DECA7CF0DA3B3754",
+          "workingDirectory": ""
+        }
+      ],
+      "exportedXmlSha256": "DD1672E3CCAF4F29701975960A86F221B2FB8DC36AE25586BA1D474926D3664F",
+      "argumentDetails": "contents omitted; review exact definitions locally",
+      "restartCount": 0,
+      "restartInterval": null
+    },
+    {
+      "name": "WinmakasePanic",
+      "state": "Ready",
+      "runLevel": "Highest",
+      "logonType": "Interactive",
+      "actions": [
+        {
+          "executable": "pwsh",
+          "argumentsSha256": "3FAE550B19DB79E66B9569E0801EC7570AA0ECF5350AEE895E5646DEABF5DD78",
+          "workingDirectory": ""
+        }
+      ],
+      "exportedXmlSha256": "7CC81DFD887A24DF7B05BA819F6838BD17D9F31CE2E2422E2FBAD04BE50F4220",
+      "argumentDetails": "contents omitted; review exact definitions locally",
+      "restartCount": 0,
+      "restartInterval": null
+    },
+    {
+      "name": "WinmakaseSupervisor",
+      "state": "Running",
+      "runLevel": "Limited",
+      "logonType": "Interactive",
+      "actions": [
+        {
+          "executable": "<user>/.winmakase/bin/winmakased.exe",
+          "argumentsSha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+          "workingDirectory": ""
+        }
+      ],
+      "exportedXmlSha256": "9E4BB1656E20C102CAA9435D41140EE69BF09855312247B0744A1BEA1FE037AB",
+      "argumentDetails": "contents omitted; review exact definitions locally",
+      "restartCount": 3,
+      "restartInterval": "PT1M"
+    }
+  ],
+  "processes": [
+    {
+      "name": "winmakased.exe",
+      "pid": 17692,
+      "imagePath": "<user>/.winmakase/bin/winmakased.exe",
+      "imagePathReadable": true,
+      "createdAt": "2026-09-08T11:25:51.4013890Z"
+    },
+    {
+      "name": "zebar.exe",
+      "pid": 21932,
+      "imagePath": "C:/Program Files/glzr.io/Zebar/zebar.exe",
+      "imagePathReadable": true,
+      "createdAt": "2026-09-08T11:25:56.9946850Z"
+    },
+    {
+      "name": "PowerToys.PowerLauncher.exe",
+      "pid": 27008,
+      "imagePath": "C:/Program Files/PowerToys/PowerToys.PowerLauncher.exe",
+      "imagePathReadable": true,
+      "createdAt": "2026-09-08T11:26:13.0937170Z"
+    },
+    {
+      "name": "kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
+      "pid": 17240,
+      "imagePath": "",
+      "imagePathReadable": false,
+      "createdAt": "2026-09-08T11:26:17.7165990Z"
+    },
+    {
+      "name": "glazewm.exe",
+      "pid": 11104,
+      "imagePath": "<user>/.winmakase/bin/glazewm.exe",
+      "imagePathReadable": true,
+      "createdAt": "2026-09-08T11:26:17.7375260Z"
+    },
+    {
+      "name": "glazewm-watcher.exe",
+      "pid": 20252,
+      "imagePath": "<user>/.winmakase/bin/glazewm-watcher.exe",
+      "imagePathReadable": true,
+      "createdAt": "2026-09-08T11:26:17.8715500Z"
+    }
+  ],
+  "displays": [
+    {
+      "Device": "\\\\.\\DISPLAY2",
+      "Bounds": {
+        "Left": 0,
+        "Top": 0,
+        "Right": 3840,
+        "Bottom": 1600
+      },
+      "WorkArea": {
+        "Left": 0,
+        "Top": 40,
+        "Right": 3840,
+        "Bottom": 1600
+      },
+      "Primary": true,
+      "DpiX": 96,
+      "DpiY": 96,
+      "DpiResult": 0
+    },
+    {
+      "Device": "\\\\.\\DISPLAY1",
+      "Bounds": {
+        "Left": -1200,
+        "Top": -156,
+        "Right": 0,
+        "Bottom": 1764
+      },
+      "WorkArea": {
+        "Left": -1200,
+        "Top": -116,
+        "Right": 0,
+        "Bottom": 1764
+      },
+      "Primary": false,
+      "DpiX": 96,
+      "DpiY": 96,
+      "DpiResult": 0
+    },
+    {
+      "Device": "\\\\.\\DISPLAY3",
+      "Bounds": {
+        "Left": 3840,
+        "Top": -400,
+        "Right": 6400,
+        "Bottom": 2480
+      },
+      "WorkArea": {
+        "Left": 3840,
+        "Top": -360,
+        "Right": 6400,
+        "Bottom": 2480
+      },
+      "Primary": false,
+      "DpiX": 96,
+      "DpiY": 96,
+      "DpiResult": 0
+    }
+  ],
+  "dpiMethod": "GetDpiForMonitor MDT_EFFECTIVE_DPI in caller context; not a mixed-DPI acceptance test.",
+  "optionalFeatures": [
+    {
+      "Name": "VirtualMachinePlatform",
+      "InstallState": 1
+    },
+    {
+      "Name": "Microsoft-Hyper-V-All",
+      "InstallState": 2
+    },
+    {
+      "Name": "Containers-DisposableClientVM",
+      "InstallState": 1
+    }
+  ],
+  "optionalFeatureStates": {
+    "4": "Unknown",
+    "1": "Enabled",
+    "2": "Disabled",
+    "3": "Absent"
+  },
+  "acls": [
+    {
+      "path": "<repo>",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "-536805376",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "-1610612736",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "path": "D:/dev",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": false
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": false
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": false
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "-536805376",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "-1610612736",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "path": "<repo>/spike",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "-536805376",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "-1610612736",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "path": "<repo>/spike/tools/kanata",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "268435456",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "-536805376",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "-1610612736",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "path": "<repo>/spike/caps.kbd",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "path": "<repo>/spike/panic.ps1",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Authenticated Users",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Users",
+          "type": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "path": "<user>/.winmakase",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": false
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": false
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Current user",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "path": "<user>/.winmakase/bin",
+      "present": true,
+      "inheritanceProtected": false,
+      "entries": [
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "Other principal",
+          "type": "Allow",
+          "rights": "Modify, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Administrators",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "Current user",
+          "type": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        }
+      ]
+    }
+  ],
+  "aclMethod": "Listed DACL entries, not a complete effective-access/security audit."
+}

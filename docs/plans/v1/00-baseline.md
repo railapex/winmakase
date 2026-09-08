@@ -1,6 +1,10 @@
 # P0 — Baseline and integration proofs
 
-Status: not started. Exit: R0. Research findings are not experiment results.
+Status: active. Exit: R0. Research findings are not experiment results.
+
+Execution clarification: ordinary bounded window/input checks may use the daily desktop with disposable test windows, captured starting state and verified restoration. A second live stack, failure injection, Explorer restart and unproven taskbar suppression require a disposable Windows OS environment. A VM is not a prerequisite for source, fixture or non-disruptive checks.
+
+Direct Caps reassessment: the archived [leader spike](../archive/2026-09-08/glaze-caps-ownership.md) passed automated and injected live A/B checks, then the old stack was restored. The currently deployed AppID build still uses Kanata and right-Win bindings. Review and combine the bounded patches, then complete physical input/elevation/reboot/fullscreen acceptance before deciding whether v1 can retire Kanata. Reuse the existing work; do not substitute another remapper without a demonstrated need.
 
 ## Deliverables
 

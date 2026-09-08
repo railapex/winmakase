@@ -1,18 +1,23 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-08T17:14:05Z",
+  "updatedAt": "2026-09-08T22:35:45.3697364Z",
   "planBaseCommit": "ab32da1",
   "lastVerifiedBuild": null,
-  "stage": "Planning ready; v1 implementation rounds pending",
+  "stage": "P0 active: baseline captured; fixtures and direct Caps candidate under review",
   "currentSlice": {
     "id": "P0.1",
-    "status": "Queued",
+    "status": "In progress",
     "title": "Baseline and disposable Windows test environment",
-    "nextAction": "Record component provenance and prepare the isolated test environment before running integration proofs."
+    "nextAction": "Finish artifact inventory and fixture review; recover direct Caps candidate; use the daily desktop for bounded non-disruptive checks and Sandbox for failure/shell experiments."
   },
   "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
   "decisions": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "title": "Sandbox awaiting host restart",
+      "detail": "Chris enabled Containers-DisposableClientVM. CBS reports reboot pending; guest tests have not run. Source, build and bounded ordinary desktop work can continue."
+    }
+  ],
   "recentDecisions": [
     {
       "title": "Chosen stack retained",
@@ -28,10 +33,15 @@
     },
     {
       "title": "Bounded execution",
-      "detail": "Astra lead, Sol builders, independent review, at most two writing scopes; no build started by this report."
+      "detail": "Astra lead, two Sol builders in separate worktrees, independent review. P0 was explicitly started in the active session."
     }
   ],
   "evidence": [
+    {
+      "label": "P0 baseline and direct Caps findings",
+      "href": "../../verification/v1/2026-09-08-p0/README.md",
+      "detail": "Read-only inventory and pinned payload comparisons completed; R0 remains open."
+    },
     {
       "label": "V1 plan and verification design",
       "href": "README.md",
@@ -49,6 +59,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-08",
+      "summary": "P0 started. Host inventory found Sandbox/Hyper-V disabled; Chris is enabling Sandbox. Direct Caps spike was tested but restored afterward, so Kanata remains live. Reassess existing direct Caps work before locking in the remapper dependency."
+    },
     {
       "at": "2026-09-08",
       "summary": "Planning follow-up: tray/calendar and lost W cuts incorporated. Next action is P0.1; no product build is active."

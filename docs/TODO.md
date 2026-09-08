@@ -16,7 +16,7 @@ These checks do not imply clean installation, dialog safety, focus-or-launch, co
 
 ## Active packages
 
-- [ ] [P0 — Baseline and integration proofs](plans/v1/00-baseline.md): exact provenance, key-pattern comparison, Run shortcut indexing, popup/focus/dock capability, classification and suppression probes. Exit: R0.
+- [ ] [P0 — Baseline and integration proofs](plans/v1/00-baseline.md): active; exact provenance, key-pattern comparison, direct-Caps candidate/possible Kanata retirement, Run shortcut indexing, popup/focus/dock capability, classification and suppression probes. [Current evidence](verification/v1/2026-09-08-p0/README.md). Exit: R0.
 - [ ] [P1 — Window policy and app actions](plans/v1/01-window-policy.md): dialog-safe defaults, homes/profiles, launch modes, safe adoption/reload, loose-float recovery, practical splits, named terminal and one daily layout. Exit: R1.
 - [ ] [P2 — Launcher and controls](plans/v1/02-launcher-controls.md): shared entries, offline bar, monitor identity, dropdown tray with user pinning, month calendar, float indicator and accessible controls/help. Exit: R2.
 - [ ] [P3 — Appearance](plans/v1/03-appearance.md): two complete presets, staged apply/rollback, owned settings. Exit: R3.

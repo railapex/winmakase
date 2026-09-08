@@ -12,7 +12,7 @@ Opinionated Windows 11 desktop. Public repository: railapex/winmakase.
 
 ## Scope and safety
 
-- V1 uses GlazeWM, Zebar, Kanata LLHOOK and PowerToys Run. Omarchy patterns and exact bindings where supported are the target. Record limitations and intended future convergence. No new WM, shell, application catalog or generic action framework.
+- V1 retains GlazeWM, Zebar and PowerToys Run. Kanata LLHOOK is currently deployed; P0 is reassessing the existing direct-Caps Glaze candidate for its retirement after acceptance. Omarchy patterns and exact bindings where supported are the target. Record limitations and intended future convergence. No new WM, shell, application catalog or generic action framework.
 - Machine changes need task authorization. Research/planning does not authorize deployment. A checklist item alone is not permission to alter a live desktop.
 - Pin dependency versions and provenance. Never install an unpinned latest build. Glaze has a local AppUserModelID patch; record its upstream commit, patch and build configuration.
 - WINMAKASE_HOME isolates files only. Glaze IPC, hooks, tasks and Explorer are shared. Crash, taskbar and Explorer tests belong in a disposable Windows OS environment, not a second stack on the daily desktop.

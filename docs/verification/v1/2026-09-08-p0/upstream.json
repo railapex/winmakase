@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "observedOn": "2026-09-08",
+  "method": "GitHub release/tag API via gh api --paginate; downloaded pinned assets; verified asset SHA256; extracted with 7-Zip as data without executing MSI or component binaries; compared executable SHA256.",
+  "components": [
+    {
+      "name": "Zebar",
+      "tag": "v3.3.1",
+      "commit": "8af3cbecff3c00a496b4b8e7e84b6a658e825537",
+      "asset": "https://github.com/glzr-io/zebar/releases/download/v3.3.1/zebar-v3.3.1-opt1-x64.msi",
+      "assetSha256": "1D5584BE8DEF58F828D55ED09CEE52FE80FDD60EA118141F37963AA80E902C28",
+      "assetBytes": 12197888,
+      "extractedMember": "Path",
+      "executableSha256": "16EF0B5B586F30DF132DE93CFB31C4D9105571EC3525685B4BDA6D8D6D5C84D0",
+      "installedExecutableMatches": true
+    },
+    {
+      "name": "Kanata",
+      "tag": "v1.12.0",
+      "commit": "02242ef761ef43b860eac30067ce86904be7d466",
+      "asset": "https://github.com/jtroo/kanata/releases/download/v1.12.0/windows-binaries-x64.zip",
+      "assetSha256": "13947ED78CFA3284BFEF854E3C542C74AB366236B72FD9F7E039F8638DEEAD9D",
+      "assetBytes": 8484766,
+      "extractedMember": "kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
+      "executableSha256": "FE7FF97656F1C4309874036A5878EDE5B2C51BD16AFA5EEF468A44FF10BB50F2",
+      "configuredTaskPathCandidateMatches": true,
+      "runningProcessImagePathVerified": false
+    },
+    {
+      "name": "GlazeWM",
+      "tag": "v3.10.1",
+      "commit": "56a8bdee81e9d1a11d6ad840b83b183bb1b3195f",
+      "localAppIdPatch": "6d62d6616e6acdfd1c1d35ad42ba468f9bb7972e",
+      "localReleaseMatchesDeployed": true,
+      "reproducibleBuildAttestation": null
+    },
+    {
+      "name": "PowerToys",
+      "tag": "v0.100.2",
+      "commit": "1d11b732b7ba7dbb265d1151531655fd8d83c76d",
+      "installedRunFileVersion": "0.100.2.0",
+      "releasePayloadComparison": "pending"
+    }
+  ]
+}

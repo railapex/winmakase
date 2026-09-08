@@ -18,14 +18,14 @@ main{max-width:1100px;margin:auto;padding:42px 24px 64px}h1{font-size:clamp(30px
 <header>
 <div class="eyebrow">Winmakase / v1</div>
 <h1>Build progress</h1>
-<p class="stage">Planning ready; v1 implementation rounds pending</p>
-<p class="subtle">Updated <time id="updated" datetime="09/08/2026 17:14:05">09/08/2026 17:14:05</time> · Read-only build snapshot</p>
+<p class="stage">P0 active: baseline captured; fixtures and direct Caps candidate under review</p>
+<p class="subtle">Updated <time id="updated" datetime="09/08/2026 22:35:45">09/08/2026 22:35:45</time> · Read-only build snapshot</p>
 <p class="notice" id="freshness">This report records evidence. It does not run builds, change the desktop or submit decisions.</p>
 <nav aria-label="Build references"><a href="NEXT.md">Resume</a> · <a href="README.md">Plan</a> · <a href="execution.md">Build procedure</a> · <a href="verification.md">Verification</a> · <a href="../../research/desktop-interactions-2026-09-08.md">Desktop behavior</a></nav>
 </header>
 <div class="grid">
-<section class="panel lead"><div class="small-label">Current slice</div><h2 class="slice">P0.1 · Baseline and disposable Windows test environment<span class="pill">Queued</span></h2><p>Record component provenance and prepare the isolated test environment before running integration proofs.</p><div class="small-label">Next check-in</div><p>R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.</p></section>
-<section class="panel"><h2>Decisions for Chris</h2><p>No decisions awaiting Chris. The next checkpoint will show concrete options and evidence.</p><div class="small-label">Blockers</div><p>No active build blocker recorded. Prerequisite experiments are queued, not passed.</p></section>
+<section class="panel lead"><div class="small-label">Current slice</div><h2 class="slice">P0.1 · Baseline and disposable Windows test environment<span class="pill">In progress</span></h2><p>Finish artifact inventory and fixture review; recover direct Caps candidate; use the daily desktop for bounded non-disruptive checks and Sandbox for failure/shell experiments.</p><div class="small-label">Next check-in</div><p>R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.</p></section>
+<section class="panel"><h2>Decisions for Chris</h2><p>No decisions awaiting Chris. The next checkpoint will show concrete options and evidence.</p><div class="small-label">Blockers</div><ul><li>@{title=Sandbox awaiting host restart; detail=Chris enabled Containers-DisposableClientVM. CBS reports reboot pending; guest tests have not run. Source, build and bounded ordinary desktop work can continue.}</li></ul></section>
 </div>
 <div class="grid">
 <section class="panel"><h2>Build packages</h2><table><thead><tr><th>ID</th><th>Outcome</th><th>Status</th></tr></thead><tbody><tr><th scope="row"><a href="../../../docs/plans/v1/00-baseline.md">P0</a></th><td>Baseline and integration proofs</td><td>Pending</td></tr>
@@ -46,12 +46,14 @@ main{max-width:1100px;margin:auto;padding:42px 24px 64px}h1{font-size:clamp(30px
 <section class="panel"><h2>Scope decisions</h2><ul class="list"><li><strong>Chosen stack retained</strong><p>GlazeWM, Zebar, Kanata and PowerToys. App catalog and replacement platforms remain deferred.</p></li>
 <li><strong>Tray and calendar specified</strong><p>Dropdown overflow, user-pinned icons and a real month calendar. Implementation proof pending.</p></li>
 <li><strong>W3–W5 reconciled</strong><p>Float recovery and one daily layout are assigned; switcher need is reviewed after a week.</p></li>
-<li><strong>Bounded execution</strong><p>Astra lead, Sol builders, independent review, at most two writing scopes; no build started by this report.</p></li></ul></section>
-<section class="panel"><h2>Evidence</h2><ul class="list"><li><a href="README.md">V1 plan and verification design</a><p>Plans complete; execution cases remain open.</p></li>
+<li><strong>Bounded execution</strong><p>Astra lead, two Sol builders in separate worktrees, independent review. P0 was explicitly started in the active session.</p></li></ul></section>
+<section class="panel"><h2>Evidence</h2><ul class="list"><li><a href="../../verification/v1/2026-09-08-p0/README.md">P0 baseline and direct Caps findings</a><p>Read-only inventory and pinned payload comparisons completed; R0 remains open.</p></li>
+<li><a href="README.md">V1 plan and verification design</a><p>Plans complete; execution cases remain open.</p></li>
 <li><a href="../../research/desktop-interactions-2026-09-08.md">Source-checked desktop behavior</a><p>Current splits, scratch and pin limits; not live acceptance.</p></li>
 <li><a href="../../research/v1-engineering-review-2026-09-08.md">Engineering review</a><p>Two documentation review rounds completed before this follow-up.</p></li></ul><div class="meta"><div><div class="small-label">Last verified build</div>No v1 build has passed these rounds</div><div><div class="small-label">Planning base</div>ab32da1</div></div></section>
 </div>
-<section class="panel"><details><summary>Checkpoint history</summary><ul class="list"><li><time>2026-09-08</time><p>Planning follow-up: tray/calendar and lost W cuts incorporated. Next action is P0.1; no product build is active.</p></li></ul></details></section>
+<section class="panel"><details><summary>Checkpoint history</summary><ul class="list"><li><time>2026-09-08</time><p>P0 started. Host inventory found Sandbox/Hyper-V disabled; Chris is enabling Sandbox. Direct Caps spike was tested but restored afterward, so Kanata remains live. Reassess existing direct Caps work before locking in the remapper dependency.</p></li>
+<li><time>2026-09-08</time><p>Planning follow-up: tray/calendar and lost W cuts incorporated. Next action is P0.1; no product build is active.</p></li></ul></details></section>
 <footer class="footer">Generated from docs/TODO.md and execution-state.json. Answer decisions in the active session; the lead records the decision and updates this snapshot. No hidden build is running behind this page.</footer>
 </main>
 <script>

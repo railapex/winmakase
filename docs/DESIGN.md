@@ -32,6 +32,8 @@ The existing Rust CLI and windowless supervisor entry point remain. Install scri
 
 Keep Caps as a pure right-Win modifier, Caps+Space as launcher, physical left Win native and ScrLk as a raw Caps escape. Tap-Caps launching is deferred. Current Apps-key mode needs its own live validation before being advertised.
 
+P0 reassessment, 2026-09-08: the existing direct-Caps Glaze spike passed automated/injected A/B tests but was not adopted. Complete its remaining input/launcher/reload acceptance before retaining Kanata as a v1 dependency. Direct Caps without tap launching is a supported candidate configuration. [Current evidence and migration findings](verification/v1/2026-09-08-p0/direct-caps.md) distinguish it from the deployed right-Win path. Lifecycle removal follows successful input acceptance; existing Kanata-dependent contracts still describe the current stack until then.
+
 A versioned correspondence table distinguishes exact, same-pattern Windows equivalent, unavailable and deferred bindings. Preserve workspace/focus/move/resize/float/fullscreen/launcher families; do not substitute an unrelated action merely to fill a chord. Existing deviations, including the fullscreen focus escape, need explicit review rather than silently becoming the target.
 
 Omarchy's generic browser/terminal bindings invoke launch commands; selected app shortcuts explicitly focus-or-launch. Preserve that distinction. A launch command does not universally guarantee a new window: Winmakase launch-new requires role-specific support/arguments and reports unsupported singleton apps. SUPER+G grouping can remain unavailable in v1. Native reserved chords get an honest explanation, not an unreliable remap.

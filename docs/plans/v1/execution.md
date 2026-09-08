@@ -1,6 +1,6 @@
 # V1 build procedure
 
-Status: ready to use; implementation has not started. This is the Winmakase procedure, not a new general orchestrator.
+Status: in use for P0. This is the Winmakase procedure, not a new general orchestrator.
 
 ## Roles and boundaries
 
