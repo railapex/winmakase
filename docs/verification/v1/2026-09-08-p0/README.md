@@ -10,7 +10,7 @@ Status: baseline and guest fixture slices accepted; source binding comparison un
 - Deployed Winmakase CLI and supervisor each match their respective local release file by SHA-256. Their latest source-touch commits differ (`2bd3f6b` for CLI, `53ef578` for supervisor/taskbar); this is consistent with the recorded selective deployments. Build-time source attestations were not retained, so these are candidate source associations, not reproducible-build proof.
 - Deployed Glaze main/CLI/watcher each match the local AppID worktree's release files. The clean source HEAD is `6d62d6616e6acdfd1c1d35ad42ba468f9bb7972e`, based on upstream v3.10.1 `56a8bdee81e9d1a11d6ad840b83b183bb1b3195f`. The main executable contains an `asInvoker`, `uiAccess="false"` manifest snippet. The snapshot records raw XML snippets, not a parsed resource/security audit.
 - Zebar's installed executable is **verified against the pinned v3.3.1 MSI payload**, despite its `0.0.0` file version. Kanata's configured task-path candidate likewise matches the v1.12.0 ZIP member. See [upstream evidence](upstream.json).
-- PowerToys Run reports file version `0.100.2.0`; its executable hash is recorded. Matching to the release installer payload remains open.
+- PowerToys Run's installed executable matches the pinned v0.100.2 user-installer payload by SHA-256. The attached CAB and MSI were extracted as data; the MSI hash also matches the bundle manifest. Only the Run executable was compared, not the full installation. See [upstream evidence](upstream.json).
 - The elevated Kanata task points at the repo's `gui_winIOv2_cmd_allowed` binary and `spike/caps.kbd`. The process is running, but its elevated image path is unreadable from this session. The snapshot explicitly distinguishes the configured candidate file from process-image proof.
 - Kanata and panic task inputs live under a repo whose DACL grants Authenticated Users Modify. These paths and their parents must be protected or retired before release. The current supervisor task retries three times at one-minute intervals; that does not meet the proposed two-second recovery gate.
 
@@ -25,6 +25,8 @@ The deployed config contains `rwin` bindings and no `keybinding_leader`; `caps.k
 Ordinary bounded behavior checks can run here using disposable windows, captured state and verified restoration. WINMAKASE_HOME is file isolation only. A second stack, crash injection, Explorer restart and unproven taskbar suppression require disposable Windows.
 
 Chris enabled `Containers-DisposableClientVM` after the initial inventory. The feature now reports enabled; CBS reports reboot pending and the Sandbox executable was not yet available. Last boot remained `2026-09-08T11:25:26.500073Z`. No restart or Sandbox launch was performed by this session. After reboot, verify the feature, launch Sandbox and apply only the reviewed guest fixture instructions. Sandbox does not establish physical keyboard, mixed-DPI/multi-monitor or real-game acceptance.
+
+The [staged guest kit](guest-kit.md) records the local launch file and pinned archives. Its XML parses and both host mappings exist and are read-only. Guest initialization builds fixtures only; dependency installation and UI tests remain separate steps.
 
 ## Open evidence
 

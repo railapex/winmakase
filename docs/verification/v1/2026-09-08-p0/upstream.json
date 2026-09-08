@@ -39,7 +39,20 @@
       "tag": "v0.100.2",
       "commit": "1d11b732b7ba7dbb265d1151531655fd8d83c76d",
       "installedRunFileVersion": "0.100.2.0",
-      "releasePayloadComparison": "pending"
+      "asset": "https://github.com/microsoft/PowerToys/releases/download/v0.100.2/PowerToysUserSetup-0.100.2-x64.exe",
+      "assetSha256": "945FDF327E4D38E4CED61B0727B7AB8A1222958782982052989DDF7CB7096F62",
+      "assetBytes": 284920432,
+      "attachedCabOffset": 1222528,
+      "attachedCabBytes": 283687823,
+      "msiMember": "a2",
+      "msiBytes": 284274688,
+      "msiSha512": "8A0519D3B7A9A3F5B7212276E30F7876BDD0A5F7F501B346ADF8C0324F39F8EE68564254D75342EE74C042474BC43143320C8A025B3F8F040B60DB89168C033F",
+      "msiHashMatchesBundleManifest": true,
+      "extractedMember": "cab1.cab/BaseApplicationsFiles_File_PowerToys.PowerLauncher.exe",
+      "executableBytes": 192312,
+      "executableSha256": "062ED25AA8F343C83641277111BCCAC366B25EBF80021B1E4D783EEF25D2E688",
+      "installedRunExecutableMatches": true,
+      "releasePayloadComparison": "Run executable only; full installation not compared"
     }
   ]
 }
