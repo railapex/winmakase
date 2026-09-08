@@ -55,6 +55,9 @@ else {
     Set-Content -LiteralPath (Join-Path $canonicalGuestRoot '.winmakase-p0-fixture-root') `
         -Value 'winmakase-p0-disposable-fixture-v1' -NoNewline -Encoding ASCII
 }
+$canonicalGuestRoot = Assert-WindowsSandboxGuest `
+    -FixtureRoot $canonicalGuestRoot `
+    -ConsentToken $ConsentToken
 
 $sourceDestination = Join-Path $canonicalGuestRoot 'source'
 $binDirectory = Join-Path $canonicalGuestRoot 'bin'
