@@ -10,7 +10,7 @@ Scope: source comparison only. No desktop process, input hook, task, Glaze IPC, 
 
 `keymap/omarchy.toml` is useful coverage data, but its claim to contain every Quattro binding verbatim is false against Omarchy v4.0.2. The local stock file has 104 grouped rows and expands to 226 chords. The pinned upstream has 233 distinct chord contexts. The difference is exact: Winmakase carries three old/local aliases that v4.0.2 does not have, while omitting ten v4.0.2 contexts.
 
-The row-level disposition of all 104 stock mappings is 22 exact, 37 Windows/Glaze equivalents, 26 unavailable, and 19 deferred. Of 50 v1-critical rows, 20 are exact, 19 equivalent, and 11 deferred. These are source judgments, not runtime acceptance.
+The row-level disposition of all 104 stock mappings is 22 exact, 35 Windows/Glaze equivalents, 28 unavailable, and 19 deferred. Of 50 v1-critical rows, 20 are exact, 18 equivalent, 1 unavailable, and 11 deferred. These are source judgments, not runtime acceptance.
 
 The full row ledger is [bindings-comparison.csv](bindings-comparison.csv). It also records the ten upstream-only contexts and seven sanitized local-override effects. No command, profile name, workspace label, path, account, or private app value from the personal override file is present.
 
@@ -20,14 +20,16 @@ The official repository is `omacom/omarchy`; the local header still says `baseca
 
 The comparison used the six modules loaded by [`default/hypr/omarchy.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/omarchy.lua#L8-L14), plus the helper and launch scripts needed to interpret action semantics:
 
-| Source | Git blob | SHA-256 |
+| Source | Git blob | Canonical raw SHA-256 |
 |---|---|---|
-| [`tiling.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/tiling.lua) | `7e2408d351afbd2b197a4f5088c3d4a7099067de` | `BF7F030361C6D5E978548753B9F86B5EF5712D32C925C62E01CA983F6CF83252` |
-| [`applications.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/applications.lua) | `0c990e64ae6a23b1b8a42e61ab8e6f2211783c0a` | `8C26809D312288A9997645E758277F2FB80CA62600A156E4D59BFB58592D8E27` |
-| [`clipboard.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/clipboard.lua) | `f095ea5cd6484156e1f4d5dc43867d422f14d3d3` | `A9B83C6585EFEB162D1F6FC91329549AE098D8BB7EDDA0FC25FAE02661E14C62` |
-| [`utilities.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/utilities.lua) | `406b773f6b6fafceb3174f07a8fc1e19baf22abc` | `507B7D75453A02CB531AB57EB218DB5445A4AE6208BDAE51BCF03A03919DA6BB` |
-| [`media.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/media.lua) | `52779baa8a43c94b58c27b2b1c60fb8b5871d57a` | `62236C3A86A339A3673A1A005770341EBEDD052B60302010AB6E70198BED60ED` |
-| [`voxtype.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/voxtype.lua) | `df594b83056fd6166eb0cab326e2761eb7c8dc67` | `3CC1C162E450C80654A68D4F6A31800C86001D7A03D97BCDB8A23AC19FCF8046` |
+| [`tiling.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/tiling.lua) | `7e2408d351afbd2b197a4f5088c3d4a7099067de` | `85AAC24C8A44FC3D0513E77AC2C59EEFB179228834D6670EC76FB310D9F99AAF` |
+| [`applications.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/applications.lua) | `0c990e64ae6a23b1b8a42e61ab8e6f2211783c0a` | `6EF93BFE3DF6F3B93379E0B194F3EC925CD84CFDB30115C6ECE18198F21E0E3E` |
+| [`clipboard.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/clipboard.lua) | `f095ea5cd6484156e1f4d5dc43867d422f14d3d3` | `3C197296F8EFD7C3EB4B048D05C452FD9BBE0AD3C4969D938EA24A1E2D034717` |
+| [`utilities.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/utilities.lua) | `406b773f6b6fafceb3174f07a8fc1e19baf22abc` | `60B4AD67084D71222F04B118D6B5DF0DA7BC7B48169655674B84AE6D2F36B5FF` |
+| [`media.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/media.lua) | `52779baa8a43c94b58c27b2b1c60fb8b5871d57a` | `956980E5BC440E51D305F0E40CDEE7F791EFF6D4692F866B70275036FF82D2C1` |
+| [`voxtype.lua`](https://github.com/omacom/omarchy/blob/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/voxtype.lua) | `df594b83056fd6166eb0cab326e2761eb7c8dc67` | `FF39DCAB7A834082ABC12A5563C3B37CE434A39A1969A1ECB2F025553B69C446` |
+
+The SHA-256 values are over bytes downloaded from `raw.githubusercontent.com` at the pinned commit, before Git checkout or line-ending conversion. The Git blob IDs independently identify the same canonical objects.
 
 Local `keymap/omarchy.toml` Git blob: `22f89ba9cb7da3397c2bc13be476df00bf0a59ce`.
 
@@ -37,6 +39,8 @@ Reproduce the source set and counts:
 gh api --paginate repos/omacom/omarchy/git/ref/tags/v4.0.2
 gh api --paginate repos/omacom/omarchy/commits/v4.0.2 --jq '.sha, .commit.committer.date, .html_url'
 gh api --paginate 'repos/omacom/omarchy/git/trees/v4.0.2?recursive=1' --jq '.tree[] | select(.path | startswith("default/hypr/bindings/")) | [.type,.path,.sha] | @tsv'
+curl.exe -L --fail -o tiling.lua https://raw.githubusercontent.com/omacom/omarchy/346e69e1cec6c4e8924531874af6ba010a1bc99e/default/hypr/bindings/tiling.lua
+Get-FileHash ./tiling.lua -Algorithm SHA256
 cargo run --quiet -p winmakase --bin winmakase -- --home docs/verification/v1/2026-09-08-p0/nonexistent-home keymap check --keymap keymap/omarchy.toml
 Import-Csv docs/verification/v1/2026-09-08-p0/bindings-comparison.csv | Group-Object scope,classification | Sort-Object Name | Select-Object Name,Count
 ```
@@ -66,9 +70,11 @@ Several same-key mappings are only equivalents:
 - Height resize uses percentages instead of Omarchy's fixed pixel deltas.
 - `SUPER+O` floats, centers, and raises a window, but cannot pin it across workspaces.
 
-The six width-resize mappings are wrong against v4.0.2. Omarchy's `code:20` grows the window left and `code:21` shrinks from the left at normal, little, and large steps. Winmakase describes and emits `code:20` as width shrink and `code:21` as width grow. They are marked deferred rather than equivalent.
+The six width-resize mappings remain deferred because source alone does not prove their user-visible direction. Omarchy describes `code:20` as expansion left and passes negative relative x deltas; `code:21` gets positive deltas. Winmakase passes negative and positive width deltas respectively, using percentages instead of pixels. The matching signs do not establish equivalence or inversion: tiled behavior depends on split position and compositor resize semantics, while floating behavior is a separate case. R1 must test normal, little, and large steps across tiled split positions and floating windows. Do not change these bindings from the English labels alone.
 
-Windows-reserved or occupied chords remain explicit losses. `CTRL+ALT+DELETE` is the secure attention sequence. `SUPER+L` locks even with extra modifiers and cannot safely host Omarchy's workspace-layout cycle. `CTRL+ALT+TAB` is Windows' persistent task switcher, so it is not an exact monitor-cycle binding. Physical left Win remains native by product contract.
+Windows-reserved or occupied chords remain explicit losses. `CTRL+ALT+DELETE` is the secure attention sequence. `SUPER+L` is occupied by Windows lock and cannot safely host Omarchy's workspace-layout cycle; this source slice did not test extra-modifier variants. `CTRL+ALT+TAB` is Windows' persistent task switcher, so it is not an exact monitor-cycle binding. Physical left Win remains native by product contract.
+
+Two aggregate native rows also need the weakest-member rule. Windows Notification Center covers history, but source identifies no equivalent for Omarchy's dismiss-one, dismiss-all, silence, or invoke-last actions, so `notifications` is unavailable as a family. Windows voice typing covers toggle dictation, but not Omarchy's F9 press/release push-to-talk pair, so `dictation` is also unavailable as a family.
 
 ### Current fullscreen and reload defects
 
