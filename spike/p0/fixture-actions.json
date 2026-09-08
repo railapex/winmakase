@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "executableRelativePath": "bin/WinmakaseP0Fixture.exe",
+  "captureDirectoryRelativePath": "data",
+  "fixedTitles": {
+    "main": "Winmakase P0 Fixture - Main",
+    "owned": "Winmakase P0 Fixture - Owned Dialog",
+    "modal": "Winmakase P0 Fixture - Modal Dialog",
+    "utility": "Winmakase P0 Fixture - Utility"
+  },
+  "actions": [
+    {
+      "id": "main-spaces",
+      "shortcutFile": "Winmakase P0 - Main Spaces.lnk",
+      "arguments": [
+        "--guest-consent",
+        "DISPOSABLE-WINDOWS-GUEST",
+        "--fixture-id",
+        "main-spaces",
+        "--window",
+        "main",
+        "--profile-label",
+        "Work Profile"
+      ],
+      "expectedCapture": {
+        "fixtureId": "main-spaces",
+        "window": "main",
+        "profileLabel": "Work Profile"
+      }
+    },
+    {
+      "id": "owned-dialog",
+      "shortcutFile": "Winmakase P0 - Owned Dialog.lnk",
+      "arguments": [
+        "--guest-consent",
+        "DISPOSABLE-WINDOWS-GUEST",
+        "--fixture-id",
+        "owned-dialog",
+        "--window",
+        "owned",
+        "--profile-label",
+        "Owner Dialog"
+      ],
+      "expectedCapture": {
+        "fixtureId": "owned-dialog",
+        "window": "owned",
+        "profileLabel": "Owner Dialog"
+      }
+    },
+    {
+      "id": "unicode-modal",
+      "shortcutFile": "Winmakase P0 - Unicode Modal.lnk",
+      "arguments": [
+        "--guest-consent",
+        "DISPOSABLE-WINDOWS-GUEST",
+        "--fixture-id",
+        "unicode-modal",
+        "--window",
+        "modal",
+        "--profile-label",
+        "Café 東京"
+      ],
+      "expectedCapture": {
+        "fixtureId": "unicode-modal",
+        "window": "modal",
+        "profileLabel": "Café 東京"
+      }
+    },
+    {
+      "id": "utility-popup",
+      "shortcutFile": "Winmakase P0 - Utility Popup.lnk",
+      "arguments": [
+        "--guest-consent",
+        "DISPOSABLE-WINDOWS-GUEST",
+        "--fixture-id",
+        "utility-popup",
+        "--window",
+        "utility",
+        "--profile-label",
+        "Tools Pop-up"
+      ],
+      "expectedCapture": {
+        "fixtureId": "utility-popup",
+        "window": "utility",
+        "profileLabel": "Tools Pop-up"
+      }
+    }
+  ]
+}

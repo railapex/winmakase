@@ -1,0 +1,136 @@
+[CmdletBinding()]
+param()
+
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+Import-Module (Join-Path $PSScriptRoot 'Fixture.Common.psm1') -Force
+
+$script:Assertions = 0
+function Assert-True {
+    param([Parameter(Mandatory)][bool] $Condition, [Parameter(Mandatory)][string] $Message)
+    $script:Assertions++
+    if (-not $Condition) {
+        throw "Assertion failed: $Message"
+    }
+}
+
+function Assert-Equal {
+    param($Expected, $Actual, [Parameter(Mandatory)][string] $Message)
+    $script:Assertions++
+    if ($Expected -cne $Actual) {
+        throw "Assertion failed: $Message`nExpected: <$Expected>`nActual:   <$Actual>"
+    }
+}
+
+$canonicalTempRoot = Get-CanonicalPath ([System.IO.Path]::GetTempPath())
+$testRootName = "winmakase-p0-test-" + [Guid]::NewGuid().ToString('N')
+$testRoot = Join-Path $canonicalTempRoot $testRootName
+try {
+    [void] (New-Item -ItemType Directory -Path $testRoot)
+    Set-Content -LiteralPath (Join-Path $testRoot '.winmakase-p0-fixture-root') `
+        -Value 'winmakase-p0-disposable-fixture-v1' -NoNewline -Encoding ASCII
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'fixture-actions.json') -Destination $testRoot
+    [void] (New-Item -ItemType Directory -Path (Join-Path $testRoot 'bin'))
+
+    $unicodeLabel = 'Caf' + [char]0x00E9 + ' ' + [char]0x6771 + [char]0x4EAC
+    Assert-Equal 'plain' (ConvertTo-WindowsCommandLineArgument 'plain') 'plain argument serialization'
+    Assert-Equal '"Work Profile"' (ConvertTo-WindowsCommandLineArgument 'Work Profile') 'space argument serialization'
+    Assert-Equal ('"' + $unicodeLabel + '"') (ConvertTo-WindowsCommandLineArgument $unicodeLabel) 'Unicode argument serialization'
+    Assert-Equal '"a\\\"b"' (ConvertTo-WindowsCommandLineArgument 'a\"b') 'quote and slash serialization'
+    Assert-Equal '"tail slash\\"' (ConvertTo-WindowsCommandLineArgument 'tail slash\') 'quoted trailing slash serialization'
+    Assert-Equal '""' (ConvertTo-WindowsCommandLineArgument '') 'empty argument serialization'
+
+    $manifest = Read-FixtureManifest $testRoot
+    Assert-Equal 4 @($manifest.actions).Count 'manifest action count'
+    Assert-Equal 'Work Profile' $manifest.actions[0].expectedCapture.profileLabel 'space fixture expectation'
+    Assert-Equal $unicodeLabel $manifest.actions[2].expectedCapture.profileLabel 'Unicode fixture expectation'
+    Assert-Equal 'utility' $manifest.actions[3].expectedCapture.window 'utility fixture expectation'
+
+    [xml] $sandboxTemplate = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'WinmakaseP0.wsb.template') -Raw
+    Assert-Equal 'Disable' $sandboxTemplate.Configuration.Networking 'sandbox networking is disabled'
+    Assert-Equal 'Disable' $sandboxTemplate.Configuration.ClipboardRedirection 'sandbox clipboard is disabled'
+    Assert-Equal 'true' $sandboxTemplate.Configuration.MappedFolders.MappedFolder.ReadOnly 'source mapping is read-only'
+    Assert-Equal 1 @($sandboxTemplate.Configuration.MappedFolders.MappedFolder).Count 'only fixture source is mapped'
+
+    $compilerCandidates = @(
+        "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
+        "$env:WINDIR\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+    )
+    $compiler = $compilerCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+    Assert-True ($null -ne $compiler) 'inbox .NET Framework compiler exists'
+    $executable = Join-Path $testRoot 'bin/WinmakaseP0Fixture.exe'
+    & $compiler @(
+        '/nologo',
+        '/target:winexe',
+        '/reference:System.dll',
+        '/reference:System.Drawing.dll',
+        '/reference:System.Windows.Forms.dll',
+        '/reference:System.Web.Extensions.dll',
+        "/out:$executable",
+        (Join-Path $PSScriptRoot 'FixtureApp.cs')
+    )
+    Assert-Equal 0 $LASTEXITCODE 'fixture app compiles with inbox compiler'
+    Assert-True (Test-Path -LiteralPath $executable -PathType Leaf) 'fixture executable was produced'
+
+    $expectationPath = & (Join-Path $PSScriptRoot 'New-LauncherFixtures.ps1') `
+        -FixtureRoot $testRoot `
+        -ExecutablePath $executable
+    Assert-Equal (Join-Path $testRoot 'expectations.json') $expectationPath 'expectation export path'
+    $expectations = Get-Content -LiteralPath $expectationPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    Assert-Equal 4 @($expectations.actions).Count 'exported expectation count'
+
+    foreach ($action in @($expectations.actions)) {
+        $shortcutPath = Join-Path (Join-Path $testRoot 'shortcuts') $action.shortcutFile
+        Assert-True (Test-Path -LiteralPath $shortcutPath -PathType Leaf) "shortcut exists: $($action.id)"
+        $shortcut = Read-UnicodeShortcut $shortcutPath
+        Assert-True ((Get-CanonicalPath $executable).Equals(
+            (Get-CanonicalPath $shortcut.TargetPath),
+            [System.StringComparison]::OrdinalIgnoreCase)) "shortcut target: $($action.id)"
+        Assert-Equal $action.argumentsString $shortcut.Arguments "shortcut arguments: $($action.id)"
+        Assert-True ((Get-CanonicalPath (Split-Path -Parent $executable)).Equals(
+            (Get-CanonicalPath $shortcut.WorkingDirectory),
+            [System.StringComparison]::OrdinalIgnoreCase)) "shortcut working directory: $($action.id)"
+    }
+
+    $rejectedOutsideExecutable = $false
+    try {
+        & (Join-Path $PSScriptRoot 'New-LauncherFixtures.ps1') `
+            -FixtureRoot $testRoot `
+            -ExecutablePath $compiler
+    }
+    catch {
+        $rejectedOutsideExecutable = $true
+    }
+    Assert-True $rejectedOutsideExecutable 'generator rejects executables outside the fixture root'
+
+    $process = Start-Process -FilePath $executable `
+        -ArgumentList '--guest-consent DISPOSABLE-WINDOWS-GUEST --fixture-id main-spaces --window main --profile-label "Work Profile"' `
+        -WindowStyle Hidden `
+        -PassThru
+    if (-not $process.WaitForExit(5000)) {
+        Stop-Process -InputObject $process -Force
+        [void] $process.WaitForExit(5000)
+        throw 'Compiled fixture app did not complete its non-Sandbox guard within five seconds.'
+    }
+    Assert-Equal 41 $process.ExitCode 'compiled app rejects a non-Sandbox host before UI or writes'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $testRoot 'data'))) 'host guard produced no capture data'
+
+    Write-Output "PASS: $script:Assertions assertions; no fixture UI launched."
+}
+finally {
+    if (Test-Path -LiteralPath $testRoot) {
+        $canonicalTestRoot = Get-CanonicalPath $testRoot
+        if (-not (Test-PathInside -Parent $canonicalTempRoot -Child $canonicalTestRoot) -or
+            $canonicalTestRoot.Equals($canonicalTempRoot, [System.StringComparison]::OrdinalIgnoreCase) -or
+            [System.IO.Path]::GetFileName($canonicalTestRoot) -cnotmatch '^winmakase-p0-test-[0-9a-f]{32}$') {
+            throw "Refusing to clean an unexpected test path: $canonicalTestRoot"
+        }
+        [void] (Assert-SafeFixtureRoot $canonicalTestRoot)
+        $reparsePoints = @(Get-ChildItem -LiteralPath $canonicalTestRoot -Recurse -Force |
+            Where-Object { ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 })
+        if ($reparsePoints.Count -gt 0) {
+            throw "Refusing to clean a fixture containing reparse points: $canonicalTestRoot"
+        }
+        Remove-Item -LiteralPath $canonicalTestRoot -Recurse -Force
+    }
+}

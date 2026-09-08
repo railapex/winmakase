@@ -1,0 +1,15 @@
+<Configuration>
+  <Networking>Disable</Networking>
+  <ClipboardRedirection>Disable</ClipboardRedirection>
+  <PrinterRedirection>Disable</PrinterRedirection>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>__ABSOLUTE_PATH_TO_SPIKE_P0__</HostFolder>
+      <SandboxFolder>C:\WinmakaseSource</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\WinmakaseSource\Initialize-P0Guest.ps1 -SourceRoot C:\WinmakaseSource -GuestRoot C:\WinmakaseP0 -ConsentToken DISPOSABLE-WINDOWS-GUEST</Command>
+  </LogonCommand>
+</Configuration>
