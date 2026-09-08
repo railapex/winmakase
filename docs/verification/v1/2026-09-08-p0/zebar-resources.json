@@ -1,0 +1,4995 @@
+{
+  "schemaVersion": 1,
+  "subject": "zebar-backend-and-descendant-webviews",
+  "model": {
+    "requested": "gpt-5.6-sol",
+    "requestedEffort": "high",
+    "actual": null,
+    "actualEffort": null,
+    "caveat": "The execution surface did not independently expose actual model or effort; no substitution was reported."
+  },
+  "context": {
+    "displayCount": 3,
+    "displayEvidenceObservedDate": "2026-09-08",
+    "dpi": 96,
+    "primarySource": "DISPLAY2",
+    "evidence": "docs/verification/v1/2026-09-08-p0/baseline.json on the integration branch",
+    "displayCaveat": "Dated context only; this capture did not query display topology or change displays."
+  },
+  "capture": {
+    "startedUtc": "2026-09-08T23:14:26.1657195+00:00",
+    "endedUtc": "2026-09-08T23:14:56.9205401+00:00",
+    "elapsedMs": 30754,
+    "sampleCount": 31,
+    "targetIntervalMs": 1000,
+    "intervalDeltaCount": 30
+  },
+  "method": {
+    "rootSelection": "Exactly one running target backend, selected by exact executable name.",
+    "descendants": "One exact-name Win32_Process snapshot per sample; recursive ParentProcessId graph from the fixed backend PID; only connected descendant WebView executables contribute counters.",
+    "counters": "Get-Process cumulative CPU time, private bytes, working set, PID, and UTC start time.",
+    "deltaValidity": "A delta requires the same PID and startUtc in adjacent samples and a nondecreasing CPU counter. New, missing, reused, or reset identities are excluded.",
+    "sanitation": "No window titles, command lines, executable paths, or unrelated process names are emitted.",
+    "limitations": "CIM ancestry and Get-Process counters are sequential, not an atomic snapshot. Processes wholly between samples are missed. Valid CPU total excludes new, missing, reused, reset, and missed lifetimes. Summed working sets can double-count shared pages."
+  },
+  "summary": {
+    "cpuDeltaMs": {
+      "min": 0.0,
+      "mean": 18.75,
+      "p95": 62.5,
+      "max": 343.75
+    },
+    "validCpuDeltaMsTotal": 562.5,
+    "invalidCpuDeltas": {
+      "newIdentity": 0,
+      "missingIdentity": 0,
+      "pidStartChanged": 0,
+      "counterReset": 0
+    },
+    "privateBytes": {
+      "min": 1309630464.0,
+      "mean": 1313440933.161,
+      "p95": 1321402368.0,
+      "max": 1322455040.0
+    },
+    "workingSetBytes": {
+      "min": 448352256.0,
+      "mean": 465477896.258,
+      "p95": 477081600.0,
+      "max": 477437952.0
+    },
+    "processCount": {
+      "min": 15.0,
+      "mean": 15.0,
+      "p95": 15.0,
+      "max": 15.0
+    },
+    "webViewCount": {
+      "min": 14.0,
+      "mean": 14.0,
+      "p95": 14.0,
+      "max": 14.0
+    }
+  },
+  "intervalCpuDeltas": [
+    {
+      "fromSample": 0,
+      "toSample": 1,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 1,
+      "toSample": 2,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 2,
+      "toSample": 3,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 3,
+      "toSample": 4,
+      "validCpuDeltaMs": 46.875,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 4,
+      "toSample": 5,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 5,
+      "toSample": 6,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 6,
+      "toSample": 7,
+      "validCpuDeltaMs": 343.75,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 7,
+      "toSample": 8,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 8,
+      "toSample": 9,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 9,
+      "toSample": 10,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 10,
+      "toSample": 11,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 11,
+      "toSample": 12,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 12,
+      "toSample": 13,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 13,
+      "toSample": 14,
+      "validCpuDeltaMs": 62.5,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 14,
+      "toSample": 15,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 15,
+      "toSample": 16,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 16,
+      "toSample": 17,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 17,
+      "toSample": 18,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 18,
+      "toSample": 19,
+      "validCpuDeltaMs": 15.625,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 19,
+      "toSample": 20,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 20,
+      "toSample": 21,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 21,
+      "toSample": 22,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 22,
+      "toSample": 23,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 23,
+      "toSample": 24,
+      "validCpuDeltaMs": 15.625,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 24,
+      "toSample": 25,
+      "validCpuDeltaMs": 15.625,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 25,
+      "toSample": 26,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 26,
+      "toSample": 27,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 27,
+      "toSample": 28,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 28,
+      "toSample": 29,
+      "validCpuDeltaMs": 62.5,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    },
+    {
+      "fromSample": 29,
+      "toSample": 30,
+      "validCpuDeltaMs": 0.0,
+      "validDeltaCount": 15,
+      "invalid": {
+        "newIdentity": 0,
+        "missingIdentity": 0,
+        "pidStartChanged": 0,
+        "counterReset": 0
+      }
+    }
+  ],
+  "samples": [
+    {
+      "index": 0,
+      "capturedUtc": "2026-09-08T23:14:26.1699484+00:00",
+      "elapsedMs": 950,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1320046592,
+      "totalWorkingSetBytes": 456036352,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185156.25,
+          "privateBytes": 58056704,
+          "workingSetBytes": 25174016
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74062.5,
+          "privateBytes": 108666880,
+          "workingSetBytes": 82989056
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47796.875,
+          "privateBytes": 87183360,
+          "workingSetBytes": 69709824
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51953.125,
+          "privateBytes": 109572096,
+          "workingSetBytes": 73592832
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72125.0,
+          "privateBytes": 692211712,
+          "workingSetBytes": 89063424
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39593.75,
+          "privateBytes": 87498752,
+          "workingSetBytes": 28184576
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "capturedUtc": "2026-09-08T23:14:27.1696180+00:00",
+      "elapsedMs": 1779,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1315823616,
+      "totalWorkingSetBytes": 452530176,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185156.25,
+          "privateBytes": 58056704,
+          "workingSetBytes": 25174016
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74062.5,
+          "privateBytes": 108666880,
+          "workingSetBytes": 82980864
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47796.875,
+          "privateBytes": 87183360,
+          "workingSetBytes": 69709824
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51953.125,
+          "privateBytes": 109572096,
+          "workingSetBytes": 73592832
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72125.0,
+          "privateBytes": 688701440,
+          "workingSetBytes": 85622784
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39593.75,
+          "privateBytes": 86786048,
+          "workingSetBytes": 28127232
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "capturedUtc": "2026-09-08T23:14:28.1708459+00:00",
+      "elapsedMs": 2729,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1315827712,
+      "totalWorkingSetBytes": 452550656,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185156.25,
+          "privateBytes": 58056704,
+          "workingSetBytes": 25174016
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74062.5,
+          "privateBytes": 108675072,
+          "workingSetBytes": 82997248
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47796.875,
+          "privateBytes": 87183360,
+          "workingSetBytes": 69726208
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51953.125,
+          "privateBytes": 109572096,
+          "workingSetBytes": 73592832
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72125.0,
+          "privateBytes": 688701440,
+          "workingSetBytes": 85622784
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39593.75,
+          "privateBytes": 86781952,
+          "workingSetBytes": 28114944
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "capturedUtc": "2026-09-08T23:14:29.1731913+00:00",
+      "elapsedMs": 3865,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1315897344,
+      "totalWorkingSetBytes": 452734976,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185156.25,
+          "privateBytes": 58056704,
+          "workingSetBytes": 25174016
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74062.5,
+          "privateBytes": 108675072,
+          "workingSetBytes": 83054592
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47796.875,
+          "privateBytes": 87252992,
+          "workingSetBytes": 69853184
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51953.125,
+          "privateBytes": 109572096,
+          "workingSetBytes": 73592832
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72125.0,
+          "privateBytes": 688701440,
+          "workingSetBytes": 85622784
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39593.75,
+          "privateBytes": 86781952,
+          "workingSetBytes": 28114944
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "capturedUtc": "2026-09-08T23:14:30.1707546+00:00",
+      "elapsedMs": 4800,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1309716480,
+      "totalWorkingSetBytes": 448425984,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185156.25,
+          "privateBytes": 58060800,
+          "workingSetBytes": 25178112
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74078.125,
+          "privateBytes": 106999808,
+          "workingSetBytes": 81645568
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47796.875,
+          "privateBytes": 84647936,
+          "workingSetBytes": 67588096
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51968.75,
+          "privateBytes": 108396544,
+          "workingSetBytes": 72548352
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72140.625,
+          "privateBytes": 688775168,
+          "workingSetBytes": 85696512
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39593.75,
+          "privateBytes": 85979136,
+          "workingSetBytes": 28446720
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "capturedUtc": "2026-09-08T23:14:31.1781635+00:00",
+      "elapsedMs": 5790,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1309638656,
+      "totalWorkingSetBytes": 448475136,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185156.25,
+          "privateBytes": 58060800,
+          "workingSetBytes": 25178112
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74078.125,
+          "privateBytes": 106999808,
+          "workingSetBytes": 81694720
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47796.875,
+          "privateBytes": 84647936,
+          "workingSetBytes": 67588096
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51968.75,
+          "privateBytes": 108396544,
+          "workingSetBytes": 72626176
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72140.625,
+          "privateBytes": 688742400,
+          "workingSetBytes": 85663744
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39593.75,
+          "privateBytes": 85934080,
+          "workingSetBytes": 28401664
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "capturedUtc": "2026-09-08T23:14:32.1819638+00:00",
+      "elapsedMs": 6797,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1309630464,
+      "totalWorkingSetBytes": 448352256,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185156.25,
+          "privateBytes": 58060800,
+          "workingSetBytes": 25178112
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74078.125,
+          "privateBytes": 106999808,
+          "workingSetBytes": 81637376
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47796.875,
+          "privateBytes": 84647936,
+          "workingSetBytes": 67575808
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51968.75,
+          "privateBytes": 108396544,
+          "workingSetBytes": 72613888
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72140.625,
+          "privateBytes": 688742400,
+          "workingSetBytes": 85655552
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39593.75,
+          "privateBytes": 85925888,
+          "workingSetBytes": 28368896
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "capturedUtc": "2026-09-08T23:14:33.1802907+00:00",
+      "elapsedMs": 7848,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1322455040,
+      "totalWorkingSetBytes": 477437952,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185203.125,
+          "privateBytes": 58056704,
+          "workingSetBytes": 25190400
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 110968832,
+          "workingSetBytes": 89325568
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 86183936,
+          "workingSetBytes": 71020544
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51984.375,
+          "privateBytes": 111292416,
+          "workingSetBytes": 75984896
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72203.125,
+          "privateBytes": 692994048,
+          "workingSetBytes": 100003840
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86102016,
+          "workingSetBytes": 28590080
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "capturedUtc": "2026-09-08T23:14:34.1732803+00:00",
+      "elapsedMs": 8868,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1321402368,
+      "totalWorkingSetBytes": 477081600,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185203.125,
+          "privateBytes": 58085376,
+          "workingSetBytes": 25206784
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 110968832,
+          "workingSetBytes": 89309184
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 84914176,
+          "workingSetBytes": 70258688
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51984.375,
+          "privateBytes": 111562752,
+          "workingSetBytes": 76447744
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72203.125,
+          "privateBytes": 692994048,
+          "workingSetBytes": 100003840
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86020096,
+          "workingSetBytes": 28532736
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "capturedUtc": "2026-09-08T23:14:35.1817412+00:00",
+      "elapsedMs": 9815,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312403456,
+      "totalWorkingSetBytes": 469295104,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185203.125,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25235456
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107053056,
+          "workingSetBytes": 86028288
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83099648,
+          "workingSetBytes": 68743168
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51984.375,
+          "privateBytes": 110088192,
+          "workingSetBytes": 75255808
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72203.125,
+          "privateBytes": 691089408,
+          "workingSetBytes": 98078720
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86126592,
+          "workingSetBytes": 28631040
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "capturedUtc": "2026-09-08T23:14:36.1725966+00:00",
+      "elapsedMs": 10815,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312374784,
+      "totalWorkingSetBytes": 469209088,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185203.125,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25235456
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107053056,
+          "workingSetBytes": 86016000
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83099648,
+          "workingSetBytes": 68730880
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51984.375,
+          "privateBytes": 110088192,
+          "workingSetBytes": 75247616
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72203.125,
+          "privateBytes": 691089408,
+          "workingSetBytes": 98074624
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86097920,
+          "workingSetBytes": 28581888
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "capturedUtc": "2026-09-08T23:14:37.1757454+00:00",
+      "elapsedMs": 11776,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312370688,
+      "totalWorkingSetBytes": 469204992,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185203.125,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25235456
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107053056,
+          "workingSetBytes": 86003712
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83099648,
+          "workingSetBytes": 68730880
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51984.375,
+          "privateBytes": 110088192,
+          "workingSetBytes": 75268096
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72203.125,
+          "privateBytes": 691089408,
+          "workingSetBytes": 98066432
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86093824,
+          "workingSetBytes": 28577792
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "capturedUtc": "2026-09-08T23:14:38.1758482+00:00",
+      "elapsedMs": 12793,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1311940608,
+      "totalWorkingSetBytes": 468910080,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185203.125,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25235456
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107053056,
+          "workingSetBytes": 86003712
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83099648,
+          "workingSetBytes": 68722688
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51984.375,
+          "privateBytes": 110088192,
+          "workingSetBytes": 75288576
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72203.125,
+          "privateBytes": 691089408,
+          "workingSetBytes": 98074624
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 85663744,
+          "workingSetBytes": 28262400
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "capturedUtc": "2026-09-08T23:14:39.1690892+00:00",
+      "elapsedMs": 13811,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1311666176,
+      "totalWorkingSetBytes": 468623360,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185203.125,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25235456
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107053056,
+          "workingSetBytes": 85975040
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83099648,
+          "workingSetBytes": 68722688
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13983744,
+          "workingSetBytes": 12681216
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 51984.375,
+          "privateBytes": 110088192,
+          "workingSetBytes": 75309056
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72203.125,
+          "privateBytes": 690814976,
+          "workingSetBytes": 97800192
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 85663744,
+          "workingSetBytes": 28262400
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "capturedUtc": "2026-09-08T23:14:40.1759170+00:00",
+      "elapsedMs": 14810,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312100352,
+      "totalWorkingSetBytes": 468639744,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185218.75,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85958656
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83058688,
+          "workingSetBytes": 68730880
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 109948928,
+          "workingSetBytes": 75055104
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690823168,
+          "workingSetBytes": 97808384
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86290432,
+          "workingSetBytes": 28516352
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "capturedUtc": "2026-09-08T23:14:41.1757798+00:00",
+      "elapsedMs": 15736,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312043008,
+      "totalWorkingSetBytes": 468516864,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185218.75,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85942272
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83058688,
+          "workingSetBytes": 68714496
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 109948928,
+          "workingSetBytes": 75059200
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690823168,
+          "workingSetBytes": 97808384
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86233088,
+          "workingSetBytes": 28422144
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "capturedUtc": "2026-09-08T23:14:42.1811464+00:00",
+      "elapsedMs": 16762,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1311576064,
+      "totalWorkingSetBytes": 468533248,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185218.75,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85929984
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83058688,
+          "workingSetBytes": 68714496
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 109948928,
+          "workingSetBytes": 75128832
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690823168,
+          "workingSetBytes": 97808384
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 85766144,
+          "workingSetBytes": 28381184
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "capturedUtc": "2026-09-08T23:14:43.1758762+00:00",
+      "elapsedMs": 17788,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1311629312,
+      "totalWorkingSetBytes": 468639744,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185218.75,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85925888
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83066880,
+          "workingSetBytes": 68722688
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110006272,
+          "workingSetBytes": 75243520
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690810880,
+          "workingSetBytes": 97796096
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 85766144,
+          "workingSetBytes": 28381184
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "capturedUtc": "2026-09-08T23:14:44.1769899+00:00",
+      "elapsedMs": 18769,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1311629312,
+      "totalWorkingSetBytes": 468631552,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185218.75,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85917696
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83066880,
+          "workingSetBytes": 68722688
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110006272,
+          "workingSetBytes": 75243520
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690810880,
+          "workingSetBytes": 97796096
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 85766144,
+          "workingSetBytes": 28381184
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "capturedUtc": "2026-09-08T23:14:45.1811977+00:00",
+      "elapsedMs": 19673,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1313148928,
+      "totalWorkingSetBytes": 468975616,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185234.375,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85934080
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83066880,
+          "workingSetBytes": 68816896
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12685312
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110014464,
+          "workingSetBytes": 75350016
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690819072,
+          "workingSetBytes": 97804288
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 87269376,
+          "workingSetBytes": 28499968
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "capturedUtc": "2026-09-08T23:14:46.1748582+00:00",
+      "elapsedMs": 20813,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312849920,
+      "totalWorkingSetBytes": 468787200,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185234.375,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85905408
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83066880,
+          "workingSetBytes": 68820992
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13942784,
+          "workingSetBytes": 12664832
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 109985792,
+          "workingSetBytes": 75321344
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690778112,
+          "workingSetBytes": 97787904
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3010560,
+          "workingSetBytes": 5648384
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 87126016,
+          "workingSetBytes": 28418048
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39907328,
+          "workingSetBytes": 23683072
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12247040,
+          "workingSetBytes": 7704576
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "capturedUtc": "2026-09-08T23:14:47.1805997+00:00",
+      "elapsedMs": 21705,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1313308672,
+      "totalWorkingSetBytes": 468889600,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185234.375,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 106995712,
+          "workingSetBytes": 85893120
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83300352,
+          "workingSetBytes": 68878336
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12689408
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110247936,
+          "workingSetBytes": 75386880
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690814976,
+          "workingSetBytes": 97800192
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 87126016,
+          "workingSetBytes": 28409856
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39862272,
+          "workingSetBytes": 23662592
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3010560,
+          "workingSetBytes": 5644288
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12206080,
+          "workingSetBytes": 7688192
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "capturedUtc": "2026-09-08T23:14:48.1708572+00:00",
+      "elapsedMs": 22789,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1313517568,
+      "totalWorkingSetBytes": 468959232,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185234.375,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85905408
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83333120,
+          "workingSetBytes": 68894720
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12677120
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110280704,
+          "workingSetBytes": 75403264
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690814976,
+          "workingSetBytes": 97800192
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 87117824,
+          "workingSetBytes": 28401664
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "capturedUtc": "2026-09-08T23:14:49.1775325+00:00",
+      "elapsedMs": 23868,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1313525760,
+      "totalWorkingSetBytes": 468938752,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185234.375,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 107028480,
+          "workingSetBytes": 85905408
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83333120,
+          "workingSetBytes": 68898816
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12644352
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 9076736,
+          "workingSetBytes": 8200192
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110288896,
+          "workingSetBytes": 75411456
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690814976,
+          "workingSetBytes": 97800192
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 87117824,
+          "workingSetBytes": 28401664
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "capturedUtc": "2026-09-08T23:14:50.1706692+00:00",
+      "elapsedMs": 24855,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312649216,
+      "totalWorkingSetBytes": 468914176,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185250.0,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 106577920,
+          "workingSetBytes": 85524480
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83230720,
+          "workingSetBytes": 68898816
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12603392
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 8970240,
+          "workingSetBytes": 8097792
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110297088,
+          "workingSetBytes": 75522048
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690827264,
+          "workingSetBytes": 97812480
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86880256,
+          "workingSetBytes": 28778496
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "capturedUtc": "2026-09-08T23:14:51.1808183+00:00",
+      "elapsedMs": 25864,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312727040,
+      "totalWorkingSetBytes": 469147648,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185265.625,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 106602496,
+          "workingSetBytes": 85557248
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83263488,
+          "workingSetBytes": 69054464
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12570624
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 8970240,
+          "workingSetBytes": 8097792
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110301184,
+          "workingSetBytes": 75587584
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690896896,
+          "workingSetBytes": 97902592
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86827008,
+          "workingSetBytes": 28700672
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "capturedUtc": "2026-09-08T23:14:52.1709568+00:00",
+      "elapsedMs": 26764,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312727040,
+      "totalWorkingSetBytes": 469127168,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185265.625,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 106602496,
+          "workingSetBytes": 85536768
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83263488,
+          "workingSetBytes": 69054464
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12570624
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 8970240,
+          "workingSetBytes": 8097792
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110301184,
+          "workingSetBytes": 75587584
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690896896,
+          "workingSetBytes": 97902592
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86827008,
+          "workingSetBytes": 28700672
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "capturedUtc": "2026-09-08T23:14:53.1775114+00:00",
+      "elapsedMs": 27730,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312714752,
+      "totalWorkingSetBytes": 469151744,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185265.625,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 106602496,
+          "workingSetBytes": 85508096
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83263488,
+          "workingSetBytes": 69054464
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12570624
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 8970240,
+          "workingSetBytes": 8097792
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110301184,
+          "workingSetBytes": 75653120
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690896896,
+          "workingSetBytes": 97902592
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86814720,
+          "workingSetBytes": 28688384
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "capturedUtc": "2026-09-08T23:14:54.1706710+00:00",
+      "elapsedMs": 28804,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1312301056,
+      "totalWorkingSetBytes": 468860928,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185265.625,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25247744
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74234.375,
+          "privateBytes": 106602496,
+          "workingSetBytes": 85504000
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47812.5,
+          "privateBytes": 83263488,
+          "workingSetBytes": 69046272
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12570624
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 8970240,
+          "workingSetBytes": 8097792
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52000.0,
+          "privateBytes": 110301184,
+          "workingSetBytes": 75653120
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690896896,
+          "workingSetBytes": 97902592
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 86401024,
+          "workingSetBytes": 28409856
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "capturedUtc": "2026-09-08T23:14:55.1760703+00:00",
+      "elapsedMs": 29785,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1313538048,
+      "totalWorkingSetBytes": 469110784,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185281.25,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25260032
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74250.0,
+          "privateBytes": 106602496,
+          "workingSetBytes": 85524480
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47828.125,
+          "privateBytes": 83525632,
+          "workingSetBytes": 69128192
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12570624
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 8970240,
+          "workingSetBytes": 8097792
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52015.625,
+          "privateBytes": 110501888,
+          "workingSetBytes": 75726848
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690814976,
+          "workingSetBytes": 97800192
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 87257088,
+          "workingSetBytes": 28573696
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "capturedUtc": "2026-09-08T23:14:56.1816982+00:00",
+      "elapsedMs": 30754,
+      "backendCount": 1,
+      "webViewCount": 14,
+      "counterUnavailableCount": 0,
+      "totalPrivateBytes": 1313488896,
+      "totalWorkingSetBytes": 469123072,
+      "processes": [
+        {
+          "role": "backend",
+          "pid": 21932,
+          "parentPid": null,
+          "startUtc": "2026-09-08T11:25:56.9946856Z",
+          "cpuMs": 185281.25,
+          "privateBytes": 58089472,
+          "workingSetBytes": 25260032
+        },
+        {
+          "role": "webview",
+          "pid": 10936,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.3413062Z",
+          "cpuMs": 74250.0,
+          "privateBytes": 106602496,
+          "workingSetBytes": 85512192
+        },
+        {
+          "role": "webview",
+          "pid": 10952,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.4018941Z",
+          "cpuMs": 47828.125,
+          "privateBytes": 83525632,
+          "workingSetBytes": 69189632
+        },
+        {
+          "role": "webview",
+          "pid": 11672,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.0499685Z",
+          "cpuMs": 171.875,
+          "privateBytes": 8839168,
+          "workingSetBytes": 6463488
+        },
+        {
+          "role": "webview",
+          "pid": 23572,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8581641Z",
+          "cpuMs": 8578.125,
+          "privateBytes": 13987840,
+          "workingSetBytes": 12570624
+        },
+        {
+          "role": "webview",
+          "pid": 23892,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.9414197Z",
+          "cpuMs": 234.375,
+          "privateBytes": 8970240,
+          "workingSetBytes": 8097792
+        },
+        {
+          "role": "webview",
+          "pid": 23900,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:06.1438828Z",
+          "cpuMs": 52015.625,
+          "privateBytes": 110501888,
+          "workingSetBytes": 75776000
+        },
+        {
+          "role": "webview",
+          "pid": 24300,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:05.6603095Z",
+          "cpuMs": 72234.375,
+          "privateBytes": 690814976,
+          "workingSetBytes": 97800192
+        },
+        {
+          "role": "webview",
+          "pid": 24332,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.6723139Z",
+          "cpuMs": 156.25,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5664768
+        },
+        {
+          "role": "webview",
+          "pid": 24540,
+          "parentPid": 24300,
+          "startUtc": "2026-09-08T11:26:05.8556474Z",
+          "cpuMs": 39640.625,
+          "privateBytes": 87207936,
+          "workingSetBytes": 28487680
+        },
+        {
+          "role": "webview",
+          "pid": 24616,
+          "parentPid": 21932,
+          "startUtc": "2026-09-08T11:26:06.4724110Z",
+          "cpuMs": 9734.375,
+          "privateBytes": 39903232,
+          "workingSetBytes": 23678976
+        },
+        {
+          "role": "webview",
+          "pid": 24640,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.4862536Z",
+          "cpuMs": 125.0,
+          "privateBytes": 3051520,
+          "workingSetBytes": 5660672
+        },
+        {
+          "role": "webview",
+          "pid": 24860,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7575501Z",
+          "cpuMs": 671.875,
+          "privateBytes": 64106496,
+          "workingSetBytes": 10612736
+        },
+        {
+          "role": "webview",
+          "pid": 24880,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:06.7597760Z",
+          "cpuMs": 2015.625,
+          "privateBytes": 12242944,
+          "workingSetBytes": 7700480
+        },
+        {
+          "role": "webview",
+          "pid": 25620,
+          "parentPid": 24616,
+          "startUtc": "2026-09-08T11:26:09.4720581Z",
+          "cpuMs": 312.5,
+          "privateBytes": 22593536,
+          "workingSetBytes": 6647808
+        }
+      ]
+    }
+  ]
+}
