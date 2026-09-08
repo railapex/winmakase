@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "stagedAt": "2026-09-08T23:19:30.4239660+00:00",
+  "sourceCommit": "371a448c92dca053e0834d346d314d344aaa943f",
+  "sourceTree": "2e3b2f6f6de3b54b0840cb5c487dc3761d94d1ec",
+  "sourceClean": true,
+  "upstreamCommit": "56a8bdee81e9d1a11d6ad840b83b183bb1b3195f",
+  "appIdCommit": "6d62d6616e6acdfd1c1d35ad42ba468f9bb7972e",
+  "cargoLockSha256": "8881BF13179AA3CC9C7ADE85F7D584D9AA118DB0767C3C2B50F469999794B49A",
+  "toolchain": {
+    "rustc": "1.100.0-nightly (17fd5b8a3 2026-08-28)",
+    "rustcCommit": "17fd5b8a37b6667b6cc137f3cc35f09759768a3b",
+    "cargo": "1.100.0-nightly (e8cb624d5 2026-08-22)",
+    "llvm": "23.1.0",
+    "target": "x86_64-pc-windows-msvc"
+  },
+  "build": {
+    "versionNumber": "3.10.1",
+    "profile": "release",
+    "defaultFeatures": true,
+    "uiAccess": false,
+    "rustFlagsEnvironmentSet": false,
+    "encodedRustFlagsEnvironmentSet": false,
+    "targetDirEnvironmentSet": false,
+    "buildTargetEnvironmentSet": false,
+    "command": "cargo +nightly build --release --locked --target x86_64-pc-windows-msvc -p wm -p wm-cli -p wm-watcher --bin glazewm --bin glazewm-cli --bin glazewm-watcher",
+    "result": "PASS; 52.95 seconds"
+  },
+  "validation": {
+    "leaderTests": "22 passed; lead rerun with --locked",
+    "matcherTest": "1 passed; lead rerun with --locked",
+    "formatting": "PASS; builder",
+    "workspaceCheck": "PASS; builder",
+    "strictWorkspaceClippy": "PASS; builder",
+    "independentSourceReview": "PASS at exact source commit",
+    "widerSuite": "30 passed, 4 failed; baseline comparison pending",
+    "runtime": "Not launched or deployed; physical and guest acceptance remain open"
+  },
+  "artifacts": [
+    {
+      "name": "glazewm.exe",
+      "bytes": 8539648,
+      "sha256": "E35420848E2E376C6C2558B349BFF1AA45626317098C1225EDC456E934C929A2"
+    },
+    {
+      "name": "glazewm-cli.exe",
+      "bytes": 4271104,
+      "sha256": "9930669338E57AFAB9A1CFF11B537E6795552BD2ACD2AB45F7E6A56CBFC8AC10"
+    },
+    {
+      "name": "glazewm-watcher.exe",
+      "bytes": 4122624,
+      "sha256": "C129953E4248BF48DF6348E29C7783EDC9F7E8CC643ED033142B06E4460EEC8F"
+    }
+  ],
+  "note": "Local build and staging attestation, not a reproducible-build claim. No program or installer payload was executed by staging.",
+  "guestArchive": {
+    "name": "glazewm-p0-371a448-x64.zip",
+    "bytes": 6475752,
+    "sha256": "795E8A0CC44CCC1CF181A1252FBF1AAF44B0DE53F3F6B70ACB14D976DECB4998"
+  }
+}

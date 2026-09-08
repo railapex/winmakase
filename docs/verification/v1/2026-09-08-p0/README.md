@@ -1,6 +1,6 @@
 # P0 checkpoint — 2026-09-08
 
-Status: baseline and guest fixture slices accepted; source binding comparison under review. **R0 remains open.** This directory contains executable preparation and measured inventory, not completed desktop acceptance.
+Status: baseline, guest fixtures, binding comparison, input source/build and resource capture accepted. **R0 remains open.** This directory contains executable preparation and measured inventory, not completed desktop acceptance.
 
 ## Observed baseline
 
@@ -29,6 +29,14 @@ Chris enabled `Containers-DisposableClientVM` after the initial inventory. The f
 The [staged guest kit](guest-kit.md) records the local launch file and pinned archives. Its XML parses and both host mappings exist and are read-only. Guest initialization builds fixtures only; dependency installation and UI tests remain separate steps.
 
 ## Open evidence
+
+Accepted [binding comparison](bindings.md), integrated at `1b0ceca`: all 104 stock rows are classified against pinned Omarchy v4.0.2. There are 22 exact, 35 equivalent, 28 unavailable and 19 deferred rows; these are source judgments. Independent review corrected canonical-byte hashes, removed an unproven width-resize inversion claim, and applied the grouped-row classification rule consistently. No mapping was changed by this comparison.
+
+Accepted [Run payload and activation evidence](launcher-activation.md), committed at `7cef5e6`: the installed Run executable matches the pinned payload, its internal invocation event exists, and source preserves distinct shortcut names and arguments. Native UI observation failed twice before any activation input; visible behavior and timing remain open. The [guest kit](guest-kit.md) is staged and has not run.
+
+Accepted [Zebar resource capture](zebar-resources.md), integrated at `9edc253`: 31 samples over 30.754 seconds retained 465 process-counter rows. The same 15 identities contributed 562.5 ms of CPU time across 30 observed intervals. This is an uncontrolled-workload sample with dated three-display context; no one-monitor comparison or process-creation-rate result is implied.
+
+Accepted [input contract and build](direct-caps.md): Glaze `371a448` passes independent source review, 22 leader tests plus one matcher test, formatting, workspace check and strict Clippy. Lead built all three release binaries and staged them with hashes. The wider suite has four failures that also reproduce on the clean parent. No-tap, held-key transitions, injected Caps and pause/resume have selected test evidence; the candidate remains unlaunched.
 
 Accepted fixture source: [launcher/dialog harness evidence](fixtures.md), integrated at `7161a6d` after two review fixes. Lead rerun: 38 assertions pass under PowerShell 7; builder also ran 38 under inbox PowerShell 5.1. The harness compiles the WinForms executable, round-trips Unicode/space-bearing shortcuts and rejects host UI execution. No PowerToys indexing or dialog UI result is implied. The combined Glaze candidate also passes its selected pure tests and build checks as recorded in [direct Caps](direct-caps.md).
 

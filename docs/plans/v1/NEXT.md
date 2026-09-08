@@ -4,12 +4,12 @@ Read this file first in every continuation. It is a stable entry point, not a se
 
 ## Current checkpoint
 
-- Accepted source baseline: `dfb3e7d`; guest fixtures integrated at `7161a6d`. Verify current HEAD and diff before continuing. [P0 evidence](../../verification/v1/2026-09-08-p0/README.md).
+- Accepted source baseline: `dfb3e7d`; fixtures `7161a6d`; binding comparison `1b0ceca`; Run payload/kit `7cef5e6`; resource baseline `9edc253`. Reviewed Glaze source/build: `371a448`. Verify current HEAD and diff before continuing. [P0 evidence](../../verification/v1/2026-09-08-p0/README.md).
 - Active build: P0 baseline/proofs, explicitly started by Chris. No v1 implementation round has passed. Lead owns Wire `env:winmakase-uat`; check the roster before continuing.
 - Current slice, decisions and checkpoint history: [execution-state.json](execution-state.json).
 - Package/round completion: [TODO](../../TODO.md).
 - Procedure and authority boundaries: [execution.md](execution.md).
-- Next action: P0.3, finish the direct-Caps input/reload contract and explicit launcher activation. Combined Glaze worktree `D:/dev/glazewm-wt-v1-input` is at `1dd80dd`; selected pure tests/build checks pass, runtime gates remain open. Chris enabled Sandbox; host restart is pending. Bounded ordinary behavior checks can use the daily desktop; shell/failure injection requires disposable Windows.
+- Next action: P0.3 runtime prerequisites and explicit launcher activation. Glaze worktree `D:/dev/glazewm-wt-v1-input` is clean at `371a448`; source review, 23 selected tests and release build pass. Four wider-suite failures reproduce on parent `1dd80dd` in detached `D:/dev/glazewm-wt-p0-test-baseline`; no code fix was made for them. The [guest kit](../../verification/v1/2026-09-08-p0/guest-kit.md) includes the built candidate. Chris enabled Sandbox; host restart and Windows UI connection recovery remain pending. Bounded ordinary behavior checks can use the daily desktop; shell/failure injection requires disposable Windows. No worker is still writing this slice.
 - Next user checkpoint: after two accepted slices, a package boundary or 60–90 active minutes. R0 must present concrete interaction results and unresolved choices.
 
 ## Resume contract
