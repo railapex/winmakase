@@ -26,6 +26,8 @@ Everything console-mode / temporary. No scheduled tasks, no installs to Startup,
 
 ## M1 — Core stack
 
+- [x] Float/tile shortcut escapes floating/fullscreen history using explicit current-state transitions. Eight live Muxel cases passed 2026-09-08: both fullscreen entry paths, fullscreen exit back to floating, and repeated float/tile. `[v]`
+
 - [x] Full omarchy grammar → keymap mapping file + GlazeWM YAML generator: `keymap/omarchy.toml` (quattro, 226 chords — 73 mapped, rest explicit gap/native/app/omitted) + `crates/winmakase-keymap` + `winmakase keymap check|render`. Golden + pinned coverage counts as drift alarm. Deviations recorded in DESIGN.md (SUPER+ESCAPE = cycle-focus, Alt+Tab native, SUPER+TAB restored to next-workspace)
 - [x] Adopt rendered GlazeWM YAML on the dogfood rig `[v]`: source/live composition, rollback, reversible IPC suite and literal physical-key pass all green 2026-08-30. Caps workspace navigation, reflow, float/layer cycle, scratch banish/summon, move+follow and silent move work; Alt+Tab and physical left-Win+Tab remain native. Session cut W0 in `docs/plans/winmakase-window-policy.md`; closeout in `docs/plans/handoff-w0-window-policy.md`
 - [x] kanata config templates rendered from mode setting (`caps` | `apps`): `[keyboard]` in config.toml (mode + apps-mode tap/hold ms), `winmakase kanata render [--config] [--out]`, templates baked into the binary (caps = v4.1 verbatim with the scrlk-hatch invariant tested; apps = spike config verbatim, still not live-tested — its header carries the two-hooks desync caution). Game-suspend SPLIT OUT (was never a template feature — kanata has no foreground awareness; komokana/kanawin/qanata exist precisely to bolt it on): see its own item below

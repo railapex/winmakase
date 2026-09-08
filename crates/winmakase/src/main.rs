@@ -101,6 +101,9 @@ enum Cmd {
         dry_run: bool,
     },
 
+    /// Float a tiled window; return any non-tiled window directly to tiling.
+    ToggleFloating,
+
     /// Toggle a named scratchpad window (see [scratchpad.*] in config.toml).
     Scratchpad {
         #[command(subcommand)]
@@ -269,6 +272,7 @@ fn main() -> ExitCode {
             Ok(())
         }
         Cmd::Reflow { dry_run } => reflow_cmd(&paths, dry_run),
+        Cmd::ToggleFloating => toggle_floating_cmd(&paths),
         Cmd::Scratchpad { action } => scratchpad_cmd(&paths, action),
         Cmd::Stub { .. } => unreachable!("handled above"),
     };
@@ -530,6 +534,29 @@ fn kanata_cmd(paths: &Paths, action: KanataAction) -> io::Result<()> {
             }
         }
     }
+}
+
+fn toggle_floating_cmd(paths: &Paths) -> io::Result<()> {
+    let cfg = Config::load_or_create(&paths.config())?;
+    let client = winmakase::glazewm::Client::from_config(&cfg)?;
+    let Some(window) = client.query_focused()?.filter(|node| node.is_window()) else {
+        return Ok(());
+    };
+
+    // Glaze's native toggle restores prevState, which can cycle forever
+    // between floating and fullscreen. This key always toggles against tiling.
+    let args: &[&str] = match window.state_type() {
+        Some("tiling") => &["set-floating", "--centered"],
+        Some("floating" | "fullscreen" | "minimized") => &["set-tiling"],
+        state => {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("cannot toggle window with unknown state: {state:?}"),
+            ));
+        }
+    };
+    // Target the queried window even if focus changes during the round trip.
+    client.command_for(&window.id, args)
 }
 
 fn reflow_cmd(paths: &Paths, dry_run: bool) -> io::Result<()> {

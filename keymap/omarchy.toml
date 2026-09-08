@@ -87,7 +87,8 @@ id = "window-float"
 chord = "SUPER + T"
 desc = "Toggle window floating/tiling"
 src = "tiling"
-map = ["toggle-floating --centered"]
+map = ["shell-exec --hide-window {winmakase} toggle-floating"]
+note = "Tiled goes floating; any non-tiled state goes directly to tiled. Glaze's native toggle restores the previous state and can cycle between floating and fullscreen."
 
 [[bind]]
 id = "window-fullscreen"

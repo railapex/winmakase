@@ -10,7 +10,7 @@ keybindings:
   - commands: ['shell-exec --hide-window winmakase reflow']
     bindings: ['rwin+j']
   # window-float — Toggle window floating/tiling
-  - commands: ['toggle-floating --centered']
+  - commands: ['shell-exec --hide-window winmakase toggle-floating']
     bindings: ['rwin+t']
   # window-fullscreen — Full screen
   - commands: ['toggle-fullscreen']
