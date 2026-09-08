@@ -1,94 +1,38 @@
-# Winmakase — Work Breakdown
+# Winmakase work state
 
-Source of truth for work state. Check items in the same commit as the work. A cold session starts here: find the first unchecked item in the active milestone, read its notes, go. When a milestone completes, note the date and move anything cut to Deferred.
+Updated 2026-09-08. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata and PowerToys.** Plans are accepted direction; implementation gates below remain open. The previous M0–M4 ledger is [archived](plans/archive/2026-09-08/TODO.md); its completed evidence remains useful, its unchecked sequence is superseded.
 
-Conventions: `[v]` needs verification on the real rig before checking · items reference DESIGN.md sections rather than restating rationale.
+## Already present
 
-Cross-cutting plans extracted 2026-08-30:
+- [x] Rust CLI/supervisor; task hosting, adoption, logs/status/reload and recovery.
+- [x] Pure Caps → right-Win mapping, generated Omarchy grammar and local overrides.
+- [x] Current-state float/tile fix; reflow and scratchpads.
+- [x] Typed app homes plus Glaze AppUserModelID patch; profile routing dogfood verification.
+- [x] Per-monitor Zebar pack with tray and health; bounded dock-restart workaround.
+- [x] Quattro palette parser and Terminal renderer with two fixture themes.
+- [x] V1 source review, updated scope, implementation packages and verification design.
 
-- [`docs/plans/glazemakaze-core.md`](plans/glazemakaze-core.md) — Glaze core hardening, speed, official animation branch, upstream patch train and fork gate. Parked outside the WinMakase milestone loop until a named session starts it.
-- [`docs/plans/winmakase-window-policy.md`](plans/winmakase-window-policy.md) — generated bindings, app homes, focus-or-launch, float recovery, layouts and switcher gate. Its work remains ordered in M1/M2/M3 below.
+These checks do not imply clean installation, dialog safety, focus-or-launch, complete theming or hardened recovery.
 
-## M0 — Spike (prove the risky parts before building on them)
+## Active packages
 
-Everything console-mode / temporary. No scheduled tasks, no installs to Startup, Chris's live PowerToys config untouched.
+- [ ] [P0 — Baseline and integration proofs](plans/v1/00-baseline.md): exact provenance, key-pattern comparison, Run shortcut indexing, popup/focus/dock capability, classification and suppression probes. Exit: R0.
+- [ ] [P1 — Window policy and app actions](plans/v1/01-window-policy.md): dialog-safe defaults, explicit homes, work/personal roles, launch-new/focus-or-launch and safe adoption/reload. Exit: R1.
+- [ ] [P2 — Launcher and controls](plans/v1/02-launcher-controls.md): shared command entries, offline bar, real monitor identity, accessible controls/help. Exit: R2.
+- [ ] [P3 — Appearance](plans/v1/03-appearance.md): two complete presets, staged apply/rollback, owned settings. Exit: R3.
+- [ ] [P4 — Supervisor and taskbar retirement](plans/v1/04-supervisor.md): lifecycle correctness, crash restoration, privileged-path boundary, delete hover controller after replacement proof. Exit: R4.
+- [ ] [P5 — Distribution and release](plans/v1/05-package.md): install/update/uninstall, provenance/licenses, clean Windows verification and dogfood. Exit: R5–R6.
 
-- [x] kanata console-mode caps tap-hold: works at 200/200; latency "a smidge," livable — tuning stays open by daily use (fallback: drop tap, launcher on chord+Space). NOTE: WM chord corrected to **Ctrl+Alt+Win** — Ctrl+Alt+Shift+Win is the Office key and Shift must stay free for the grammar
-- [ ] kanata `apps` mode variant: VK_APPS tap = context menu, hold = WM chord — config written (`spike/apps.kbd`, validates), not yet live-tested
-- [x] kanata elevated: chords verified landing while an admin window has focus (LLHOOK, no driver) `[v]`
-- [x] GlazeWM 3.10.1: grammar subset bound on lwin+ctrl+alt chords, full 60-second run clean across all three monitors `[v]`
-- [x] `hide_title_bar`: works — classic-chrome charmap shaved clean, modern apps unaffected (own chrome). Default-on with per-app opt-out `[v]`
-- [x] GlazeWM IPC capability pass: query/command/sub all present (16 event types incl. monitor_*; built-in pause) — UAT harness + agent surface fully covered; see spike/NOTES.md
-- [x] Chrome `BrowserThemeColor`: HKCU Policies ACL-locked on this box → HKLM works, applies on Chrome's lazy policy refresh (minutes, not at launch), and BEATS user-installed themes across ALL profiles — kills per-profile color-coding, so Winmakase ships it opt-in. Per-profile generated themes = arc
-- [x] Triple-monitor behavior: per-monitor workspaces, focus crosses boundaries, uniform dpi 96 / scale 1.0 across all three (mixed-DPI risk absent on this rig) `[v]`
-- [x] Monitor-set change via the real workflow: full teleprompter add→remove→re-add cycle CLEAN on 3.10.1 — workspace 4 auto-activates on it, daily three never reshuffle, **#1233 did not reproduce**. Supervisor display-watch demoted to insurance; crash-restart remains core `[v]`
-- [x] Spike retro → DESIGN.md updated (titlebars solved, Chrome tint partial, #1233 not reproduced, WM chord = Ctrl+Alt+Win). Remaining M0 stragglers: apps-mode live test, timing tune by daily use
+P1 and offline-bar work can proceed after their P0 proofs. P4 correctness and privileged-layout work can start early; taskbar retirement waits for P1/P2 controls and recovery. P3 reload behavior depends on P1. See the [dependency order](plans/v1/README.md).
 
-## M1 — Core stack
+## Verification ledger
 
-- [x] Float/tile shortcut escapes floating/fullscreen history using explicit current-state transitions. Eight live Muxel cases passed 2026-09-08: both fullscreen entry paths, fullscreen exit back to floating, and repeated float/tile. `[v]`
+- [ ] R0 — baseline and bounded experiments.
+- [ ] R1 — window/dialog/profile behavior.
+- [ ] R2 — launcher, controls and monitor behavior.
+- [ ] R3 — appearance, reload and rollback.
+- [ ] R4 — failure injection and taskbar takeover.
+- [ ] R5 — clean install, update, uninstall and offline operation.
+- [ ] R6 — integrated use and release review.
 
-- [x] Full omarchy grammar → keymap mapping file + GlazeWM YAML generator: `keymap/omarchy.toml` (quattro, 226 chords — 73 mapped, rest explicit gap/native/app/omitted) + `crates/winmakase-keymap` + `winmakase keymap check|render`. Golden + pinned coverage counts as drift alarm. Deviations recorded in DESIGN.md (SUPER+ESCAPE = cycle-focus, Alt+Tab native, SUPER+TAB restored to next-workspace)
-- [x] Adopt rendered GlazeWM YAML on the dogfood rig `[v]`: source/live composition, rollback, reversible IPC suite and literal physical-key pass all green 2026-08-30. Caps workspace navigation, reflow, float/layer cycle, scratch banish/summon, move+follow and silent move work; Alt+Tab and physical left-Win+Tab remain native. Session cut W0 in `docs/plans/winmakase-window-policy.md`; closeout in `docs/plans/handoff-w0-window-policy.md`
-- [x] kanata config templates rendered from mode setting (`caps` | `apps`): `[keyboard]` in config.toml (mode + apps-mode tap/hold ms), `winmakase kanata render [--config] [--out]`, templates baked into the binary (caps = v4.1 verbatim with the scrlk-hatch invariant tested; apps = spike config verbatim, still not live-tested — its header carries the two-hooks desync caution). Game-suspend SPLIT OUT (was never a template feature — kanata has no foreground awareness; komokana/kanawin/qanata exist precisely to bolt it on): see its own item below
-- [ ] Game-foreground auto-suspend: supervisor-side watcher checks the foreground process against a config match list, flips kanata to a passthrough layer over its TCP server (komokana pattern; rides the R5 relay's warm TCP link), restores on focus loss. Escalation for kernel-anti-cheat titles: task-stop for fully-raw input — needs a deliberate `suspended` state so the linked-pair rule doesn't fight the stop. Note the concrete caps-mode failure it prevents: a muscle-memory caps tap in a fullscreen game = Start menu
-- [x] `winmakase reload` SHIPPED 2026-08-29 (config.toml was read once at supervisor start — the KhangHLe A/B swap needed a full `winmakase down` + task re-run for a one-line path change): control-file verb + tokened `state/reload-result`, re-read + diff, bounce only what changed (pair rule respected — either pair member changed bounces both; zebar alone bounces/adds/removes alone), parse failure rejects loudly and keeps the running config, pending crash-restarts folded in so concurrent recoveries cannot lose one another, supervisor knobs live-applied (poll/stop-timeout/backoff/hide_taskbar; log caps at next start). 4 integration tests. Deployed with v0.1.1 on the rig 2026-08-30 `[v]`
-- [x] caps→rwin is the DEFAULT (Sol review, source-verified in both codebases; live as v4.1): caps emits right Win, GlazeWM binds `rwin+X`, physical left Win fully native
-- [ ] **R5 fast-follow card**: tap-caps launcher via resident relay — winmakase.exe holds warm WebSocket to GlazeWM IPC (persistent tokio server, no spawn) + TCP to kanata; requires small kanata patch adding a "notify TCP clients" action (scoped, upstreamable — its TCP server exists for exactly this). Single-digit ms. Blocked on supervisor landing; do NOT block M1 on it
-- [ ] Upstream freebie: CREATE_NO_WINDOW for kanata `cmd` spawns (kills console flash for low-frequency cmd actions like panic)
-- [ ] Upstream candidates from spike: GlazeWM fullscreen focus trap (directional focus can't reach fullscreen layer; wm-cycle-focus is the workaround). Reflow resolved by gap-features decision below — winmakase-side verb is permanent, upstream FR is courtesy only while the `main` review/release lane is stalled. Glaze-core work is cleaved to `docs/plans/glazemakaze-core.md`
-- [x] **RESEARCH CARD — gap features (scratchpad · grouping/tabs · in-place reflow)**: decided 2026-08-28 — decision doc at `docs/research/gap-features.md`. Verdicts: reflow = build (`winmakase reflow` via IPC); scratchpad = build (all primitives source-verified: `--id` subject targeting, `focus --container-id`, targeted `move --workspace`, `set-floating` w/ geometry); grouping = documented gap in v1, komorebi power option is the only genuine route. Correction 2026-08-30: `main` has stalled since 2026-04-08 and the outside PR queue is unserved, but Lars developed the official `animations-test` branch through 2026-06-20 (93 commits ahead / 9 behind). That is unpublished concentrated work, not abandonment. Field re-swept same day: Seelen UI only live challenger, loses on grammar fidelity + DE-not-component; FancyWM PolyForm-licensed; Whim alpha-dormant. Follow-on items below
-- [x] `winmakase reflow` verb SHIPPED + live-verified both directions 2026-08-28 `[v]`: plan-based (`--dry-run` prints it), direct-WebSocket IPC (tungstenite, ~25ms warm). Two live findings baked in: move choreography must run in REVERSE reading order (each move lands atop the moved tail — a [1,3,2] row came out [1,2,3] until fixed), and GlazeWM leaves single-child split shells after moves, which the planner sees through (deepest ancestor row with ≥2 units). Multi-window nested splits refused loudly — flat rows only for now
-- [x] `winmakase scratchpad` SHIPPED 2026-08-28: `toggle <name>` (config `[scratchpad.<name>]`: launch + process match + width/height; summon/banish/launch decided purely, launch gets CREATE_NEW_CONSOLE — a console pad otherwise inherits the invoker's console, live finding) and `summon` (anonymous rwin+s: rescue-first via DWM cloak or an undisplayed workspace, then newest-from-scratch, silent no-op; 57ms cold / ~25ms warm vs ~300ms pwsh). W0 live testing removed `IsWindowVisible` from rescue after it falsely classified healthy GPUI/muxel and added the unbound-scratch fallback. Banish stays pure GlazeWM. Binding flip owned by the config stream. Refinement DONE 2026-08-29: optional `title` match rule (case-insensitive substring, AND-ed with process; untitled windows never match) — the term pad launches `wt -w -1 new-tab --title winmakase-pad` and matches the marker, so the daily WT is untouchable. Default config + rig config updated `[v]`
-- [x] mod+G grouping stub SHIPPED 2026-08-29: `winmakase gap grouping` raises a native notice (MessageBox — zero-dep, no toast AppID ceremony) naming the missing Glaze container primitive and parked Glazemakaze route; SUPER+G mapped to it in the keymap. Same pass flipped the OTHER overdue verb binds the keymap still carried as gaps: SUPER+J → `{winmakase} reflow`, SUPER+S → `{winmakase} scratchpad summon`, SUPER+ALT+S → `move --workspace scratch` (grave aliases stay gap — key not in the translation table). New `{winmakase}` apps key (bare name; local.toml overrides with the deployed path). Coverage 76 mapped / 226
-- [ ] winmakase-helper: taskbar hide/restore, per-monitor wallpaper (IDesktopWallpaper), Windows light/dark flip, audio output switch
-- [x] Supervisor core BUILT + review-hardened (61 tests): `winmakase supervise/status/logs/down`, linked-pair rule extended to both-or-neither-on-START (rollback semantics — partial start rolls back rather than leaving kanata chord-less), backoff with sanitized config floors, console-shutdown budget const-asserted ≤ GRACE, round-trip date validation. NOT YET: Zebar in the set
-- [x] Logging BUILT: rolling 5MB×3 per component + supervisor log, timestamped [out]/[err] capture, `winmakase logs` tails across rotations. NOT YET: debug-mode flag flip. Note: only direct children get stdio capture — task-hosted kanata, adopted, and shell-launched (UIAccess) components keep their own logging
-- [x] Supervisor adoption SHIPPED + verified live 2026-08-28 `[v]`: ProcessHandle over spawned/external processes, adopt-first (full-image-path match — slid under the live stack with zero disruption), kanata task-hosted (`schtasks /run`/`/end` on elevated WinmakaseKanata, both proven from user level), GlazeWM shell-spawn fallback (manifest is asInvoker + uiAccess=true → CreateProcess 740s; found via live crashloop), `winmakased.exe` GUI-subsystem twin hosts the WinmakaseSupervisor logon task (windowless; WM_ENDSESSION → graceful shutdown), singleton guard, display watch (log always; `bounce_on_display_change` off by default — #1233 never reproduced), `winmakase down` waits for shutdown COMPLETION (ack-race orphaned the pair when panic killed the supervisor mid-shutdown — fixed), panic.ps1 goes through `winmakase down` first (panic vs supervisor fight caught before it bit for real). Cold start, crash-restart, graceful down, and panic all exercised on the rig same evening
-- [x] Reboot hardening SHIPPED + live-verified 2026-08-30 `[v]`: pinned GlazeWM 3.10.1 hit the upstream startup/wake commit-pressure abort five times (`ucrtbase.dll`, `0xc0000409`, fail-fast 7) before exponential backoff escaped the pressure window; GlazeWM starts now wait on the upstream `GlobalMemoryStatusEx` threshold and retry each second. Pending recoveries are independent, so the linked pair can back off while Zebar restarts instead of stranding the bar.
-- [x] Zebar integration SHIPPED + verified live 2026-08-28 `[v]`: Zebar 3.3.1 (bundled install, recorded as the pin) supervised as the optional third component — outside the linked pair, dies-restarts-alone (proven live), `[zebar]` section optional in config.toml, adopted on takeover like the others. glzr-io.starter `with-glazewm` widget on all three monitors (workspaces + clock + stats, per-monitor); `ignore` window rule for zebar added to the live GlazeWM config (starter bars were getting TILED without it). Component-set generalization deliberately NOT done: three compiled-in components with distinct hard-coded policies (linked pair / independent bar) is honest — a config-driven policy language for one rig is speculative generality; revisit when the set actually grows. Still open from the review finding: sleepless backoff tests (needs a clock abstraction)
-- [x] Winmakase bar pack SHIPPED + live-verified 2026-08-30 `[v]` (`zebar/` in repo, deployed to `~/.glzr/zebar/winmakase`): workspaces/clock/stats per-monitor, **SYSTRAY on the primary bar** (Chris's ask — tray gated on primary-at-origin heuristic until the M2 render knows monitors), **health dot** polling `winmakase status --json` via shellExec privilege (json now carries `supervisorProcessAlive` — the file alone reads running forever after a hard kill). Dock-race findings: systray-in-every-instance breaks one monitor's dockToEdge; two widget configs lose the second config's docks wholesale → one widget, all monitors, tray gated in-page. **Supervisor now heals lost docks**: reserve check ~12s after each Zebar start and after each settled display-change burst treats partial and all-zero reserves as failure, then bounces the bar (3-cap). The second trigger closed a live v0.1.2 hole where Zebar survived monitor churn with zero widget windows after the start-only check had passed. Live v0.1.3 proof: three appbars registered and Windows reserves `[40, 40, 40]`. Still M2: theme the pack (stylesheet render), vendor the CDN deps (react/babel/zebar via esm.sh at bar startup), real monitor knowledge for the tray gate
-- [x] Scheduled-task registration scripts: `installer/register-tasks.ps1` (WinmakaseSupervisor at logon needs no elevation; elevated pair (re)registered only when run elevated; deploys binaries to ~/.winmakase/bin so the build tree is never locked) + `installer/unregister-tasks.ps1`. spike/winmakase-up.ps1 reduced to taskbar-hide + task trigger; spike start/stop/restart scripts superseded by the supervisor
-- [ ] kanata config lands in ACL-protected path; verify a non-admin write fails `[v]`
-
-## M2 — Theming
-
-- [x] Adapter core: colors.toml palette extraction (26 semantic keys incl. mode, omarchy 4 format; loud failure on missing/unknown shape) — plus WT renderer (omarchy `ansi_alias` mapping, cited) and light/dark (mode > marker > luminance, matching omarchy's `resolve_theme_mode`); 21 tests, 2 fixture themes
-- [ ] Bar widget pass (omarchy parity + drill-ins; omarchy's own bar surveyed 2026-08-29 — clock is `%A %H:%M`, 24h, NO date and NO calendar, and every drill-in is click → launch-or-focus floating TUI): cpu/ram click → btop scratchpad (or Task Manager), clock click → calendar (GCal webapp scratchpad first; a true in-bar dropdown needs a popout window — dock reserve fixes bar height), audio/volume module + click-to-switch (pairs with winmakase-helper audio verb), media now-playing, update indicator (winget upgrade count → floating terminal), 24h clock knob (`USE_24H_CLOCK` in bar.html today, default 24h — shipped 2026-08-29) into the config render
-- [ ] Renderers: WT scheme (ANSI mapping = omarchy's ghostty.conf.tpl, verbatim) · Zebar stylesheet template · GlazeWM border colors · wallpaper · light/dark (mode key; luminance = legacy fallback only) · **Windows accent color from palette `accent`** (tints PT Run highlight, borders, start — native launcher theming) · nvim colorscheme pass-through · vscode.json pass-through
-- [ ] Per-app compact-chrome settings pack (WT hide-titlebar, VS Code, Chrome flags) applied on render
-- [ ] App layer (restored from scoping plan — dropped in TODO translation): apps.conf launch bindings, webapp shortcuts via `chrome --app=URL` gen (omarchy webapp trick). DONE 2026-08-29: launch-binding personalization via keymap local overrides (`<home>/keymap/local.toml`: `[apps]` override + bind add/replace/disable, merged + revalidated at check/render) — Chris's Chrome profile chords expressed there, matching the live spike config; goes live with rendered-YAML adoption. Still open: webapp gen, per-app availability pack
-- [x] Typed app homes + generated Glaze `window_rules` SHIPPED 2026-08-30, hardened/profile-aware and deployed 2026-08-31: machine-local `[apps.<name>]` definitions carry launch + args, process with optional class/title/AppUserModelID, workspace and `tiling|floating|ignored`; the renderer owns one deterministic manage-time rules list while preserving base exceptions first. Unknown TOML keys, invalid/unknown workspace, ignored+home, duplicate ownership and exact/non-exact contradictory overlap fail loud. Zero apps reproduce W0 byte-for-byte. Follow-up HWND probes found stable Chrome AUMIDs (`Chrome` Default, `Chrome.UserData.Profile1` Profile 1). The thin Glaze `window_app_id` patch routed an isolated profile's first managed state directly to hidden workspace 7 as floating while all four daily windows stayed put; v0.1.5 plus the unsigned `ui_access=false` Glaze build/watcher are live from `~/.winmakase/bin`. Glaze reload/restart replays `manage` rules for existing HWNDs; title changes do not. `[v]`
-- [ ] **focus-or-launch verb** (`winmakase focus-or-launch <app>`): app keys focus the running instance via GlazeWM IPC, spawn only if absent — the omarchy launch-key behavior. Pair with generated app-home `window_rules`; session cuts W1/W2 in `docs/plans/winmakase-window-policy.md`
-- [ ] Golden-file tests: 19 stock omarchy themes → snapshotted outputs, CI green
-- [ ] `winmakase theme set|list`, `winmakase bg next`
-- [ ] Theme visual pass harness: cycle themes, capture per-theme screenshots (doubles as gallery assets)
-- [ ] Chromium tint renderer (only if M0 spike verified the policy)
-- [ ] muxel target: blocked on muxel user-theme-dir + watched-apply feature (tracked in muxel repo, not here)
-
-## M3 — Install / update / uninstall
-
-- [ ] winmakase scoop bucket, exact versions pinned for every tool
-- [ ] Adoption story (spike finding): mid-day first start tiles every open window into mosaics — use the explicit first-run policy from `docs/plans/winmakase-window-policy.md`, not permanent broad float rules that weaken the daily tile-first contract
-- [ ] install.ps1: prereqs → scoop → bucket installs → clone → render → single elevation prompt → tasks registered. Idempotent (second run = no-op), backs up files it replaces, writes install manifest
-- [ ] Bootstrap disables PowerToys KBM module + FancyZones (and records prior state in manifest)
-- [ ] `winmakase update`: pull (refuse dirty), re-render, restart stack
-- [ ] uninstall.ps1: manifest-driven full restore (taskbar, PowerToys modules, backed-up configs, tasks removed)
-- [ ] `winmakase toggle off|on`
-- [ ] `winmakase doctor`: versions vs pins, tasks present, hooks alive, config parse status
-- [ ] Pester suite: manifest correctness, idempotency, uninstall restoration
-- [ ] Windows Sandbox e2e: install → assert up → uninstall → assert restored
-
-## M4 — UAT harness + release
-
-- [ ] UAT harness: spawn windows, SendInput keystrokes, assert via GlazeWM IPC (grammar coverage: focus, move, workspaces, launcher tap)
-- [ ] CI: windows-latest — lint, unit, config validation (`kanata --check`, YAML), golden themes
-- [ ] README: hero GIF, install one-liner, full keybind table, theme gallery
-- [ ] Keybind reference: `winmakase keys`
-- [ ] Issue templates, CONTRIBUTING
-- [ ] Manual release gate on the real rig (DESIGN.md § Verification)
-- [ ] Tag v0.1.0
-
-## Deferred (arc — revisit after v0.1)
-
-legacy pre-v3 community themes (alacritty.toml fallback parser) · komorebi power option via winmakase-wm-switch (BYO license; check whkd license) · per-project accent colors (WT tab / border tint keyed to repo) · per-profile accents — one base theme, an accent color per Chrome profile via generated theme extensions (spike finding: BrowserThemeColor is machine-wide and flattens profile color-coding) · agent layouts (omarchy `tdl`/`tsl` equivalent: editor+agent+terminal workspace via IPC) · workspace overview with live previews · trackpad gestures · community-theme guarantee · VS theme VSIX pack · menu (Command Palette extension or TUI) · notification daemon · website/manual
+Record build, environment, observations and artifacts under the [verification contract](plans/v1/verification.md). No release tag until all blocking cases pass. Future WM/shell/grouping work lives in [future platforms](plans/future-desktop-platforms.md).

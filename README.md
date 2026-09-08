@@ -1,31 +1,29 @@
 # Winmakase
 
-> An omakase, omarchy-inspired desktop environment for Windows 11 — tiling, coordinated themes, and one keymap your hands can take with you to Linux.
+An opinionated Windows 11 desktop, following [Omarchy](https://omarchy.org)'s patterns for launching, tiling, controls and appearance.
 
-**Status: pre-alpha.** Nothing to install yet. Design and construction happening in the open — see [docs/DESIGN.md](docs/DESIGN.md) and [docs/TODO.md](docs/TODO.md).
+**Status: working dogfood stack; v1 is planned, not released.** GlazeWM, Zebar, Kanata and PowerToys are the committed v1 components. The [v1 plan](docs/plans/v1/README.md) defines the remaining work and release gates.
 
-## What
+## What works today
 
-[Omarchy](https://omarchy.org) proved that an opinionated, curated desktop — one command, one keymap, one theme switch — beats a pile of dotfiles. [Omacosy](https://github.com/paulsp94/omacosy) brought it to macOS. Winmakase brings it to Windows 11:
+- Caps Lock acts as right Win through Kanata; GlazeWM handles the window chords. Physical left Win keeps native Windows shortcuts. Caps+Space opens PowerToys Run.
+- Generated keybindings, machine-local overrides and typed app-home rules, including a small GlazeWM patch for Chrome profile identity.
+- Window actions including current-state float/tile, reflow and scratchpads.
+- A supervised stack with scheduled-task hosting, component recovery, status/logging and a per-monitor Zebar pack.
+- A palette parser and Windows Terminal scheme renderer. Complete theme application is still planned.
 
-- **Tiling** via [GlazeWM](https://github.com/glzr-io/glazewm), driven by omarchy's exact keybinding grammar
-- **A real modifier key** — Caps Lock (or the context-menu key) becomes the window-manager mod via [kanata](https://github.com/jtroo/kanata) tap-hold: tap for your launcher, hold for the WM. On a future omarchy machine, `caps:super` gives you the identical physical motion — the muscle memory transfers
-- **Omarchy theme compatibility** — Winmakase consumes real omarchy theme folders (their `colors.toml` palette plus shipped `neovim.lua` and `vscode.json`) and renders them onto Windows Terminal, VS Code, Neovim, the status bar, window borders, wallpaper, and Windows light/dark mode. Stock and community omarchy themes just work
-- **Status bar** via [Zebar](https://github.com/glzr-io/zebar), taskbar hidden
-- **Stock Windows where Windows already wins** — PowerToys Run/Command Palette, Win+V clipboard history, built-in OCR and dictation. Winmakase curates; it doesn't rebuild
-- **A supervisor** that keeps the stack alive, restarts the tiler on crash or monitor replug, and shows health in the bar — silent failure is the enemy
-- **Reversible** — manifest-driven uninstall restores your machine; `winmakase toggle off` disables everything without uninstalling
+This is not yet a clean-machine installer or a finished desktop. See [current work](docs/TODO.md) and the dated [assessment](docs/research/v1-assessment-2026-09-08.md).
 
-## What it deliberately is not
+## V1
 
-- Not a fork of omarchy — a sibling implementation that treats omarchy's themes and keymap as a compatibility target
-- Not a universal reskin — arbitrary win32 app internals stay unthemed (same gap omarchy has on Linux GUIs); titlebars are handled via GlazeWM's Win11 `hide_title_bar` effect plus per-app compact-chrome settings
-- Not a notification theming tool — Windows toasts aren't themeable; that's a documented gap, same as omarchy's unthemed GUI apps
+Reliable dialogs and app homes; explicit work/personal browser roles; predictable launch-new and focus-or-launch actions; searchable commands; useful Zebar controls; two complete appearance presets; taskbar recovery that survives a supervisor crash; install, update and uninstall with tested restoration.
 
-## Credits
+Omarchy is the compatibility target. Unsupported bindings remain recorded gaps to close over time. V1 excludes an application catalog, another window manager, a replacement Windows shell and broad editor integration.
 
-Standing on: [omarchy](https://github.com/basecamp/omarchy) (DHH / Basecamp), [omacosy](https://github.com/paulsp94/omacosy) (Paul Springer), [GlazeWM & Zebar](https://github.com/glzr-io) (glzr.io), [kanata](https://github.com/jtroo/kanata) (jtroo).
+[Design](docs/DESIGN.md) · [Implementation plans](docs/plans/v1/README.md) · [Verification rounds](docs/plans/v1/verification.md) · [Future platforms](docs/plans/future-desktop-platforms.md)
 
-## License
+## Credits and license
 
-MIT
+Built on [Omarchy](https://github.com/omacom/omarchy), [GlazeWM and Zebar](https://github.com/glzr-io), [Kanata](https://github.com/jtroo/kanata) and [PowerToys](https://github.com/microsoft/PowerToys). Inspired also by [Omacosy](https://github.com/paulsp94/omacosy).
+
+MIT; bundled dependencies retain their own licenses.

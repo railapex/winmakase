@@ -4,6 +4,9 @@ All notable changes to Winmakase. Format follows [Keep a Changelog](https://keep
 
 ## [Unreleased]
 
+### Documentation
+- Replaced the old milestone roadmap with a coherent v1 plan for the chosen GlazeWM, Zebar, Kanata and PowerToys stack: dialog/app policy, launch actions, controls, appearance, supervisor recovery and distribution, with R0–R6 verification gates. Updated current-versus-planned claims and archived superseded design/plans. This documentation change does not deploy or implement those features.
+
 ### Fixed
 - The float/tile shortcut now returns fullscreen and floating windows directly to tiling, avoiding GlazeWM's previous-state loop between floating and fullscreen. Tiled windows still become centered floating windows.
 - Taskbar autohide now actually collapses. `ABM_SETSTATE` was setting the flag (work area full, tiles under the bar) but Win11's XAML tray stayed painted after a hover; Start toggle hid it, mouse-leave did not. The supervisor still sets the autohide flag, then shows/hides `Shell_TrayWnd` / `Shell_SecondaryTrayWnd` itself: mouse the bottom edge to peek, cursor-leave collapses after 400ms, Start and tray flyouts hold it open. Shutdown and panic still restore the prior appbar state and show the windows. Trays are found with `FindWindowExW` by class, not `EnumWindows` — while Start is open, EnumWindows in the supervisor never handed over the primary bar, so Win-key showed only the secondary monitors' bars; a hold-open is also re-asserted each tick on any bar that lagged.
