@@ -18,13 +18,13 @@ main{max-width:1100px;margin:auto;padding:42px 24px 64px}h1{font-size:clamp(30px
 <header>
 <div class="eyebrow">Winmakase / v1</div>
 <h1>Build progress</h1>
-<p class="stage">P0 active: baseline captured; fixtures and direct Caps candidate under review</p>
-<p class="subtle">Updated <time id="updated" datetime="09/08/2026 22:35:45">09/08/2026 22:35:45</time> · Read-only build snapshot</p>
+<p class="stage">P0: baseline and guest fixtures accepted; direct Caps proof next</p>
+<p class="subtle">Updated <time id="updated" datetime="09/08/2026 22:46:16">09/08/2026 22:46:16</time> · Read-only build snapshot</p>
 <p class="notice" id="freshness">This report records evidence. It does not run builds, change the desktop or submit decisions.</p>
 <nav aria-label="Build references"><a href="NEXT.md">Resume</a> · <a href="README.md">Plan</a> · <a href="execution.md">Build procedure</a> · <a href="verification.md">Verification</a> · <a href="../../research/desktop-interactions-2026-09-08.md">Desktop behavior</a></nav>
 </header>
 <div class="grid">
-<section class="panel lead"><div class="small-label">Current slice</div><h2 class="slice">P0.1 · Baseline and disposable Windows test environment<span class="pill">In progress</span></h2><p>Finish artifact inventory and fixture review; recover direct Caps candidate; use the daily desktop for bounded non-disruptive checks and Sandbox for failure/shell experiments.</p><div class="small-label">Next check-in</div><p>R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.</p></section>
+<section class="panel lead"><div class="small-label">Current slice</div><h2 class="slice">P0.3 · Direct Caps contract and explicit launcher activation<span class="pill">In progress</span></h2><p>Resolve reload/contention and injected Caps behavior in the combined Glaze worktree; prove no-tap and launcher activation. Run guest fixtures after host restart.</p><div class="small-label">Next check-in</div><p>R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.</p></section>
 <section class="panel"><h2>Decisions for Chris</h2><p>No decisions awaiting Chris. The next checkpoint will show concrete options and evidence.</p><div class="small-label">Blockers</div><ul><li>@{title=Sandbox awaiting host restart; detail=Chris enabled Containers-DisposableClientVM. CBS reports reboot pending; guest tests have not run. Source, build and bounded ordinary desktop work can continue.}</li></ul></section>
 </div>
 <div class="grid">
@@ -43,16 +43,19 @@ main{max-width:1100px;margin:auto;padding:42px 24px 64px}h1{font-size:clamp(30px
 <li><strong>R6</strong><span>integrated use and release review</span><em>Pending</em></li></ul></section>
 </div>
 <div class="grid">
-<section class="panel"><h2>Scope decisions</h2><ul class="list"><li><strong>Chosen stack retained</strong><p>GlazeWM, Zebar, Kanata and PowerToys. App catalog and replacement platforms remain deferred.</p></li>
+<section class="panel"><h2>Scope decisions</h2><ul class="list"><li><strong>Direct Caps adoption reopened</strong><p>GlazeWM, Zebar and PowerToys retained. Kanata is currently deployed; the existing direct Caps candidate will determine whether it can be retired.</p></li>
 <li><strong>Tray and calendar specified</strong><p>Dropdown overflow, user-pinned icons and a real month calendar. Implementation proof pending.</p></li>
 <li><strong>W3–W5 reconciled</strong><p>Float recovery and one daily layout are assigned; switcher need is reviewed after a week.</p></li>
 <li><strong>Bounded execution</strong><p>Astra lead, two Sol builders in separate worktrees, independent review. P0 was explicitly started in the active session.</p></li></ul></section>
-<section class="panel"><h2>Evidence</h2><ul class="list"><li><a href="../../verification/v1/2026-09-08-p0/README.md">P0 baseline and direct Caps findings</a><p>Read-only inventory and pinned payload comparisons completed; R0 remains open.</p></li>
+<section class="panel"><h2>Evidence</h2><ul class="list"><li><a href="../../verification/v1/2026-09-08-p0/fixtures.md">Accepted launcher/dialog fixtures</a><p>38 host assertions passed on integration; also tested under inbox PowerShell 5.1. Guest UI cases remain open.</p></li>
+<li><a href="../../verification/v1/2026-09-08-p0/direct-caps.md">Combined direct Caps candidate</a><p>13 selected pure tests and build checks pass; live cutover and input-contract fixes remain pending.</p></li>
+<li><a href="../../verification/v1/2026-09-08-p0/README.md">P0 baseline and direct Caps findings</a><p>Read-only inventory and pinned payload comparisons completed; R0 remains open.</p></li>
 <li><a href="README.md">V1 plan and verification design</a><p>Plans complete; execution cases remain open.</p></li>
 <li><a href="../../research/desktop-interactions-2026-09-08.md">Source-checked desktop behavior</a><p>Current splits, scratch and pin limits; not live acceptance.</p></li>
-<li><a href="../../research/v1-engineering-review-2026-09-08.md">Engineering review</a><p>Two documentation review rounds completed before this follow-up.</p></li></ul><div class="meta"><div><div class="small-label">Last verified build</div>No v1 build has passed these rounds</div><div><div class="small-label">Planning base</div>ab32da1</div></div></section>
+<li><a href="../../research/v1-engineering-review-2026-09-08.md">Engineering review</a><p>Two documentation review rounds completed before this follow-up.</p></li></ul><div class="meta"><div><div class="small-label">Last verified build</div>7161a6d — fixture checks only; product acceptance pending</div><div><div class="small-label">Planning base</div>ab32da1</div></div></section>
 </div>
-<section class="panel"><details><summary>Checkpoint history</summary><ul class="list"><li><time>2026-09-08</time><p>P0 started. Host inventory found Sandbox/Hyper-V disabled; Chris is enabling Sandbox. Direct Caps spike was tested but restored afterward, so Kanata remains live. Reassess existing direct Caps work before locking in the remapper dependency.</p></li>
+<section class="panel"><details><summary>Checkpoint history</summary><ul class="list"><li><time>09/08/2026 22:46:16</time><p>First build checkpoint: baseline dfb3e7d plus fixtures 7161a6d accepted. Glaze input candidate 1dd80dd combines the existing patches and passes selected pure/build checks. R0 stays open; no guest UI or live keyboard cutover.</p></li>
+<li><time>2026-09-08</time><p>P0 started. Host inventory found Sandbox/Hyper-V disabled; Chris is enabling Sandbox. Direct Caps spike was tested but restored afterward, so Kanata remains live. Reassess existing direct Caps work before locking in the remapper dependency.</p></li>
 <li><time>2026-09-08</time><p>Planning follow-up: tray/calendar and lost W cuts incorporated. Next action is P0.1; no product build is active.</p></li></ul></details></section>
 <footer class="footer">Generated from docs/TODO.md and execution-state.json. Answer decisions in the active session; the lead records the decision and updates this snapshot. No hidden build is running behind this page.</footer>
 </main>

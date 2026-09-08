@@ -1,6 +1,6 @@
 # P0 checkpoint — 2026-09-08
 
-Status: baseline and fixture preparation in progress. **R0 remains open.** This directory contains executable preparation and measured inventory, not completed desktop acceptance.
+Status: baseline and guest fixture slices accepted; source binding comparison under review. **R0 remains open.** This directory contains executable preparation and measured inventory, not completed desktop acceptance.
 
 ## Observed baseline
 
@@ -27,6 +27,8 @@ Ordinary bounded behavior checks can run here using disposable windows, captured
 Chris enabled `Containers-DisposableClientVM` after the initial inventory. The feature now reports enabled; CBS reports reboot pending and the Sandbox executable was not yet available. Last boot remained `2026-09-08T11:25:26.500073Z`. No restart or Sandbox launch was performed by this session. After reboot, verify the feature, launch Sandbox and apply only the reviewed guest fixture instructions. Sandbox does not establish physical keyboard, mixed-DPI/multi-monitor or real-game acceptance.
 
 ## Open evidence
+
+Accepted fixture source: [launcher/dialog harness evidence](fixtures.md), integrated at `7161a6d` after two review fixes. Lead rerun: 38 assertions pass under PowerShell 7; builder also ran 38 under inbox PowerShell 5.1. The harness compiles the WinForms executable, round-trips Unicode/space-bearing shortcuts and rejects host UI execution. No PowerToys indexing or dialog UI result is implied. The combined Glaze candidate also passes its selected pure tests and build checks as recorded in [direct Caps](direct-caps.md).
 
 No new launcher timings, popup/tray/calendar interactions, Chrome profile matrix, theme reload, suppression or crash-recovery cases have passed in this batch. Existing dated tests remain historical evidence for their exact builds. Full build flags/attestations, offline dependency packaging and relevant live cases stay open.
 

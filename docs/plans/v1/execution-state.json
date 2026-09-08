@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-08T22:35:45.3697364Z",
+  "updatedAt": "2026-09-08T22:46:16.9585318Z",
   "planBaseCommit": "ab32da1",
-  "lastVerifiedBuild": null,
-  "stage": "P0 active: baseline captured; fixtures and direct Caps candidate under review",
+  "lastVerifiedBuild": "7161a6d — fixture checks only; product acceptance pending",
+  "stage": "P0: baseline and guest fixtures accepted; direct Caps proof next",
   "currentSlice": {
-    "id": "P0.1",
+    "id": "P0.3",
     "status": "In progress",
-    "title": "Baseline and disposable Windows test environment",
-    "nextAction": "Finish artifact inventory and fixture review; recover direct Caps candidate; use the daily desktop for bounded non-disruptive checks and Sandbox for failure/shell experiments."
+    "title": "Direct Caps contract and explicit launcher activation",
+    "nextAction": "Resolve reload/contention and injected Caps behavior in the combined Glaze worktree; prove no-tap and launcher activation. Run guest fixtures after host restart."
   },
   "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
   "decisions": [],
@@ -20,8 +20,8 @@
   ],
   "recentDecisions": [
     {
-      "title": "Chosen stack retained",
-      "detail": "GlazeWM, Zebar, Kanata and PowerToys. App catalog and replacement platforms remain deferred."
+      "title": "Direct Caps adoption reopened",
+      "detail": "GlazeWM, Zebar and PowerToys retained. Kanata is currently deployed; the existing direct Caps candidate will determine whether it can be retired."
     },
     {
       "title": "Tray and calendar specified",
@@ -37,6 +37,16 @@
     }
   ],
   "evidence": [
+    {
+      "label": "Accepted launcher/dialog fixtures",
+      "href": "../../verification/v1/2026-09-08-p0/fixtures.md",
+      "detail": "38 host assertions passed on integration; also tested under inbox PowerShell 5.1. Guest UI cases remain open."
+    },
+    {
+      "label": "Combined direct Caps candidate",
+      "href": "../../verification/v1/2026-09-08-p0/direct-caps.md",
+      "detail": "13 selected pure tests and build checks pass; live cutover and input-contract fixes remain pending."
+    },
     {
       "label": "P0 baseline and direct Caps findings",
       "href": "../../verification/v1/2026-09-08-p0/README.md",
@@ -59,6 +69,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-08T22:46:16Z",
+      "summary": "First build checkpoint: baseline dfb3e7d plus fixtures 7161a6d accepted. Glaze input candidate 1dd80dd combines the existing patches and passes selected pure/build checks. R0 stays open; no guest UI or live keyboard cutover."
+    },
     {
       "at": "2026-09-08",
       "summary": "P0 started. Host inventory found Sandbox/Hyper-V disabled; Chris is enabling Sandbox. Direct Caps spike was tested but restored afterward, so Kanata remains live. Reassess existing direct Caps work before locking in the remapper dependency."

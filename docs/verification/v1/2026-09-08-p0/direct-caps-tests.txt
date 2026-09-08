@@ -1,0 +1,153 @@
+Source: D:/dev/glazewm-wt-v1-input at f4d3348 (AppID + direct leader + separate uncloak fix)
+Toolchain: rustc 1.100.0-nightly (17fd5b8a3 2026-08-28), x86_64-pc-windows-msvc
+VERSION_NUMBER=3.10.1
+Commands:
+cargo +nightly test -p wm-platform --test test leader -- --test-threads=1
+cargo +nightly test -p wm-platform --test test matcher_preserves_longest_binding_and_extra_modifier_rules -- --test-threads=1
+These selected tests are pure reducers/matching; no live hook or desktop stack started.
+An earlier module-qualified filter selected zero tests; that result was rejected and these actual cases were rerun.
+
+warning: unused import: `display_listener::*`
+  --> packages\wm-platform\src\platform_impl\windows\mod.rs:12:16
+   |
+12 | pub(crate) use display_listener::*;
+   |                ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `single_instance::*`
+  --> packages\wm-platform\src\platform_impl\windows\mod.rs:17:16
+   |
+17 | pub(crate) use single_instance::*;
+   |                ^^^^^^^^^^^^^^^^^^
+
+warning: struct `DisplayListener` is never constructed
+  --> packages\wm-platform\src\platform_impl\windows\display_listener.rs:17:19
+   |
+17 | pub(crate) struct DisplayListener {
+   |                   ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated items `new` and `terminate` are never used
+  --> packages\wm-platform\src\platform_impl\windows\display_listener.rs:24:17
+   |
+22 | impl DisplayListener {
+   | -------------------- associated items in this implementation
+23 |   /// Implements [`DisplayListener::new`].
+24 |   pub(crate) fn new(
+   |                 ^^^
+...
+95 |   pub(crate) fn terminate(&mut self) -> crate::Result<()> {
+   |                 ^^^^^^^^^
+
+warning: constant `APP_GUID` is never used
+  --> packages\wm-platform\src\platform_impl\windows\single_instance.rs:16:7
+   |
+16 | const APP_GUID: PCWSTR =
+   |       ^^^^^^^^
+
+warning: struct `SingleInstance` is never constructed
+  --> packages\wm-platform\src\platform_impl\windows\single_instance.rs:20:12
+   |
+20 | pub struct SingleInstance {
+   |            ^^^^^^^^^^^^^^
+
+warning: associated functions `new` and `is_running` are never used
+  --> packages\wm-platform\src\platform_impl\windows\single_instance.rs:26:17
+   |
+24 | impl SingleInstance {
+   | ------------------- associated functions in this implementation
+25 |   /// Implements [`SingleInstance::new`].
+26 |   pub(crate) fn new() -> crate::Result<Self> {
+   |                 ^^^
+...
+44 |   pub(crate) fn is_running() -> bool {
+   |                 ^^^^^^^^^^
+
+warning: `wm-platform` (test "test") generated 7 warnings (run `cargo fix --test "test" -p wm-platform` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.11s
+     Running src\test.rs (D:/build-cache/rust/targets/cargo/4c\f6bbab4f4dc285\debug\build\wm-platform/1a647c03642835d4\out\test-1a647c03642835d4.exe)
+
+running 12 tests
+test leader_long_solo_hold_does_nothing                ... ok
+test leader_update_clears_pending_state                ... ok
+test leader_modifier_then_chord_resolves               ... ok
+test leader_clean_tap_resolves_on_release              ... ok
+test leader_chord_resolves_on_trigger_down             ... ok
+test disabled_leader_leaves_events_unhandled           ... ok
+test leader_repeat_does_not_restart_tap_clock          ... ok
+test leader_unbound_key_passes_and_cancels_tap         ... ok
+test leader_handles_two_rapid_taps_independently       ... ok
+test leader_reverse_release_order_does_not_stick       ... ok
+test leader_elapsed_time_handles_timestamp_wraparound  ... ok
+test leader_preserves_existing_injected_event_behavior ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+warning: unused import: `display_listener::*`
+  --> packages\wm-platform\src\platform_impl\windows\mod.rs:12:16
+   |
+12 | pub(crate) use display_listener::*;
+   |                ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `single_instance::*`
+  --> packages\wm-platform\src\platform_impl\windows\mod.rs:17:16
+   |
+17 | pub(crate) use single_instance::*;
+   |                ^^^^^^^^^^^^^^^^^^
+
+warning: struct `DisplayListener` is never constructed
+  --> packages\wm-platform\src\platform_impl\windows\display_listener.rs:17:19
+   |
+17 | pub(crate) struct DisplayListener {
+   |                   ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated items `new` and `terminate` are never used
+  --> packages\wm-platform\src\platform_impl\windows\display_listener.rs:24:17
+   |
+22 | impl DisplayListener {
+   | -------------------- associated items in this implementation
+23 |   /// Implements [`DisplayListener::new`].
+24 |   pub(crate) fn new(
+   |                 ^^^
+...
+95 |   pub(crate) fn terminate(&mut self) -> crate::Result<()> {
+   |                 ^^^^^^^^^
+
+warning: constant `APP_GUID` is never used
+  --> packages\wm-platform\src\platform_impl\windows\single_instance.rs:16:7
+   |
+16 | const APP_GUID: PCWSTR =
+   |       ^^^^^^^^
+
+warning: struct `SingleInstance` is never constructed
+  --> packages\wm-platform\src\platform_impl\windows\single_instance.rs:20:12
+   |
+20 | pub struct SingleInstance {
+   |            ^^^^^^^^^^^^^^
+
+warning: associated functions `new` and `is_running` are never used
+  --> packages\wm-platform\src\platform_impl\windows\single_instance.rs:26:17
+   |
+24 | impl SingleInstance {
+   | ------------------- associated functions in this implementation
+25 |   /// Implements [`SingleInstance::new`].
+26 |   pub(crate) fn new() -> crate::Result<Self> {
+   |                 ^^^
+...
+44 |   pub(crate) fn is_running() -> bool {
+   |                 ^^^^^^^^^^
+
+warning: `wm-platform` (test "test") generated 7 warnings (run `cargo fix --test "test" -p wm-platform` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running src\test.rs (D:/build-cache/rust/targets/cargo/4c\f6bbab4f4dc285\debug\build\wm-platform/1a647c03642835d4\out\test-1a647c03642835d4.exe)
+
+running 1 test
+test matcher_preserves_longest_binding_and_extra_modifier_rules ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 23 filtered out; finished in 0.00s

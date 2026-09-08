@@ -10,7 +10,9 @@ The [archived spike](../../../plans/archive/2026-09-08/glaze-caps-ownership.md) 
 - Deployed AppID source: `6d62d6616e6acdfd1c1d35ad42ba468f9bb7972e`.
 - Direct leader: `ba1c7e4061454a109d9891733f97a51d59982fa9`.
 - Separate cleanup fix on that branch: `f17c552` (retain independent identification).
-- Worktree: `D:/dev/glazewm-wt-caps-leader`; clean at review. A read-only three-way merge preview against the AppID branch had no conflict markers. No combined build has passed yet.
+- Original worktree: `D:/dev/glazewm-wt-caps-leader`; clean at review. The patches now combine in `D:/dev/glazewm-wt-v1-input`, branch `winmakase-v1-input`, HEAD `1dd80ddb18f2bf60322e26d8549ab7fad2faa53f`. Independent patch-ID comparison confirms the original leader and cleanup patches were preserved; the final commit adds one missing semicolon required by Clippy.
+
+Combined-source verification: 12 leader reducer tests and one matcher test passed at parent `f4d3348`; [captured output](direct-caps-tests.txt). Workspace check passed; formatting and strict workspace Clippy passed after the semicolon fix. Toolchain was `rustc 1.100.0-nightly (17fd5b8a3 2026-08-28)`, target `x86_64-pc-windows-msvc`, `VERSION_NUMBER=3.10.1`, default features with no `ui_access`. These selected tests install no hook. No combined application was launched or deployed; source findings below remain open.
 
 Kanata is not necessary for Glaze's window commands. Its current job is Caps→right Win and Scroll Lock→Caps. The candidate directly consumes physical Caps and dispatches matching chords. It already supports no tap action: declare the leader, retarget chords to `caps_lock`, and omit a bare Caps binding. Add a test for that exact configuration. Removing Kanata is conditional on acceptance, not on the number of mappings.
 
@@ -24,4 +26,4 @@ Kanata is not necessary for Glaze's window commands. Its current job is Caps→r
 
 Direct Caps would also remove the synthetic Win+L collision. It does not supply Glaze's missing scrolling-layout feature. Reclassify reserved chords for the chosen input target after acceptance.
 
-Next slice: combine the existing patches in a separate worktree, address the bounded-hook/transition contract, prove no-tap behavior and explicit launcher activation, then run the remaining controlled acceptance. Keep the currently working input stack until the candidate and rollback are ready for the cutover checkpoint.
+Next slice: address the bounded-hook/transition contract in the combined worktree, prove no-tap behavior and explicit launcher activation, then run the remaining controlled acceptance. Keep the currently working input stack until the candidate and rollback are ready for the cutover checkpoint.

@@ -4,12 +4,12 @@ Read this file first in every continuation. It is a stable entry point, not a se
 
 ## Current checkpoint
 
-- Planning/reporting baseline: commit 7b83482; later commits may refine these instructions. Verify current HEAD and diff before continuing.
+- Accepted source baseline: `dfb3e7d`; guest fixtures integrated at `7161a6d`. Verify current HEAD and diff before continuing. [P0 evidence](../../verification/v1/2026-09-08-p0/README.md).
 - Active build: P0 baseline/proofs, explicitly started by Chris. No v1 implementation round has passed. Lead owns Wire `env:winmakase-uat`; check the roster before continuing.
 - Current slice, decisions and checkpoint history: [execution-state.json](execution-state.json).
 - Package/round completion: [TODO](../../TODO.md).
 - Procedure and authority boundaries: [execution.md](execution.md).
-- Next action: P0.1, finish exact artifact provenance and guest-only fixtures. Chris is setting up Sandbox. Reconcile the existing direct Caps Glaze spike with the deployed AppID patch before assuming Kanata remains necessary. Bounded ordinary behavior checks can use the daily desktop; shell/failure injection requires disposable Windows.
+- Next action: P0.3, finish the direct-Caps input/reload contract and explicit launcher activation. Combined Glaze worktree `D:/dev/glazewm-wt-v1-input` is at `1dd80dd`; selected pure tests/build checks pass, runtime gates remain open. Chris enabled Sandbox; host restart is pending. Bounded ordinary behavior checks can use the daily desktop; shell/failure injection requires disposable Windows.
 - Next user checkpoint: after two accepted slices, a package boundary or 60–90 active minutes. R0 must present concrete interaction results and unresolved choices.
 
 ## Resume contract
