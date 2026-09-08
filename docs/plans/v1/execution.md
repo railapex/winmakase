@@ -49,6 +49,10 @@ Check-ins happen in this session by default. Do not send email/chat/phone notifi
 
 ## Handoff and resumption
 
+The stable entry point is [NEXT.md](NEXT.md). Continue in the current lead session by default; the lead dispatches and collects worker handoffs and chooses the next authorized slice. Chris does not relay prompts between workers. At a batch checkpoint the lead reports, records the continuation and continues work already authorized. Wait only for required decisions or an actual authority boundary, not routine approval of every slice. The lead does not silently create a new top-level session.
+
+If Chris opens a fresh top-level session, the same single prompt works each time: "Continue the Winmakase build from D:/dev/winmakase/docs/plans/v1/NEXT.md." That session verifies the current lead/claims and recorded commit, reads the current slice/decision state, and follows the next action. Update NEXT.md's checkpoint pointers at each accepted slice; preserve earlier evidence. If the former lead still owns the work, coordinate or wait instead of running a second coordinator. No transcript copying or manually selected next handoff is required.
+
 Use [handoff template](handoff-template.md). Store instantiated slice handoffs and evidence under docs/verification/v1/<build>/; sanitize machine data before committing. A fresh session checks actual branch/HEAD, worktree cleanliness and claims before trusting the checkpoint.
 
 At every accepted slice or session boundary record: exact commit and integration base, closed requirement/case IDs, evidence paths, running processes and owners, unresolved defects/decisions, next command and authority limits. Preserve prior checkpoints. Never promise that a new session automatically inherits runtime state or unlimited budget.

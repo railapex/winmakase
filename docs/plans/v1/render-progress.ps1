@@ -62,7 +62,7 @@ main{max-width:1100px;margin:auto;padding:42px 24px 64px}h1{font-size:clamp(30px
 <p class="stage">$(Encode $state.stage)</p>
 <p class="subtle">Updated <time id="updated" datetime="$updatedAt">$updatedAt</time> · Read-only build snapshot</p>
 <p class="notice" id="freshness">This report records evidence. It does not run builds, change the desktop or submit decisions.</p>
-<nav aria-label="Build references"><a href="README.md">Plan</a> · <a href="execution.md">Build procedure</a> · <a href="verification.md">Verification</a> · <a href="../../research/desktop-interactions-2026-09-08.md">Desktop behavior</a></nav>
+<nav aria-label="Build references"><a href="NEXT.md">Resume</a> · <a href="README.md">Plan</a> · <a href="execution.md">Build procedure</a> · <a href="verification.md">Verification</a> · <a href="../../research/desktop-interactions-2026-09-08.md">Desktop behavior</a></nav>
 </header>
 <div class="grid">
 <section class="panel lead"><div class="small-label">Current slice</div><h2 class="slice">$(Encode $state.currentSlice.id) · $(Encode $state.currentSlice.title)<span class="pill">$(Encode $state.currentSlice.status)</span></h2><p>$(Encode $state.currentSlice.nextAction)</p><div class="small-label">Next check-in</div><p>$(Encode $state.nextCheckpoint)</p></section>

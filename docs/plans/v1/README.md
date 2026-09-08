@@ -8,6 +8,8 @@ Deliver a solid daily desktop on **GlazeWM + Zebar + Kanata + PowerToys Run**: l
 
 [Execution procedure](execution.md) defines bounded sessions, model roles, handoffs and check-ins. [Progress report](progress.html) is a generated snapshot, not a live controller. [Desktop interactions](../../research/desktop-interactions-2026-09-08.md) answers the tray/calendar/split/scratch questions and maps every old W cut.
 
+Start or resume through [NEXT.md](NEXT.md); the same entry point applies to each later session.
+
 ## Delivery order
 
 | Package | Work | Dependencies | Exit |

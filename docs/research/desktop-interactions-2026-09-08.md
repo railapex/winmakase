@@ -40,6 +40,8 @@ The more direct construction is also supported: with A/B side by side, focus B, 
 
 Omarchy uses dwindle's automatic splitting of the active tile and J to flip a split. Its stock map does not supply a separate direction-preselection key family. Match the pattern without pretending a new Winmakase convenience key is an existing Omarchy binding. [Pinned tiling bindings](https://github.com/omacom/omarchy/blob/v4.0.2/default/hypr/bindings/tiling.lua), [dwindle behavior](https://wiki.hypr.land/0.56.0/Configuring/Layouts/Dwindle-Layout/)
 
+Selected v1 addition: Caps+Ctrl+J changes insertion direction through Glaze's native operation; Caps+J keeps its Omarchy meaning. The inspected stock and local maps do not use Ctrl+J with the modifier. It is planned, not deployed, and must show the resulting direction rather than imply an automatic one-shot reset.
+
 ## Float, scratch, quake and pin are different
 
 | Role | Current behavior / v1 disposition |
