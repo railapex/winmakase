@@ -35,6 +35,10 @@ Limits: native component tests cover the actual placement helper plus tree recov
 
 ## Delivery
 
+**Activated later on 2026-09-10 at Chris's request.** The old Glaze exited cleanly. Its supervisor then blocked the linked-pair restart at 69% commit use despite about 34 GB unused commit capacity and 23 GB available RAM. A bounded manual start succeeded: new Glaze PID 432, Kanata PID 79432. The supervisor's adoption check was fixed and its binary replaced with a backup retained as `winmakased.pre-adoption-20260910.exe`. New supervisor PID 67292 adopted both processes and existing Zebar PID 20976 without another layout restart. Two forced-pressure adoption/fresh-launch tests pass; the release build and independent review pass. The fixed 50% fresh-launch cutoff remains a separate, overly conservative workaround; adoption no longer waits for it.
+
+The running candidate also passed the original live scenario: elevated disposable probe HWND 7147244 stayed alive but was absent from the managed-window query, with no manual ignore command. The placement recovery is now active. No broader P0/P1 gate is claimed.
+
 The release build passes and is staged at the normal next-start path, `C:/Users/chris/.winmakase/bin/glazewm.exe`. SHA-256: `06548C993F98B477327AFD1E923FEB7F114708F549BCDFEA1C1A06D433BFDFD8`.
 
 The old executable is retained at `C:/Users/chris/.winmakase/bin/glazewm.pre-placement-denied-20260910.exe`, SHA-256 `4EA8BFD012915907628A21C8E1907F096BDA7253BEDFCD7D55952232C6F79988`. Both copies were hash-verified. Staging renamed the old disk image and installed the new one; the mapped running image continues unchanged. Glaze PID `19880`, start `2026-09-10T04:25:05.5984669-07:00`, executable path and supervisor restart count (`0`) stayed unchanged afterward. The fix takes effect when Glaze next starts. Rollback is the retained old binary; replace the on-disk main executable with that copy before the next start to cancel staging.

@@ -4,7 +4,7 @@ Read this file first in every continuation. It is a stable entry point, not a se
 
 ## Current checkpoint
 
-- Targeted 2026-09-10 hotfix: Glaze `9c8e93b` on deployed-source base `6d62d66` handles placement-denied ghost tiles and is staged at the installed path for the next Glaze start. The running process was not restarted. Also carried into the future input branch as `dd8fb7d`. [Evidence and delivery status](../../verification/v1/2026-09-10-placement-denied.md). No P0/P1 gate is closed by this patch.
+- Targeted 2026-09-10 hotfix: Glaze `9c8e93b` on deployed-source base `6d62d66` is active after Chris authorized restart. A live elevated fixture was automatically excluded from tiling. Supervisor adoption now bypasses the fixed commit-pressure guard; all three components are supervised. The fresh-launch 50% cutoff remains open work. Also carried into the future input branch as `dd8fb7d`. [Evidence and delivery status](../../verification/v1/2026-09-10-placement-denied.md). No P0/P1 gate is closed by this patch.
 
 - Accepted source baseline: `dfb3e7d`; fixtures `7161a6d`; binding comparison `1b0ceca`; Run payload/kit `7cef5e6`; resource baseline `9edc253`. Reviewed Glaze source/build: `371a448`. Verify current HEAD and diff before continuing. [P0 evidence](../../verification/v1/2026-09-08-p0/README.md).
 - Active build: P0 baseline/proofs, explicitly started by Chris. No v1 implementation round has passed. Lead owns Wire `env:winmakase-uat`; check the roster before continuing.

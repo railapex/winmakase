@@ -118,7 +118,7 @@ Delete edge-hover peek, flyout allowlists and delayed hide once replacement cont
 
 Replace PID-file singleton checks with owned synchronization. Repair control request ownership and per-request completion without building a generic bus. A failed kill remains tracked, not reported stopped.
 
-Dock health must identify actual expected Zebar widgets, bounds and reserved geometry. Keep bounded repair until direct dock reconciliation is proven. Do not restart healthy tiling on routine monitor changes. The fixed 50% commit-pressure gate needs a reproducible removal/replacement experiment, a bounded wait and visible failure; adoption should not wait for permission to allocate a new process.
+Dock health must identify actual expected Zebar widgets, bounds and reserved geometry. Keep bounded repair until direct dock reconciliation is proven. Do not restart healthy tiling on routine monitor changes. The fixed 50% commit-pressure gate needs a reproducible removal/replacement experiment, a bounded wait and visible failure. As of 2026-09-10, adoption bypasses this gate; a fresh launch rechecks pressure after adoption discovery. Live adoption passed at 69% commit use. Removing the fresh-launch cutoff remains open.
 
 ## Distribution and verification
 

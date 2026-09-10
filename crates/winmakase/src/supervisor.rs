@@ -735,6 +735,15 @@ impl Supervisor {
             }
         }
 
+        // Recheck after adoption: an observed process may have exited between
+        // the set's preflight and this scan. Never turn that race into a new
+        // Glaze launch while the startup pressure guard is active.
+        if c == Component::Glazewm && commit_pressure::is_under_pressure() {
+            self.log("GlazeWM is not adoptable and commit pressure blocks a fresh launch");
+            self.health_mut(c).set(Status::Stopped, None);
+            return false;
+        }
+
         if let Some(task) = ccfg.task.clone() {
             return self.start_via_task(c, &ccfg, &task, is_restart);
         }
@@ -1041,7 +1050,23 @@ impl Supervisor {
     /// `children.insert` drops the old handle, and `Child`'s drop does not
     /// kill, leaving a second kanata holding the keyboard forever.
     fn start_set(&mut self, order: Vec<Component>, is_restart: bool) {
-        if order.contains(&Component::Glazewm) && commit_pressure::is_under_pressure() {
+        self.start_set_with_pressure(order, is_restart, commit_pressure::is_under_pressure());
+    }
+
+    /// Applies the startup guard to new allocation, not to adopting a live WM.
+    fn start_set_with_pressure(
+        &mut self,
+        order: Vec<Component>,
+        is_restart: bool,
+        under_pressure: bool,
+    ) {
+        let should_defer_glaze = order.contains(&Component::Glazewm)
+            && under_pressure
+            && !self.children.contains_key(&Component::Glazewm)
+            && !(self.cfg.glazewm.adopt
+                && procs::pids_for_image_path(&self.cfg.glazewm.command)
+                    .is_ok_and(|pids| !pids.is_empty()));
+        if should_defer_glaze {
             if !self.commit_pressure_waiting {
                 self.log(
                     "Windows commit pressure is above 50% — delaying GlazeWM until headroom returns",
@@ -1058,7 +1083,7 @@ impl Supervisor {
         }
         if order.contains(&Component::Glazewm) && self.commit_pressure_waiting {
             self.commit_pressure_waiting = false;
-            self.log("Windows commit pressure cleared — starting GlazeWM");
+            self.log("GlazeWM startup guard cleared or a running instance is available to adopt");
         }
 
         let mut started_here: Vec<Component> = Vec::new();
@@ -1319,6 +1344,57 @@ mod tests {
     use super::*;
     use crate::config::SupervisorConfig;
     use crate::testutil::{FakeHandle, FakePoll, TempDir};
+
+    #[test]
+    fn pressure_does_not_block_adopting_an_existing_glaze_process() {
+        let dir = TempDir::new("pressure-adoption");
+        let mut cfg = Config::default();
+        cfg.glazewm.command = std::env::current_exe()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_owned();
+        cfg.glazewm.adopt = true;
+        let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+
+        // Adopt this test process by a watch-only handle; no child is launched
+        // and no shutdown path is called against the adopted process.
+        sup.start_set_with_pressure(vec![Component::Glazewm], false, true);
+
+        assert_eq!(
+            sup.children[&Component::Glazewm].handle.pid(),
+            std::process::id()
+        );
+        assert!(!sup.is_scheduled(Component::Glazewm));
+    }
+
+    #[test]
+    fn pressure_still_blocks_a_fresh_or_nonadopting_glaze_launch() {
+        for adopt in [false, true] {
+            let dir = TempDir::new("pressure-fresh");
+            let mut cfg = Config::default();
+            cfg.glazewm.command = if adopt {
+                dir.path()
+                    .join("missing-glaze.exe")
+                    .to_str()
+                    .unwrap()
+                    .to_owned()
+            } else {
+                std::env::current_exe()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_owned()
+            };
+            cfg.glazewm.adopt = adopt;
+            let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+
+            sup.start_set_with_pressure(vec![Component::Glazewm], false, true);
+
+            assert!(!sup.children.contains_key(&Component::Glazewm));
+            assert!(sup.is_scheduled(Component::Glazewm));
+        }
+    }
 
     #[test]
     fn a_display_change_rearms_the_zebar_dock_check() {
