@@ -4,12 +4,14 @@ Read this file first in every continuation. It is a stable entry point, not a se
 
 ## Current checkpoint
 
+- Targeted 2026-09-10 hotfix: Glaze `9c8e93b` on deployed-source base `6d62d66` handles placement-denied ghost tiles and is staged at the installed path for the next Glaze start. The running process was not restarted. Also carried into the future input branch as `dd8fb7d`. [Evidence and delivery status](../../verification/v1/2026-09-10-placement-denied.md). No P0/P1 gate is closed by this patch.
+
 - Accepted source baseline: `dfb3e7d`; fixtures `7161a6d`; binding comparison `1b0ceca`; Run payload/kit `7cef5e6`; resource baseline `9edc253`. Reviewed Glaze source/build: `371a448`. Verify current HEAD and diff before continuing. [P0 evidence](../../verification/v1/2026-09-08-p0/README.md).
 - Active build: P0 baseline/proofs, explicitly started by Chris. No v1 implementation round has passed. Lead owns Wire `env:winmakase-uat`; check the roster before continuing.
 - Current slice, decisions and checkpoint history: [execution-state.json](execution-state.json).
 - Package/round completion: [TODO](../../TODO.md).
 - Procedure and authority boundaries: [execution.md](execution.md).
-- Next action: P0.3 runtime prerequisites and explicit launcher activation. Glaze worktree `D:/dev/glazewm-wt-v1-input` is clean at `371a448`; source review, 23 selected tests and release build pass. Four wider-suite failures reproduce on parent `1dd80dd` in detached `D:/dev/glazewm-wt-p0-test-baseline`; no code fix was made for them. The [guest kit](../../verification/v1/2026-09-08-p0/guest-kit.md) includes the built candidate. Chris enabled Sandbox; host restart and Windows UI connection recovery remain pending. Bounded ordinary behavior checks can use the daily desktop; shell/failure injection requires disposable Windows. No worker is still writing this slice.
+- Next action: P0.3 Sandbox prerequisites and explicit launcher activation. The input worktree is now `dd8fb7d` after the isolated placement fix; its staged guest binaries still represent `371a448` and need rebuilding before a future cutover. Prior input review/build and four parent-suite failures are recorded in the [guest kit](../../verification/v1/2026-09-08-p0/guest-kit.md). Native desktop access through cua-driver was verified on 2026-09-10; Sandbox and launcher acceptance remain unrun. Bounded ordinary checks can use the daily desktop; shell/failure injection requires disposable Windows. No worker is still writing this slice.
 - Next user checkpoint: after two accepted slices, a package boundary or 60–90 active minutes. R0 must present concrete interaction results and unresolved choices.
 
 ## Resume contract

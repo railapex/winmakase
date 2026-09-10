@@ -14,6 +14,8 @@ Updated 2026-09-08. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata an
 
 These checks do not imply clean installation, dialog safety, focus-or-launch, complete theming or hardened recovery.
 
+Targeted recovery: [2026-09-10 placement-denied hotfix](verification/v1/2026-09-10-placement-denied.md) implements permission-denied tile release on the deployed Glaze source base. Source review, seven recovery tests, four error tests and elevated/ordinary native component checks pass. Delivery status is recorded in the evidence; P0/P1 gates remain open.
+
 ## Active packages
 
 - [ ] [P0 — Baseline and integration proofs](plans/v1/00-baseline.md): active; exact provenance, key-pattern comparison, direct-Caps candidate/possible Kanata retirement, Run shortcut indexing, popup/focus/dock capability, classification and suppression probes. [Current evidence](verification/v1/2026-09-08-p0/README.md). Exit: R0.

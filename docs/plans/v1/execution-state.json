@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-08T23:22:37Z",
+  "updatedAt": "2026-09-10T15:45:50Z",
   "planBaseCommit": "ab32da1",
-  "lastVerifiedBuild": "Winmakase 9edc253 / Glaze 371a448 — source/build checks; runtime acceptance pending",
+  "lastVerifiedBuild": "Glaze 9c8e93b on deployed base 6d62d66 — reviewed, native component checks and release build; staged for next start. Future input branch dd8fb7d includes the fix and passes its seven recovery tests; guest binaries remain 371a448.",
   "stage": "P0 checkpoint: input source and guest artifacts accepted; runtime proofs pending",
   "currentSlice": {
     "id": "P0.3",
     "status": "Waiting on runtime environment",
     "title": "Direct Caps contract and explicit launcher activation",
-    "nextAction": "After host restart, verify Sandbox and the Windows UI connection; run the staged guest fixtures and prove explicit Run activation. Direct-Caps source 371a448 passes 23 selected tests and has built guest artifacts; physical acceptance and launcher implementation remain open."
+    "nextAction": "Verify Sandbox after host restart and prove explicit Run activation. Native desktop access through cua-driver passed on 2026-09-10. The input branch is dd8fb7d after placement recovery; rebuild the guest artifacts before its future cutover. Physical input acceptance and launcher implementation remain open."
   },
   "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
   "decisions": [],
@@ -18,8 +18,8 @@
       "detail": "Chris enabled Containers-DisposableClientVM. CBS still reports reboot pending and WindowsSandbox.exe is absent; guest tests have not run."
     },
     {
-      "title": "Windows UI connection unavailable",
-      "detail": "Computer Use initialized but native app discovery failed twice with native pipe unavailable (OS error 2). No launcher UI input followed. Recheck the connection after restart; source and build evidence do not prove visible behavior."
+      "title": "Launcher activation still unverified",
+      "detail": "Native desktop access through cua-driver passed on 2026-09-10. The older OpenAI native backend was not retried. P0 Run activation and guest UI acceptance remain unrun."
     }
   ],
   "recentDecisions": [
@@ -88,6 +88,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-10T15:45:50Z",
+      "summary": "Placement-denied ghost tile reproduced with an elevated CUA fixture. Glaze hotfix 9c8e93b on deployed 6d62d66 has seven recovery tests, four typed-error tests, elevated/ordinary native component checks, strict Clippy and release build. Staged at installed path for next start; running PID 19880 unchanged. Input branch dd8fb7d includes the fix and passes seven recovery tests. Existing corner-position test failure reconfirmed on untouched parent. P0/P1 gates remain open."
+    },
     {
       "at": "2026-09-08T23:22:37Z",
       "summary": "Input source 371a448 accepted and built for the guest kit; 23 selected tests pass and the wider suite's four failures reproduce on parent 1dd80dd. Binding comparison 1b0ceca, Run payload/kit 7cef5e6 and resource baseline 9edc253 accepted. Host restart and Windows UI reconnection are the next runtime prerequisites. R0 remains open; no daily-stack cutover."
