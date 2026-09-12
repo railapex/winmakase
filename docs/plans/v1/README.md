@@ -28,6 +28,7 @@ Each package is split into reviewable changes, not one large feature branch. Imp
 ## V1 acceptance
 
 - Main windows tile; dialogs/utilities behave deliberately; existing layouts survive routine reload.
+- Supported agent-created native windows preserve the human layout/focus and remain deliberately inspectable. P0 establishes ownership and background-operation coverage; unknown/shared-browser surfaces retain existing placement. Automatic browser-group movement is deferred.
 - Loose floats are listable/recoverable; split-next controls and one daily role layout work; a dedicated terminal pad is discoverable.
 - Work/personal Chrome actions identify the right profile; launch-new and focus-or-launch have separate predictable semantics.
 - Keyboard and mouse can launch apps, find running windows, access tray/settings/audio/notifications, inspect bindings and recover without edge-peeking a native taskbar.

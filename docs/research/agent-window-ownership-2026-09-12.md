@@ -1,0 +1,39 @@
+# Agent output windows: ownership and proof plan
+
+Status: source/design review only. No ancestry, placement or inactive-workspace input experiment has passed. Chris wants visible output without repeated human-layout changes. Agent conversations already live mainly in Muxel. Automatic browser-tab/group movement is deferred from the first cut.
+
+## Decision to make
+
+Measure ancestry first. Enroll an individual agent session root, then determine which native output windows can be attributed to its descendants. Do not enroll all of Muxel: human shells and applications share that ancestor. Add launcher cooperation only for demonstrated gaps. Classification is placement metadata, not permission to terminate a process or operate its UI.
+
+## What source establishes
+
+Local source pins (inspected files clean against these commits): Muxel `b9c9f12e3a751f0f60b7df21531cfea5e06c6169`, `crates/muxel-terminal/src/session.rs`; OwnerRez or-drive `4f724874596b8b58e8ba35e2bf1ef8c5d4a44ce7`, `.agents/skills/or-drive/browser.ts`; Glaze input candidate `dd8fb7d515eb73c7dc1210076922e75c742bb702`, `packages/wm/src/commands/window/manage_window.rs` and `packages/wm/src/commands/general/platform_sync.rs`. These are source revisions, not claims of current deployment.
+
+- Windows exposes a window's owning process and process parent IDs. A later parent-PID walk can lose exited intermediates or follow a reused PID. Capture process creation identity and ancestry while present; retain bounded lineage for surviving descendants. A PID alone, or a creation-time comparison alone, cannot reconstruct missing history. [Window owner API](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowthreadprocessid), [process parent/creation fields](https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process).
+- An event source can report process starts, but availability, permissions, latency and lost events need measurement on the supported host. Snapshot once plus events is a candidate; repeated full process scans on every window event are not the target. [Process start trace](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/krnlprov/win32-processstarttrace).
+- A per-agent Windows Job Object could retain kernel process membership across ordinary child launches. Nested jobs, breakaway, existing browser sandboxes and ConPTY compatibility need a separate proof; it does not attribute work performed by an already-running broker. Do not adopt it or add kill-on-close/resource limits merely for tagging. [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects).
+- Inspected Muxel source accepts per-instance environment entries, captures the spawned PTY child PID and exposes child_pid(): `crates/muxel-terminal/src/session.rs`. This is a possible enrollment point, not an implemented registration contract or evidence about the live channel. Never inspect or operate channel-selected muxel-live; use ordinary muxel.exe with explicit UAT roots for proofs.
+- Inspected or-drive source in orez-wt-19504 owns a dedicated browser profile and records PID/port/owner/start time. ownerToken() selects DRIVE_SESSION, then CLAUDE_CODE_SESSION_ID, then OS user. Its existing identity is a candidate adapter; wire-wrap's CLAUDE_PID/WIRE_NAME alone do not populate this contract. No OwnerRez dependency on Winmakase is proposed.
+- Inspected Glaze input-candidate manage_window creates/attaches a container, selects its focus descendant, runs Manage rules and queues native focus. Current source does not prove that moving a window afterward avoids transient disruption. Inactive workspace behavior includes configurable hiding/cloaking, so background input to an occluded window is not proof of operation on every inactive workspace.
+
+## Bounded experiments
+
+| ID | Experiment | Decision exit |
+|---|---|---|
+| A1 | In an ordinary Muxel UAT instance, compare enrolled agent vs human shell launches: cmd, pwsh, native fixture, dedicated visible browser; warm browser/terminal broker; detached child; short-lived intermediate; agent exit; two simultaneous agents. Record creation identity, lineage and resulting HWND owner without raw argv/environment/URLs. | Per-case automatic/needs-cooperation/unknown result. Zero attribution of human or other-session windows. Unknowns keep existing placement. Prove event ordering and observer cost before choosing a tracker. |
+| A2 | For an unambiguously owned fixture, test initial admission and focus while another disposable window is the human target. Twenty create/destroy cycles, late first window and user focus/workspace change; observe geometry/workspace/foreground throughout, not only after settling. | No transient human tile change or focus capture for supported cases, or a bounded Glaze patch/disposition. Test native app activation separately from Glaze-initiated focus; do not promise global prevention from a WM rule alone. |
+| A3 | Visible dedicated browser and native cua-driver fixture: active, occluded and inactive workspace under the configured hide method; capture, accessibility, background typing/clicks, deliberate inspect/return. | Supported operation/window-state matrix with fresh UI evidence. Failed background delivery must not silently take foreground. Keep visible on another monitor or require deliberate inspection if inactive operation is unsupported; guest only where the test needs isolation. |
+| A4 | Only for A1 gaps, compare existing or-drive session identity with minimal launch registration or explicit window registration. Include same-app human window, concurrent sessions, delayed identity, PID/HWND reuse and observer restart. Trial a Job Object only if ancestry retention is inadequate. | Smallest passing cooperation contract, precise unsupported cases and recovery behavior. No universal wrapper mandate without evidence; no automatic process killing. |
+| D1 | Existing P0 dialog classification probe: main/auth/settings/owned utility windows, generated home rules and reload; use real Google login/Viscosity cases where available plus deterministic fixtures. | Minimum precedence/lifecycle correction preserving parent placement and manually arranged main windows. This work does not wait for agent ownership. |
+
+Initial observation can use bounded disposable windows on the daily desktop with captured/restored state. Glaze/input changes, second stacks and failure injection use disposable Windows. A1–A4 reports belong under the P0 verification directory; supported behavior and known exclusions become R1 cases. Provider-created tabs in existing personal browser windows remain outside this first cut.
+
+## Delivery order and stopping rule
+
+1. Finish P0.3's existing direct-Caps/Run/guest proof; retain its separate physical-input gate.
+2. Run D1 and A1 as independent source/fixture work, serializing shared desktop experiments. Keep popup/tray/calendar/split proofs in R0; the new question does not replace them.
+3. Use A1 results to select the smallest ownership mechanism; A2/A3 determine whether the desired workspace workflow is viable. Run A4 only where needed.
+4. Deliver P1 dialog/reload correction independently, then supported agent output placement. P2 controls can use their own resolved P0 proofs; do not wait for every unrelated P0 experiment. Appearance, restoration and distribution remain P3–P5.
+
+One reviewable result per experiment: evidence, exact source/build, coverage, failed case, selected mechanism or explicit deferral. Stop architecture research when these decisions are supported; implement the bounded result. An AGENTS.md instruction is useful only after a supported entry point exists: keep spawned UI associated with the current agent session, use that entry point for uncovered launches, preserve visible/background operation and report unsupported cases. It cannot establish OS ownership by itself.

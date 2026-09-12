@@ -1,6 +1,6 @@
 # Winmakase work state
 
-Updated 2026-09-08. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata and PowerToys.** Plans are accepted direction; implementation gates below remain open. The previous M0–M4 ledger is [archived](plans/archive/2026-09-08/TODO.md); its completed evidence remains useful, its unchecked sequence is superseded.
+Updated 2026-09-12. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata and PowerToys.** Plans are accepted direction; implementation gates below remain open. The previous M0–M4 ledger is [archived](plans/archive/2026-09-08/TODO.md); its completed evidence remains useful, its unchecked sequence is superseded.
 
 ## Already present
 
@@ -18,8 +18,8 @@ Targeted recovery: [2026-09-10 placement-denied hotfix](verification/v1/2026-09-
 
 ## Active packages
 
-- [ ] [P0 — Baseline and integration proofs](plans/v1/00-baseline.md): active; exact provenance, key-pattern comparison, direct-Caps candidate/possible Kanata retirement, Run shortcut indexing, popup/focus/dock capability, classification and suppression probes. [Current evidence](verification/v1/2026-09-08-p0/README.md). Exit: R0.
-- [ ] [P1 — Window policy and app actions](plans/v1/01-window-policy.md): dialog-safe defaults, homes/profiles, launch modes, safe adoption/reload, loose-float recovery, practical splits, named terminal and one daily layout. Exit: R1.
+- [ ] [P0 — Baseline and integration proofs](plans/v1/00-baseline.md): active; exact provenance, key-pattern comparison, direct-Caps candidate/possible Kanata retirement, Run shortcut indexing, popup/focus/dock capability, classification, agent ancestry/admission/background-input and suppression probes. [Current evidence](verification/v1/2026-09-08-p0/README.md). Exit: R0.
+- [ ] [P1 — Window policy and app actions](plans/v1/01-window-policy.md): dialog-safe defaults, supported agent output placement, homes/profiles, launch modes, safe adoption/reload, loose-float recovery, practical splits, named terminal and one daily layout. Exit: R1.
 - [ ] [P2 — Launcher and controls](plans/v1/02-launcher-controls.md): shared entries, offline bar, monitor identity, dropdown tray with user pinning, month calendar, float indicator and accessible controls/help. Exit: R2.
 - [ ] [P3 — Appearance](plans/v1/03-appearance.md): two complete presets, staged apply/rollback, owned settings. Exit: R3.
 - [ ] [P4 — Supervisor and taskbar retirement](plans/v1/04-supervisor.md): lifecycle correctness, crash restoration, privileged-path boundary, delete hover controller after replacement proof. Exit: R4.

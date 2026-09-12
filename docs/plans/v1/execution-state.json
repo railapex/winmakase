@@ -15,6 +15,10 @@
   "blockers": [],
   "recentDecisions": [
     {
+      "title": "Measure agent ancestry before choosing cooperation",
+      "detail": "Enroll individual agent roots, preserve visible/background operation and test human Muxel shells as negative controls. P0 A1–A4 selects the minimum mechanism; P1 owns supported placement. Automatic browser-group movement is deferred. No implementation proof closed."
+    },
+    {
       "title": "Direct Caps adoption reopened",
       "detail": "GlazeWM, Zebar and PowerToys retained. Kanata is currently deployed; the existing direct Caps candidate will determine whether it can be retired."
     },
@@ -79,6 +83,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-12",
+      "summary": "Design/source review added agent output to P0/P1 acceptance and replaced mandatory launcher registration with ancestry-first experiments. Muxel source exposes per-instance child PID/env; Windows ancestry and Job Object limits are documented, not runtime-proven here. Existing direct-Caps/Run slice remains next; dialog correction can proceed independently. Automatic browser-group relocation deferred."
+    },
     {
       "at": "2026-09-12",
       "summary": "Restart verified: last boot 2026-09-10T11:17:23.702118Z; WindowsSandbox.exe now exists. Cua-driver CLI 0.26.1 reached its running daemon and returned a targeted window-discovery result. No input or Sandbox launch was attempted. CBS still reports a reboot pending, which is not evidence that the previous restart failed. Old environment blockers removed; R0 remains open. Chris raised agent-created window churn as a separate window-policy requirement."
