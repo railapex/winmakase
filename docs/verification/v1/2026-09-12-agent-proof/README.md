@@ -1,6 +1,6 @@
 # A1 sequence-feed ancestry prototype
 
-Status: bounded algorithm and controlled native fixture proof passed after review cycle 1. This does not pass A1, automatic provider recognition, HWND ownership, placement or background input.
+Status: bounded algorithm and controlled native fixture proof passed after review cycle 2 fixes. This does not pass A1, automatic provider recognition, HWND ownership, placement or background input.
 
 ## Review correction
 
@@ -10,21 +10,21 @@ The corrected prototype removes retrospective timestamp ancestry entirely. It us
 
 ## Safe feed contract
 
-- Each complete observation retains only PID, PPID and unique sequence number. The parser does not dereference or retain the returned global image-name pointers.
+- Each complete observation retains only PID, PPID and unique sequence number. The parser validates the complete fixed record, including the opaque `UNICODE_STRING` descriptor, but does not dereference or retain returned global image-name pointers.
 - A child edge is admitted only when the child sequence identity is absent from the immediately previous complete observation, present now, and the same unique parent identity is present in both observations. The parent must already be a retained agent root or descendant.
 - Existing ancestry at observer start, a parent and child first seen together, a missing/inaccessible parent and any failed/truncated/over-cap observation remain unknown. An observation failure breaks continuity; the next success is baseline only.
 - Observer restart starts with no lineage. There is no persistence or reconstruction from timestamps.
 - Root enrollment is an explicit fixture-owned PID in this proof. The PID binds once to its first observed sequence identity. The exact configured executable path must match while the process is live in two consecutive complete observations before the root is promoted. The helper checks process liveness before and after its exact image query.
 - Cached answers key on PID plus sequence. Lookup against a supplied current snapshot rejects a missing or reused PID. End-to-end native lookup first captures a fresh sequence snapshot, advances the feed, then classifies.
 - Retained nodes, cache answers, root enrollments, snapshot entries and native query buffer all have hard caps. Only descendants of retained roots/descendants enter the dynamic graph.
-- Unsupported `SystemBasicProcessInformation`, malformed/truncated data and cap overflow fail closed. There is no Toolhelp or creation-time attribution fallback.
+- Unsupported `SystemBasicProcessInformation`, malformed/truncated/misaligned data and cap overflow fail closed. Both native capture and public snapshot ingestion enforce the tracker's entry cap; either failure breaks observation continuity. There is no Toolhelp or creation-time attribution fallback.
 - Known generic shell, runtime and terminal-host executable names are rejected as configured roots. Automatic provider candidate discovery and package-entry enrollment remain open.
 
 The existing supervisor lookup still uses its original Toolhelp basename prefilter plus exact full-path match. No production policy calls the new feed.
 
 ## Deterministic coverage
 
-Twelve ancestry tests cover prior-parent admission, existing ancestry, same-observation parent/child, missing parent, observation gaps, PID reuse, exact root binding twice, retained edges after ancestor exit, bounded memory, generic-root rejection, native sequence capture and deliberately nonmonotonic sequence values. Nine process-helper tests include the existing supervisor exact-path regressions, native sequence identity for the current process, rejection of an exited-but-held hidden child, and parser rejection of truncation, PID overflow and entry-cap overflow.
+Thirteen ancestry tests cover prior-parent admission, existing ancestry, same-observation parent/child, missing parent, observation gaps, PID reuse, exact root binding twice, retained edges after ancestor exit, bounded memory, public-ingestion cap enforcement, generic-root rejection, native sequence capture and deliberately nonmonotonic sequence values. Twelve process-helper tests include the existing supervisor exact-path regressions, native sequence identity for the current process, rejection of an exited-but-held hidden child, and parser rejection of an incomplete terminal record, an offset inside the fixed record, misalignment, an invalid opaque image-name descriptor, PID overflow and entry-cap overflow. Native tests skip only when Windows reports the information class unsupported; every other query or parse failure fails the test.
 
 The hidden native fixture stages each edge across separate observations:
 
@@ -49,13 +49,13 @@ The final release run passed two staged fixture edges, 200/200 cache lookups aga
 
 Exact nanosecond distributions are in [benchmark.json](benchmark.json). They contain no raw PIDs or global process data.
 
-The 0.6611 ms median fresh-snapshot path is evidence against capturing a new global snapshot unconditionally for every Manage event. A caller that already owns the current observation can use the supplied-snapshot lookup; event cadence and batching still need integration proof.
+The measured full fresh-snapshot cost is recorded separately from lookup against a supplied current observation. Whether a fresh snapshot fits each Manage event depends on event cadence and the integration budget; this prototype does not decide that policy.
 
 ## Verification and limits
 
-- `cargo test -p winmakase agent_ancestry -- --nocapture`: 12 passed.
-- `cargo test -p winmakase procs -- --nocapture`: 9 passed.
-- `cargo test -p winmakase --lib`: 136 passed, 1 explicit real-taskbar test ignored.
+- `cargo test -p winmakase agent_ancestry -- --nocapture`: 13 passed.
+- `cargo test -p winmakase procs -- --nocapture`: 12 passed.
+- `cargo test -p winmakase --lib`: 140 passed, 1 explicit real-taskbar test ignored.
 - Scoped Clippy with the two known untouched lint classes allowed passed for all `winmakase` targets; `git diff --check` passed.
 - Supervisor process-spawning integration remains environment-blocked by the existing host commit-pressure gate; it was not rerun in this review cycle.
 

@@ -152,9 +152,9 @@ pub(crate) fn sequence_process_snapshot(max_entries: usize) -> io::Result<Vec<Se
                 "basic process snapshot exceeded bounded buffer",
             ));
         }
-        let words = bytes.div_ceil(std::mem::size_of::<usize>());
-        let mut buffer = vec![0usize; words];
-        let buffer_bytes = buffer.len() * std::mem::size_of::<usize>();
+        let words = bytes.div_ceil(std::mem::size_of::<u64>());
+        let mut buffer = vec![0u64; words];
+        let buffer_bytes = buffer.len() * std::mem::size_of::<u64>();
         let mut returned = 0u32;
         let status = unsafe {
             NtQuerySystemInformation(
@@ -192,15 +192,24 @@ pub(crate) fn sequence_process_snapshot(max_entries: usize) -> io::Result<Vec<Se
     }
 }
 
-/// Prefix of `SYSTEM_BASICPROCESS_INFORMATION`. The following `ImageName`
-/// member is deliberately omitted so the parser cannot read it accidentally.
+/// Fixed `SYSTEM_BASICPROCESS_INFORMATION` record. `image_name.buffer` is
+/// validated as an opaque pointer and is never dereferenced.
 #[repr(C)]
 #[derive(Clone, Copy)]
-struct BasicProcessIdentityFields {
+struct BasicProcessInformation {
     next_entry_offset: u32,
     unique_process_id: *mut std::ffi::c_void,
     inherited_from_unique_process_id: *mut std::ffi::c_void,
     sequence_number: u64,
+    image_name: UnicodeStringFields,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct UnicodeStringFields {
+    length: u16,
+    maximum_length: u16,
+    buffer: *const u16,
 }
 
 fn parse_sequence_processes(
@@ -208,10 +217,23 @@ fn parse_sequence_processes(
     used: usize,
     max_entries: usize,
 ) -> io::Result<Vec<SequenceProcess>> {
-    let header_size = std::mem::size_of::<BasicProcessIdentityFields>();
+    let header_size = std::mem::size_of::<BasicProcessInformation>();
+    let header_alignment = std::mem::align_of::<BasicProcessInformation>();
+    if !(buffer as usize).is_multiple_of(header_alignment) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "basic process snapshot buffer was misaligned",
+        ));
+    }
     let mut offset = 0usize;
     let mut out = Vec::new();
     loop {
+        if !offset.is_multiple_of(header_alignment) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot entry was misaligned",
+            ));
+        }
         if offset.checked_add(header_size).is_none_or(|end| end > used) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -225,8 +247,20 @@ fn parse_sequence_processes(
             ));
         }
         let fields = unsafe {
-            std::ptr::read_unaligned(buffer.add(offset).cast::<BasicProcessIdentityFields>())
+            std::ptr::read_unaligned(buffer.add(offset).cast::<BasicProcessInformation>())
         };
+        if fields.image_name.length > fields.image_name.maximum_length
+            || fields.image_name.length % 2 != 0
+            || fields.image_name.maximum_length % 2 != 0
+            || (fields.image_name.maximum_length != 0 && fields.image_name.buffer.is_null())
+            || (!fields.image_name.buffer.is_null()
+                && !(fields.image_name.buffer as usize).is_multiple_of(std::mem::align_of::<u16>()))
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot contained an invalid image-name descriptor",
+            ));
+        }
         let pid = u32::try_from(fields.unique_process_id as usize)
             .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "PID overflow"))?;
         let parent_pid = u32::try_from(fields.inherited_from_unique_process_id as usize)
@@ -246,6 +280,12 @@ fn parse_sequence_processes(
                 "basic process snapshot contained an invalid next offset",
             ));
         }
+        if !next.is_multiple_of(header_alignment) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot contained a misaligned next offset",
+            ));
+        }
         offset = offset.checked_add(next).ok_or_else(|| {
             io::Error::new(io::ErrorKind::InvalidData, "snapshot offset overflow")
         })?;
@@ -258,17 +298,34 @@ mod tests {
     use std::os::windows::process::CommandExt;
     use std::process::Command;
 
-    fn encoded_identity(fields: BasicProcessIdentityFields) -> Vec<usize> {
-        let mut words = vec![
-            0usize;
-            std::mem::size_of::<BasicProcessIdentityFields>()
-                .div_ceil(std::mem::size_of::<usize>())
-        ];
-        unsafe {
-            std::ptr::write_unaligned(
-                words.as_mut_ptr().cast::<BasicProcessIdentityFields>(),
-                fields,
-            );
+    fn identity_fields(next_entry_offset: u32) -> BasicProcessInformation {
+        BasicProcessInformation {
+            next_entry_offset,
+            unique_process_id: 10usize as _,
+            inherited_from_unique_process_id: 1usize as _,
+            sequence_number: 100,
+            image_name: UnicodeStringFields {
+                length: 0,
+                maximum_length: 0,
+                buffer: std::ptr::null(),
+            },
+        }
+    }
+
+    fn encoded_identities(fields: &[BasicProcessInformation]) -> Vec<u64> {
+        let mut words =
+            vec![0u64; std::mem::size_of_val(fields).div_ceil(std::mem::size_of::<u64>())];
+        for (index, fields) in fields.iter().copied().enumerate() {
+            unsafe {
+                std::ptr::write_unaligned(
+                    words
+                        .as_mut_ptr()
+                        .cast::<u8>()
+                        .add(index * std::mem::size_of::<BasicProcessInformation>())
+                        .cast::<BasicProcessInformation>(),
+                    fields,
+                );
+            }
         }
         words
     }
@@ -306,7 +363,11 @@ mod tests {
 
     #[test]
     fn sequence_snapshot_contains_our_live_unique_identity() {
-        let snapshot = sequence_process_snapshot(16_384).unwrap();
+        let snapshot = match sequence_process_snapshot(16_384) {
+            Ok(snapshot) => snapshot,
+            Err(error) if error.kind() == io::ErrorKind::Unsupported => return,
+            Err(error) => panic!("native sequence snapshot failed: {error}"),
+        };
         let me = snapshot
             .iter()
             .find(|process| process.pid == std::process::id())
@@ -315,39 +376,55 @@ mod tests {
     }
 
     #[test]
-    fn sequence_parser_rejects_a_truncated_entry() {
-        let words = encoded_identity(BasicProcessIdentityFields {
-            next_entry_offset: 0,
-            unique_process_id: 10usize as _,
-            inherited_from_unique_process_id: 1usize as _,
-            sequence_number: 100,
-        });
-        let used = std::mem::size_of::<BasicProcessIdentityFields>() - 1;
+    fn sequence_parser_rejects_an_incomplete_terminal_entry() {
+        let header_size = std::mem::size_of::<BasicProcessInformation>();
+        let words = encoded_identities(&[
+            identity_fields(u32::try_from(header_size).unwrap()),
+            identity_fields(0),
+        ]);
+        let used = header_size * 2 - 1;
+        assert!(parse_sequence_processes(words.as_ptr().cast(), used, 1).is_err());
+    }
+
+    #[test]
+    fn sequence_parser_rejects_an_offset_inside_the_fixed_record() {
+        let header_size = std::mem::size_of::<BasicProcessInformation>();
+        let words = encoded_identities(&[identity_fields(
+            u32::try_from(header_size - std::mem::align_of::<BasicProcessInformation>()).unwrap(),
+        )]);
+        assert!(parse_sequence_processes(words.as_ptr().cast(), header_size, 1).is_err());
+    }
+
+    #[test]
+    fn sequence_parser_rejects_a_misaligned_next_offset() {
+        let header_size = std::mem::size_of::<BasicProcessInformation>();
+        let words = encoded_identities(&[identity_fields(u32::try_from(header_size + 1).unwrap())]);
+        assert!(parse_sequence_processes(words.as_ptr().cast(), header_size, 1).is_err());
+    }
+
+    #[test]
+    fn sequence_parser_validates_the_opaque_image_name_descriptor() {
+        let mut fields = identity_fields(0);
+        fields.image_name.length = 2;
+        let words = encoded_identities(&[fields]);
+        let used = words.len() * std::mem::size_of::<u64>();
         assert!(parse_sequence_processes(words.as_ptr().cast(), used, 1).is_err());
     }
 
     #[test]
     fn sequence_parser_rejects_an_entry_over_the_cap() {
-        let words = encoded_identity(BasicProcessIdentityFields {
-            next_entry_offset: 0,
-            unique_process_id: 10usize as _,
-            inherited_from_unique_process_id: 1usize as _,
-            sequence_number: 100,
-        });
-        let used = words.len() * std::mem::size_of::<usize>();
+        let words = encoded_identities(&[identity_fields(0)]);
+        let used = words.len() * std::mem::size_of::<u64>();
         assert!(parse_sequence_processes(words.as_ptr().cast(), used, 0).is_err());
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn sequence_parser_rejects_a_pid_that_does_not_fit_win32() {
-        let words = encoded_identity(BasicProcessIdentityFields {
-            next_entry_offset: 0,
-            unique_process_id: ((u32::MAX as usize) + 1) as _,
-            inherited_from_unique_process_id: 1usize as _,
-            sequence_number: 100,
-        });
-        let used = words.len() * std::mem::size_of::<usize>();
+        let mut fields = identity_fields(0);
+        fields.unique_process_id = ((u32::MAX as usize) + 1) as _;
+        let words = encoded_identities(&[fields]);
+        let used = words.len() * std::mem::size_of::<u64>();
         assert!(parse_sequence_processes(words.as_ptr().cast(), used, 1).is_err());
     }
 

@@ -75,6 +75,10 @@ impl ProcessSnapshot {
     pub fn key_for_pid(&self, pid: u32) -> Option<ProcessKey> {
         self.by_pid.get(&pid).copied().map(SnapshotProcess::key)
     }
+
+    fn len(&self) -> usize {
+        self.by_pid.len()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -257,8 +261,15 @@ impl AncestryTracker {
         self.cache.clear();
     }
 
-    pub fn observe(&mut self, current: ProcessSnapshot) -> Observation {
-        self.advance(current, Vec::new())
+    pub fn observe(&mut self, current: ProcessSnapshot) -> io::Result<Observation> {
+        if current.len() > self.snapshot_capacity {
+            self.invalidate_continuity();
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "process snapshot exceeded the tracker entry cap",
+            ));
+        }
+        Ok(self.advance(current, Vec::new()))
     }
 
     pub fn refresh_native(&mut self) -> io::Result<NativeRefresh> {
@@ -589,7 +600,9 @@ mod tests {
         tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
         tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
         tracker.invalidate_continuity();
-        tracker.observe(snapshot(&[(10, 1, 100), (20, 10, 200)]));
+        tracker
+            .observe(snapshot(&[(10, 1, 100), (20, 10, 200)]))
+            .unwrap();
         assert_eq!(tracker.classify_current(20).ownership, Ownership::Unknown);
     }
 
@@ -604,7 +617,9 @@ mod tests {
         assert_eq!(tracker.classify_current(20).ownership, Ownership::Agent);
         assert!(tracker.classify_current(20).cache_hit);
         tracker.invalidate_continuity();
-        tracker.observe(snapshot(&[(10, 1, 100), (20, 10, 999)]));
+        tracker
+            .observe(snapshot(&[(10, 1, 100), (20, 10, 999)]))
+            .unwrap();
         let reused = tracker.classify_current(20);
         assert_eq!(reused.ownership, Ownership::Unknown);
         assert!(!reused.cache_hit);
@@ -613,8 +628,10 @@ mod tests {
     #[test]
     fn missing_or_inaccessible_parent_is_unknown() {
         let mut tracker = tracker(8);
-        tracker.observe(snapshot(&[(30, 20, 300)]));
-        tracker.observe(snapshot(&[(30, 20, 300), (40, 30, 400)]));
+        tracker.observe(snapshot(&[(30, 20, 300)])).unwrap();
+        tracker
+            .observe(snapshot(&[(30, 20, 300), (40, 30, 400)]))
+            .unwrap();
         assert_eq!(tracker.classify_current(40).ownership, Ownership::Unknown);
     }
 
@@ -634,8 +651,10 @@ mod tests {
             snapshot(&[(10, 1, 100), (20, 10, 200)]),
             vec![root(10, 100)],
         );
-        tracker.observe(snapshot(&[(20, 10, 200), (30, 20, 300)]));
-        tracker.observe(snapshot(&[(30, 20, 300)]));
+        tracker
+            .observe(snapshot(&[(20, 10, 200), (30, 20, 300)]))
+            .unwrap();
+        tracker.observe(snapshot(&[(30, 20, 300)])).unwrap();
         assert_eq!(tracker.classify_current(30).ownership, Ownership::Agent);
     }
 
@@ -647,7 +666,9 @@ mod tests {
             snapshot(&[(10, 1, 100), (20, 10, 200)]),
             vec![root(10, 100)],
         );
-        tracker.observe(snapshot(&[(10, 1, 100), (20, 10, 200), (30, 20, 300)]));
+        tracker
+            .observe(snapshot(&[(10, 1, 100), (20, 10, 200), (30, 20, 300)]))
+            .unwrap();
         assert_eq!(tracker.retained_nodes(), 2);
         let _ = tracker.classify_current(30);
         assert!(tracker.cached_answers() <= tracker.retained_nodes());
@@ -661,11 +682,56 @@ mod tests {
     }
 
     #[test]
+    fn public_observe_enforces_tracker_cap_and_breaks_continuity() {
+        let mut tracker = AncestryTracker::new(roots(), 8, 2).unwrap();
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+
+        let oversized = ProcessSnapshot::new(
+            3,
+            [
+                SnapshotProcess {
+                    pid: 10,
+                    parent_pid: 1,
+                    sequence: 100,
+                },
+                SnapshotProcess {
+                    pid: 20,
+                    parent_pid: 10,
+                    sequence: 200,
+                },
+                SnapshotProcess {
+                    pid: 30,
+                    parent_pid: 20,
+                    sequence: 300,
+                },
+            ],
+        )
+        .unwrap();
+        assert_eq!(
+            tracker.observe(oversized).unwrap_err().kind(),
+            io::ErrorKind::InvalidData
+        );
+
+        let baseline = tracker
+            .observe(snapshot(&[(10, 1, 100), (20, 10, 200)]))
+            .unwrap();
+        assert!(baseline.baseline_only);
+        assert_eq!(tracker.classify_current(20).ownership, Ownership::Unknown);
+    }
+
+    #[test]
     fn native_self_root_needs_two_live_image_validations() {
         let mut tracker = tracker(8);
         tracker.enroll_root_pid(std::process::id()).unwrap();
-        tracker.refresh_native().unwrap();
-        tracker.refresh_native().unwrap();
+        for _ in 0..2 {
+            if let Err(error) = tracker.refresh_native() {
+                if error.kind() == io::ErrorKind::Unsupported {
+                    return;
+                }
+                panic!("native sequence observation failed: {error}");
+            }
+        }
         assert_eq!(
             tracker.classify_current(std::process::id()).ownership,
             Ownership::Agent

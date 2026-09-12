@@ -13,16 +13,16 @@
 
 ## Build return
 
-- Commit(s) and actual changed behavior: initial unsafe retrospective prototype `1861586` is superseded by review-cycle fix commit reported to the lead after commit. The fixed module uses PID plus unique sequence and a two-observation feed with no timestamp fallback.
-- Required commands, runtime/build/config, executed counts and evidence paths: 12 ancestry and 9 process-helper tests pass; the full library has 136 passed and 1 explicit real-taskbar test ignored. Scoped Clippy and diff checks pass. The final release fixture passes both separately staged edges, 200 supplied-snapshot cache hits, 50 fresh-snapshot cache hits and retained classification after both ancestors exit. See `README.md` and `benchmark.json`.
+- Commit(s) and actual changed behavior: initial unsafe retrospective prototype `1861586` is superseded by sequence-feed fix `44ab088`; review-cycle 2 hardens full-record parsing and public-ingestion bounds in the final commit reported to the lead. The fixed module uses PID plus unique sequence and a two-observation feed with no timestamp fallback.
+- Required commands, runtime/build/config, executed counts and evidence paths: 13 ancestry and 12 process-helper tests pass; the full library has 140 passed and 1 explicit real-taskbar test ignored. Scoped Clippy and diff checks pass. The unchanged final release fixture passes both separately staged edges, 200 supplied-snapshot cache hits, 50 fresh-snapshot cache hits and retained classification after both ancestors exit. See `README.md` and `benchmark.json`.
 - Regression failed on prior behavior where applicable: exact-path supervisor lookup tests passed in the library phase. Supervisor integration was environment-blocked by the existing >50% commit-pressure fresh-start gate; no pass is claimed.
 - Unverified cases / failed checks / unresolved defects: automatic provider discovery, provider processes, event cadence/loss, HWND, placement, brokers and observer restart recovery remain outside this prototype. Workspace-wide format and unmodified strict Clippy checks retain their baseline blockers.
-- Independent reviewer and disposition: fresh review cycle 1 rejected timestamp ordering, exited-handle liveness and retrospective parent matching. All three paths were removed or corrected; final review remains lead-owned.
+- Independent reviewer and disposition: review cycle 1 rejected timestamp ordering, exited-handle liveness and retrospective parent matching. Review cycle 2 accepted the temporal rule and held on fixed-record extent validation, public-ingestion bounds and native-test skip precision. Those bounded fixes are implemented; fresh review remains lead-owned.
 - Integration checks and accepting owner: lead-owned.
 
 ## Checkpoint
 
-- Actual HEAD / clean status / claims: base `bea1f00bd300dbcdac8ad8570dd613248b4e128e`; initial prototype `1861586`; final fix commit/status are reported to the lead after commit; no environment claim.
+- Actual HEAD / clean status / claims: base `bea1f00bd300dbcdac8ad8570dd613248b4e128e`; initial prototype `1861586`; sequence fix `44ab088`; final cycle 2 commit/status are reported to the lead after commit; no environment claim.
 - Running processes/tasks and exact owner; cleanup needed: no fixture process remains. The local hook rejected recursive cleanup of two integration scratch directories; three failed example-run directories also remain. All five exact paths are listed in `README.md`; no bypass was attempted.
 - Decisions for Chris: none at prototype start.
 - Next executable action and its prerequisites: fresh review of the sequence parser, continuity reset, root binding and adjacent-observation edge rule. If accepted, A1 still needs automatic provider candidate discovery and real provider/event coverage before production policy wiring.
