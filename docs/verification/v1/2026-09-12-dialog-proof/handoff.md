@@ -7,7 +7,7 @@
 - Explicit exclusions: no Glaze policy implementation, live stack or task/config changes, UI/provider launch, shared desktop/guest use, global window inventory, channel-selected Muxel access, or edits to global plan/design/work-state/changelog files.
 - Base repository, branch, commit and integration contract: `railapex/winmakase`, `p0-dialog-proof`, `bea1f00bd300dbcdac8ad8570dd613248b4e128e`; preserve the four action IDs and exact checked-in argv tuples.
 - Worker worktree / owned paths / shared interfaces: `D:/dev/winmakase-wt-dialog-proof`; `spike/p0/` fixture source/scripts/tests and `docs/verification/v1/2026-09-12-dialog-proof/` only. Lead owns shared Glaze composition/policy and the disposable guest.
-- Requested model and effort; observed actual model: requested Sol builder; runtime identifies this worker as Codex based on GPT-6. No nested delegation.
+- Requested model and effort; observed actual model: requested `gpt-5.6-sol` at high effort; the runtime did not independently expose the actual model/effort, and no substitution was reported. No nested delegation.
 - Authorized actions and test environment; live-change boundary: source edits, pure host compilation/tests and read-only source review are authorized. No desktop mutation or guest claim.
 - Dependencies verified against: local `CLAUDE.md`, `docs/plans/v1/execution.md`, `docs/plans/v1/01-window-policy.md`, `docs/research/agent-window-ownership-2026-09-12.md` D1, accepted P0 fixture evidence and current `spike/p0` source.
 

@@ -6,7 +6,7 @@ Status: source and pure-host proof complete; disposable guest UI not run by this
 
 - Winmakase source: `bea1f00bd300dbcdac8ad8570dd613248b4e128e`, branch `p0-dialog-proof`, clean before this slice.
 - Glaze source inspected read-only: `dd8fb7d515eb73c7dc1210076922e75c742bb702`, `D:/dev/glazewm-wt-v1-input`, clean at inspection.
-- Requested worker: Sol builder. Actual runtime identity exposed to this worker: Codex based on GPT-6. No nested delegation or external provider run.
+- Requested worker: `gpt-5.6-sol` at high effort. The runtime did not independently expose the actual model/effort, and no substitution was reported. No nested delegation or external provider run.
 - Shared environment: not claimed or used. Lead session `winmakase-crashdown` owns `env:winmakase-uat`.
 
 ## Delivered proof contract
