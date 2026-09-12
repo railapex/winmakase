@@ -40,12 +40,44 @@ internal sealed class LaunchCapture
     public string[] arguments { get; set; }
 }
 
+internal sealed class WindowRegistrationCapture
+{
+    public int schemaVersion { get; set; }
+    public string fixtureId { get; set; }
+    public int processId { get; set; }
+    public string[] arguments { get; set; }
+    public RegisteredFixtureWindow[] windows { get; set; }
+}
+
+internal sealed class RegisteredFixtureWindow
+{
+    public string role { get; set; }
+    public string title { get; set; }
+    public long handle { get; set; }
+    public IntendedWindowFacts intended { get; set; }
+}
+
+internal sealed class IntendedWindowFacts
+{
+    public string classification { get; set; }
+    public string ownerRole { get; set; }
+    public bool modal { get; set; }
+    public bool resizable { get; set; }
+    public bool showInTaskbar { get; set; }
+    public string formBorderStyle { get; set; }
+}
+
 internal static class Program
 {
     private const string GuestUser = "WDAGUtilityAccount";
     private const string GuestConsent = "DISPOSABLE-WINDOWS-GUEST";
     private const string MarkerName = ".winmakase-p0-fixture-root";
     private const string MarkerValue = "winmakase-p0-disposable-fixture-v1";
+    private static readonly object RegistrationLock = new object();
+    private static readonly Dictionary<string, RegisteredFixtureWindow> RegisteredWindows =
+        new Dictionary<string, RegisteredFixtureWindow>(StringComparer.Ordinal);
+    private static readonly Dictionary<string, Form> OpenWindows =
+        new Dictionary<string, Form>(StringComparer.Ordinal);
 
     [STAThread]
     private static int Main(string[] args)
@@ -67,7 +99,7 @@ internal static class Program
 
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(CreateMainWindow(manifest, action));
+        Application.Run(CreateMainWindow(fixtureRoot, manifest, action, args));
         return 0;
     }
 
@@ -198,7 +230,11 @@ internal static class Program
         File.WriteAllText(capturePath, serializer.Serialize(capture), new UTF8Encoding(false));
     }
 
-    private static Form CreateMainWindow(FixtureManifest manifest, FixtureAction action)
+    private static Form CreateMainWindow(
+        string fixtureRoot,
+        FixtureManifest manifest,
+        FixtureAction action,
+        string[] args)
     {
         Form main = new Form
         {
@@ -210,6 +246,20 @@ internal static class Program
             FormBorderStyle = FormBorderStyle.Sizable,
             MaximizeBox = true,
             MinimizeBox = true
+        };
+        main.Shown += delegate
+        {
+            RegisterWindow(
+                fixtureRoot,
+                action,
+                args,
+                main,
+                "main",
+                "main",
+                null,
+                false,
+                true,
+                true);
         };
 
         Label summary = new Label
@@ -223,15 +273,24 @@ internal static class Program
         main.Controls.Add(summary);
 
         Button ownedButton = MakeButton("Owned dialog", 24, 120);
-        ownedButton.Click += delegate { ShowOwnedDialog(main, manifest, false); };
+        ownedButton.Click += delegate
+        {
+            ShowOwnedDialog(fixtureRoot, action, args, main, manifest, false);
+        };
         main.Controls.Add(ownedButton);
 
         Button modalButton = MakeButton("Modal dialog", 184, 120);
-        modalButton.Click += delegate { ShowOwnedDialog(main, manifest, true); };
+        modalButton.Click += delegate
+        {
+            ShowOwnedDialog(fixtureRoot, action, args, main, manifest, true);
+        };
         main.Controls.Add(modalButton);
 
         Button utilityButton = MakeButton("Utility popup", 344, 120);
-        utilityButton.Click += delegate { ShowUtility(main, manifest); };
+        utilityButton.Click += delegate
+        {
+            ShowUtility(fixtureRoot, action, args, main, manifest);
+        };
         main.Controls.Add(utilityButton);
 
         main.Shown += delegate
@@ -240,15 +299,15 @@ internal static class Program
             {
                 if (action.expectedCapture.window == "owned")
                 {
-                    ShowOwnedDialog(main, manifest, false);
+                    ShowOwnedDialog(fixtureRoot, action, args, main, manifest, false);
                 }
                 else if (action.expectedCapture.window == "modal")
                 {
-                    ShowOwnedDialog(main, manifest, true);
+                    ShowOwnedDialog(fixtureRoot, action, args, main, manifest, true);
                 }
                 else if (action.expectedCapture.window == "utility")
                 {
-                    ShowUtility(main, manifest);
+                    ShowUtility(fixtureRoot, action, args, main, manifest);
                 }
             });
         };
@@ -265,8 +324,19 @@ internal static class Program
         };
     }
 
-    private static void ShowOwnedDialog(Form owner, FixtureManifest manifest, bool modal)
+    private static void ShowOwnedDialog(
+        string fixtureRoot,
+        FixtureAction action,
+        string[] args,
+        Form owner,
+        FixtureManifest manifest,
+        bool modal)
     {
+        string role = modal ? "modal" : "owned";
+        if (TryActivateOpenWindow(role))
+        {
+            return;
+        }
         Form dialog = new Form
         {
             Text = manifest.fixedTitles[modal ? "modal" : "owned"],
@@ -277,6 +347,24 @@ internal static class Program
             MinimizeBox = false,
             ShowInTaskbar = false,
             StartPosition = FormStartPosition.CenterParent
+        };
+        dialog.Shown += delegate
+        {
+            RegisterWindow(
+                fixtureRoot,
+                action,
+                args,
+                dialog,
+                role,
+                "dialog",
+                "main",
+                modal,
+                false,
+                false);
+        };
+        dialog.FormClosed += delegate
+        {
+            UnregisterWindow(fixtureRoot, action, args, role, dialog);
         };
         dialog.Controls.Add(new Label
         {
@@ -300,8 +388,17 @@ internal static class Program
         }
     }
 
-    private static void ShowUtility(Form owner, FixtureManifest manifest)
+    private static void ShowUtility(
+        string fixtureRoot,
+        FixtureAction action,
+        string[] args,
+        Form owner,
+        FixtureManifest manifest)
     {
+        if (TryActivateOpenWindow("utility"))
+        {
+            return;
+        }
         Form utility = new Form
         {
             Text = manifest.fixedTitles["utility"],
@@ -314,6 +411,24 @@ internal static class Program
             StartPosition = FormStartPosition.Manual,
             Location = new Point(owner.Right - 340, owner.Top + 64)
         };
+        utility.Shown += delegate
+        {
+            RegisterWindow(
+                fixtureRoot,
+                action,
+                args,
+                utility,
+                "utility",
+                "utility",
+                "main",
+                false,
+                false,
+                false);
+        };
+        utility.FormClosed += delegate
+        {
+            UnregisterWindow(fixtureRoot, action, args, "utility", utility);
+        };
         utility.Controls.Add(new Label
         {
             AutoSize = true,
@@ -324,5 +439,101 @@ internal static class Program
         close.Click += delegate { utility.Close(); };
         utility.Controls.Add(close);
         utility.Show(owner);
+    }
+
+    private static void RegisterWindow(
+        string fixtureRoot,
+        FixtureAction action,
+        string[] args,
+        Form form,
+        string role,
+        string classification,
+        string ownerRole,
+        bool modal,
+        bool resizable,
+        bool showInTaskbar)
+    {
+        RegisteredFixtureWindow window = new RegisteredFixtureWindow
+        {
+            role = role,
+            title = form.Text,
+            handle = form.Handle.ToInt64(),
+            intended = new IntendedWindowFacts
+            {
+                classification = classification,
+                ownerRole = ownerRole,
+                modal = modal,
+                resizable = resizable,
+                showInTaskbar = showInTaskbar,
+                formBorderStyle = form.FormBorderStyle.ToString()
+            }
+        };
+
+        lock (RegistrationLock)
+        {
+            RegisteredWindows[role] = window;
+            OpenWindows[role] = form;
+            WriteWindowRegistrations(fixtureRoot, action, args);
+        }
+    }
+
+    private static void UnregisterWindow(
+        string fixtureRoot,
+        FixtureAction action,
+        string[] args,
+        string role,
+        Form form)
+    {
+        lock (RegistrationLock)
+        {
+            Form openWindow;
+            if (!OpenWindows.TryGetValue(role, out openWindow) ||
+                !Object.ReferenceEquals(openWindow, form))
+            {
+                return;
+            }
+            OpenWindows.Remove(role);
+            RegisteredWindows.Remove(role);
+            WriteWindowRegistrations(fixtureRoot, action, args);
+        }
+    }
+
+    private static bool TryActivateOpenWindow(string role)
+    {
+        Form form;
+        if (!OpenWindows.TryGetValue(role, out form) || form.IsDisposed)
+        {
+            return false;
+        }
+        form.Activate();
+        return true;
+    }
+
+    private static void WriteWindowRegistrations(
+        string fixtureRoot,
+        FixtureAction action,
+        string[] args)
+    {
+        List<RegisteredFixtureWindow> ordered = new List<RegisteredFixtureWindow>();
+        foreach (string role in new[] { "main", "owned", "modal", "utility" })
+        {
+            RegisteredFixtureWindow window;
+            if (RegisteredWindows.TryGetValue(role, out window))
+            {
+                ordered.Add(window);
+            }
+        }
+
+        WindowRegistrationCapture capture = new WindowRegistrationCapture
+        {
+            schemaVersion = 1,
+            fixtureId = action.id,
+            processId = System.Diagnostics.Process.GetCurrentProcess().Id,
+            arguments = args,
+            windows = ordered.ToArray()
+        };
+        string path = Path.Combine(fixtureRoot, "data", action.id + "-windows.json");
+        JavaScriptSerializer serializer = new JavaScriptSerializer();
+        File.WriteAllText(path, serializer.Serialize(capture), new UTF8Encoding(false));
     }
 }

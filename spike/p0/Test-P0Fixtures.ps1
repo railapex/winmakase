@@ -4,6 +4,7 @@ param()
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSScriptRoot 'Fixture.Common.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'DialogProof.Common.psm1') -Force
 
 $script:Assertions = 0
 function Assert-True {
@@ -72,6 +73,17 @@ try {
     Assert-Equal 0 $LASTEXITCODE 'fixture app compiles with inbox compiler'
     Assert-True (Test-Path -LiteralPath $executable -PathType Leaf) 'fixture executable was produced'
 
+    $dialogInterop = Join-Path $testRoot 'bin/DialogFactInterop.dll'
+    & $compiler @(
+        '/nologo',
+        '/target:library',
+        '/reference:System.dll',
+        "/out:$dialogInterop",
+        (Join-Path $PSScriptRoot 'DialogFactInterop.cs')
+    )
+    Assert-Equal 0 $LASTEXITCODE 'dialog fact interop compiles with inbox compiler'
+    Assert-True (Test-Path -LiteralPath $dialogInterop -PathType Leaf) 'dialog fact interop assembly was produced'
+
     $expectationPath = & (Join-Path $PSScriptRoot 'New-LauncherFixtures.ps1') `
         -FixtureRoot $testRoot `
         -ExecutablePath $executable
@@ -114,6 +126,142 @@ try {
     }
     Assert-Equal 41 $process.ExitCode 'compiled app rejects a non-Sandbox host before UI or writes'
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $testRoot 'data'))) 'host guard produced no capture data'
+
+    $captureRejectedHost = $false
+    try {
+        & (Join-Path $PSScriptRoot 'Capture-P0DialogProof.ps1') `
+            -FixtureRoot $testRoot `
+            -ActionId owned-dialog `
+            -Phase initial `
+            -GlazeExecutablePath $executable `
+            -ConsentToken DISPOSABLE-WINDOWS-GUEST
+    }
+    catch {
+        $captureRejectedHost = $_.Exception.Message -match 'Windows Sandbox guest'
+    }
+    Assert-True $captureRejectedHost 'dialog capture rejects host before HWND or Glaze access'
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $testRoot 'data/dialog-proof'))) 'host capture rejection writes no proof data'
+
+    $compareRejectedHost = $false
+    try {
+        & (Join-Path $PSScriptRoot 'Compare-P0DialogProof.ps1') `
+            -FixtureRoot $testRoot `
+            -ActionId owned-dialog `
+            -BeforePhase initial `
+            -AfterPhase after-reload `
+            -ConsentToken DISPOSABLE-WINDOWS-GUEST
+    }
+    catch {
+        $compareRejectedHost = $_.Exception.Message -match 'Windows Sandbox guest'
+    }
+    Assert-True $compareRejectedHost 'dialog comparison rejects host before file access'
+
+    $registrations = @(
+        [pscustomobject]@{ role = 'main'; title = 'Winmakase P0 Fixture - Main'; handle = 101 },
+        [pscustomobject]@{ role = 'owned'; title = 'Winmakase P0 Fixture - Owned Dialog'; handle = 202 }
+    )
+    $glazeResponse = @'
+{
+  "messageType": "client_response",
+  "data": {
+    "workspaces": [
+      {
+        "type": "workspace",
+        "id": "workspace-2",
+        "name": "2",
+        "children": [
+          {
+            "type": "window",
+            "id": "main-id",
+            "parentId": "workspace-2",
+            "handle": 101,
+            "title": "Winmakase P0 Fixture - Main",
+            "processName": "WinmakaseP0Fixture",
+            "className": "FixtureClass",
+            "appUserModelId": "",
+            "state": { "type": "tiling" },
+            "prevState": null,
+            "displayState": "shown",
+            "hasFocus": true,
+            "x": 10, "y": 20, "width": 700, "height": 400,
+            "floatingPlacement": { "x": 40, "y": 50, "width": 700, "height": 400 }
+          },
+          {
+            "type": "window",
+            "id": "owned-id",
+            "parentId": "workspace-2",
+            "handle": 202,
+            "title": "Winmakase P0 Fixture - Owned Dialog",
+            "processName": "WinmakaseP0Fixture",
+            "className": "FixtureClass",
+            "appUserModelId": "",
+            "state": { "type": "floating" },
+            "prevState": null,
+            "displayState": "shown",
+            "hasFocus": false,
+            "x": 120, "y": 100, "width": 380, "height": 150,
+            "floatingPlacement": { "x": 120, "y": 100, "width": 380, "height": 150 }
+          },
+          {
+            "type": "window",
+            "id": "unrelated-id",
+            "parentId": "workspace-2",
+            "handle": 303,
+            "title": "Unrelated",
+            "processName": "other",
+            "state": { "type": "tiling" },
+            "displayState": "shown",
+            "hasFocus": false,
+            "x": 0, "y": 0, "width": 1, "height": 1
+          }
+        ]
+      }
+    ]
+  },
+  "success": true
+}
+'@ | ConvertFrom-Json
+    $fixtureGlaze = @(Select-P0FixtureGlazeState -GlazeResponse $glazeResponse -Registrations $registrations)
+    Assert-Equal 2 $fixtureGlaze.Count 'Glaze readout contains only registered fixture HWNDs'
+    Assert-Equal '2' $fixtureGlaze[0].workspaceName 'main workspace is derived from recursive Glaze state'
+    Assert-Equal 'floating' $fixtureGlaze[1].stateType 'dialog state is retained in fixture-only Glaze data'
+    Assert-True $fixtureGlaze[1].managed 'registered dialog is marked managed'
+
+    $beforeProof = [pscustomobject]@{
+        schemaVersion = 1
+        fixtureId = 'owned-dialog'
+        phase = 'initial'
+        nativeWindows = @(
+            [pscustomobject]@{
+                role = 'main'
+                intended = [pscustomobject]@{ ownerRole = ''; resizable = $true }
+                observed = [pscustomobject]@{
+                    handle = 101; ownerHandle = 0; isResizable = $true
+                    className = 'FixtureClass'; styleHex = '0x1'; extendedStyleHex = '0x0'
+                }
+            },
+            [pscustomobject]@{
+                role = 'owned'
+                intended = [pscustomobject]@{ ownerRole = 'main'; resizable = $false }
+                observed = [pscustomobject]@{
+                    handle = 202; ownerHandle = 101; isResizable = $false
+                    className = 'FixtureClass'; styleHex = '0x2'; extendedStyleHex = '0x1'
+                }
+            }
+        )
+        glazeWindows = $fixtureGlaze
+    }
+    $afterProof = $beforeProof | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $afterProof.phase = 'after-reload'
+    $comparison = Compare-P0DialogProofObjects -Before $beforeProof -After $afterProof
+    Assert-Equal 'pass' $comparison.verdict 'unchanged fixture state passes reload comparison'
+    Assert-True $comparison.windows[1].sameWorkspaceAsNativeOwner 'owned dialog remains with main workspace'
+
+    $changedProof = $afterProof | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $changedProof.glazeWindows[1].stateType = 'tiling'
+    $failedComparison = Compare-P0DialogProofObjects -Before $beforeProof -After $changedProof
+    Assert-Equal 'fail' $failedComparison.verdict 'dialog state change fails reload comparison'
+    Assert-True (@($failedComparison.failures) -contains 'owned reload state') 'reload failure names changed dialog state'
 
     Write-Output "PASS: $script:Assertions assertions; no fixture UI launched."
 }

@@ -31,8 +31,12 @@ if (-not $canonicalGuestRoot.Equals('C:\WinmakaseP0', [System.StringComparison]:
 $allowedSources = @(
     'Fixture.Common.psm1',
     'FixtureApp.cs',
+    'DialogFactInterop.cs',
+    'DialogProof.Common.psm1',
     'ShortcutInterop.cs',
     'fixture-actions.json',
+    'Capture-P0DialogProof.ps1',
+    'Compare-P0DialogProof.ps1',
     'New-LauncherFixtures.ps1',
     'Start-P0Fixture.ps1',
     'Publish-P0GuestShortcuts.ps1'

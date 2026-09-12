@@ -13,6 +13,8 @@ The executable exposes four deterministic actions through one binary:
 
 Each accepted invocation replaces `C:\WinmakaseP0\data\<action>.json`. The file contains only the checked-in fixture ID, window mode, profile label and exact checked-in argument array. The app rejects unknown action tuples. It does not inspect the environment, copy configuration or accept arbitrary capture fields.
 
+While an accepted action is open, the app also writes `data/<action>-windows.json`. That registration contains only the action's exact checked-in arguments, process ID, exact fixture HWNDs/titles and intended role facts. It does not enumerate other windows. `Capture-P0DialogProof.ps1` re-reads only those registered HWNDs, rejects PID/title reuse, records native owner/style/geometry facts, queries Glaze read-only, and emits only matching fixture windows from the recursive workspace response.
+
 ## Pure host check
 
 ```powershell
@@ -39,5 +41,23 @@ This does not open fixture UI or alter the desktop, Start Menu, PowerToys or Win
    ```
 
 6. Compare each `data/<action>.json` with the corresponding `expectedCapture` in `expectations.json`. Close Windows Sandbox to discard the guest and its Start Menu publication.
+
+## D1 dialog and reload capture
+
+Run one action at a time and leave its windows open. Capture the settled initial state with the guest's exact `glazewm.exe` path:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\WinmakaseP0\source\Capture-P0DialogProof.ps1 -FixtureRoot C:\WinmakaseP0 -ActionId owned-dialog -Phase initial -GlazeExecutablePath C:\path\to\glazewm.exe -ConsentToken DISPOSABLE-WINDOWS-GUEST
+```
+
+For reload preservation, arrange the main window in the test workspace/state, capture `before-reload`, invoke the lead-owned fixture stack's normal reload action, wait for it to settle, then capture `after-reload`. Compare the two fixture-only captures:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\WinmakaseP0\source\Compare-P0DialogProof.ps1 -FixtureRoot C:\WinmakaseP0 -ActionId owned-dialog -BeforePhase before-reload -AfterPhase after-reload -ConsentToken DISPOSABLE-WINDOWS-GUEST
+```
+
+Repeat for `unicode-modal` and `utility-popup`. The native record distinguishes main, owned modeless, owned modal and utility intent; observed facts include HWND, owner/root-owner HWND, PID/TID, exact title/class, style/ex-style, resizability, visibility and rectangle. The Glaze subset records managed/unmanaged status, workspace, state, parent ID, display/focus state and geometry. The comparison reports native ownership/style mismatches, parent-workspace separation and state/workspace/geometry/Glaze-parent changes across reload. A missing Glaze representation is `incomplete`, because an explicit utility policy may intentionally leave a tool window unmanaged.
+
+The probe does not apply or reload config. It never persists the unfiltered Glaze response. The operator owns fixture policy, parent moves and reload timing; named phases are evidence labels, not commands.
 
 All mutating/UI entry points require the literal consent token, the Sandbox-only `WDAGUtilityAccount`, the exact guest root `C:\WinmakaseP0`, and the fixture marker. The raw executable repeats these checks before WinForms initialization. The unguarded shortcut generator can write only beneath an explicit marked fixture directory; it has no Start Menu default.
