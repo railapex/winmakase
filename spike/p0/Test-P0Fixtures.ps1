@@ -103,6 +103,7 @@ try {
     $glazeStub = Join-Path $testRoot 'bin/glazewm.exe'
     @'
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -124,6 +125,19 @@ internal static class GlazeQueryStub
                 stderr.Write(error, 0, error.Length);
             }
             return 23;
+        }
+        if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "inherit-pipe")))
+        {
+            Process child = Process.Start(new ProcessStartInfo
+            {
+                FileName = Environment.GetEnvironmentVariable("ComSpec"),
+                Arguments = "/d /c ping 127.0.0.1 -n 4 >nul",
+                WorkingDirectory = Path.GetTempPath(),
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            child.Dispose();
+            return 0;
         }
         byte[] payload = Encoding.UTF8.GetBytes("{\"success\":true,\"data\":{\"workspaces\":[]}}");
         using (Stream stdout = Console.OpenStandardOutput())
@@ -154,6 +168,22 @@ internal static class GlazeQueryStub
         $stubTimedOut = $_.Exception.Message -match 'exceeded 10 ms'
     }
     Assert-True $stubTimedOut 'GUI-subsystem query has a bounded timeout'
+    $inheritPipeMarker = Join-Path (Split-Path -Parent $glazeStub) 'inherit-pipe'
+    Set-Content -LiteralPath $inheritPipeMarker -Value '1' -NoNewline
+    $inheritedPipeTimedOut = $false
+    $inheritedPipeTimer = [System.Diagnostics.Stopwatch]::StartNew()
+    try {
+        [void] (Invoke-P0GlazeQueryProcess -GlazeExecutablePath $glazeStub -TimeoutMilliseconds 500)
+    }
+    catch {
+        $inheritedPipeTimedOut = $_.Exception.Message -match 'exceeded 500 ms'
+    }
+    finally {
+        $inheritedPipeTimer.Stop()
+        Remove-Item -LiteralPath $inheritPipeMarker -Force
+    }
+    Assert-True $inheritedPipeTimedOut 'inherited pipe handles cannot extend the query deadline'
+    Assert-True ($inheritedPipeTimer.ElapsedMilliseconds -lt 1500) 'inherited pipe timeout returns near the 500 ms deadline'
     Set-Content -LiteralPath (Join-Path (Split-Path -Parent $glazeStub) 'fail-query') -Value '1' -NoNewline
     $stubFailureReported = $false
     try {

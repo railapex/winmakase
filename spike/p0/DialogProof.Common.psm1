@@ -57,23 +57,28 @@ function Invoke-P0GlazeQueryProcess {
 
     $process = New-Object System.Diagnostics.Process
     $process.StartInfo = $startInfo
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     try {
         if (-not $process.Start()) {
             throw 'Could not start glazewm query process.'
         }
         $stdoutTask = $process.StandardOutput.ReadToEndAsync()
         $stderrTask = $process.StandardError.ReadToEndAsync()
-        if (-not $process.WaitForExit($TimeoutMilliseconds)) {
-            try {
-                $process.Kill()
-                [void] $process.WaitForExit(5000)
-            }
-            catch {
-                # Preserve the bounded timeout error below; cleanup is best effort.
-            }
+        $remaining = $TimeoutMilliseconds - [int] $stopwatch.ElapsedMilliseconds
+        if ($remaining -le 0 -or -not $process.WaitForExit($remaining)) {
+            Close-P0QueryReaders -Process $process
+            Stop-P0QueryProcess -Process $process
             throw "glazewm query workspaces exceeded $TimeoutMilliseconds ms."
         }
 
+        $remaining = $TimeoutMilliseconds - [int] $stopwatch.ElapsedMilliseconds
+        $readerTasks = [System.Threading.Tasks.Task[]]@($stdoutTask, $stderrTask)
+        if ($remaining -le 0 -or
+            -not [System.Threading.Tasks.Task]::WaitAll($readerTasks, $remaining)) {
+            Close-P0QueryReaders -Process $process
+            Stop-P0QueryProcess -Process $process
+            throw "glazewm query workspaces exceeded $TimeoutMilliseconds ms."
+        }
         $stdout = $stdoutTask.GetAwaiter().GetResult()
         $stderr = $stderrTask.GetAwaiter().GetResult()
         $exitCode = $process.ExitCode
@@ -90,7 +95,30 @@ function Invoke-P0GlazeQueryProcess {
         return [string] $stdout
     }
     finally {
+        $stopwatch.Stop()
         $process.Dispose()
+    }
+}
+
+function Close-P0QueryReaders {
+    param([Parameter(Mandatory)] $Process)
+
+    try { $Process.StandardOutput.Close() } catch {}
+    try { $Process.StandardError.Close() } catch {}
+}
+
+function Stop-P0QueryProcess {
+    param([Parameter(Mandatory)] $Process)
+
+    try {
+        if (-not $Process.HasExited) {
+            # Kill only the exact query process. Descendants are outside this
+            # fixture's ownership and may merely have inherited a pipe handle.
+            $Process.Kill()
+        }
+    }
+    catch {
+        # Preserve the timeout result. Disposal below releases our handle.
     }
 }
 
