@@ -74,7 +74,7 @@ For supported owned output, preserve the human tree, proportions, geometry and f
 
 Automatic Claude/Codex browser-tab/group relocation is deferred from this first cut. Existing provider-created tabs inside personal browser windows remain under provider/user placement. A later same-profile agent window can be revisited separately; no extension integration or CUA group-moving workflow is required for P1.
 
-No ownership mechanism is implemented or approved as a new service. R1 covers twenty creation/destruction cycles for the P0-supported classes, concurrent sessions, human negative controls, late windows, authentication handoff, inspection/return, observer restart and expired identities. Record unsupported surfaces explicitly; do not claim universal routing. Dialog precedence/reload correction proceeds independently of this work.
+No ownership mechanism is wired into production or approved as a new service. The [accepted bounded sequence-feed prototype](../../verification/v1/2026-09-12-agent-proof/README.md) rejects unsafe retrospective timestamp ancestry and retains only edges proven by adjacent complete observations. Provider discovery and placement remain open. R1 covers twenty creation/destruction cycles for the P0-supported classes, concurrent sessions, human negative controls, late windows, authentication handoff, inspection/return, observer restart and expired identities. Record unsupported surfaces explicitly; do not claim universal routing. Dialog precedence/reload correction proceeds independently of this work; the [guest failure captures](../../verification/v1/2026-09-12-p0/dialog-runtime.md) are its regression target.
 
 ## Verification cases
 

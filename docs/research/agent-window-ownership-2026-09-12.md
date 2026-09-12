@@ -1,6 +1,14 @@
 # Agent output windows: ownership and proof plan
 
-Status: source/design review only. No ancestry, placement or inactive-workspace input experiment has passed. Chris wants visible output without repeated human-layout changes. Agent conversations already live mainly in Muxel. Automatic browser-tab/group movement is deferred from the first cut.
+Status: bounded sequence-ancestry prototype accepted; full A1–A4 remain open. D1 guest failures are reproduced. Chris wants visible output without repeated human-layout changes. Agent conversations already live mainly in Muxel. Automatic browser-tab/group movement is deferred from the first cut.
+
+## First build checkpoint
+
+The [reviewed sequence-feed prototype](../verification/v1/2026-09-12-agent-proof/README.md) is integrated through `b236794`. Review rejected retrospective timestamp ordering: clock rollback plus PID reuse can create false ancestry. The replacement uses unique process sequences and admits an edge only when the same parent identity exists in adjacent complete observations before a previously absent child appears. It returns unknown across missed history and is capability-gated; no timestamp fallback. A controlled fixture retained two observed edges after ancestor exit. Median fresh snapshot-to-answer is 0.6611 ms. Automatic provider discovery, event cadence, HWND/admission and A3 coverage remain unproved.
+
+The [guest batch](../verification/v1/2026-09-12-p0/README.md) verified Run shortcuts/activation and [reproduced D1](../verification/v1/2026-09-12-p0/dialog-runtime.md): broad home rules tile fixed dialogs and reload undoes an arranged main window. A hidden-parent dialog remained outside Glaze; a retained native button could create it, but fresh UIA discovery from the hidden main found no matching control. That isolated result does not pass A3.
+
+The research recommendations below record the earlier candidate selection. Their retrospective creation-time prototype and unmeasured full-lookup status are superseded by these results; provider/static-source findings remain applicable.
 
 ## First research pass completed
 

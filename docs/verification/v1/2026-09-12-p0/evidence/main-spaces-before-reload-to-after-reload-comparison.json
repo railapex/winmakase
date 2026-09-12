@@ -1,0 +1,43 @@
+{
+    "schemaVersion":  2,
+    "fixtureId":  "main-spaces",
+    "beforePhase":  "before-reload",
+    "afterPhase":  "after-reload",
+    "verdict":  "fail",
+    "processIdentityPreserved":  true,
+    "windows":  [
+                    {
+                        "role":  "main",
+                        "nativeOwnerMatchesIntended":  true,
+                        "nativeResizableMatchesIntended":  true,
+                        "nativeHandlePreserved":  true,
+                        "nativeCaptureLifetimeStable":  true,
+                        "nativeLifetimePreserved":  true,
+                        "nativeStylesPreserved":  true,
+                        "glazeManagedBefore":  true,
+                        "glazeManagedAfter":  true,
+                        "reloadGlazeManagementPreserved":  true,
+                        "beforeStateType":  "floating",
+                        "afterStateType":  "tiling",
+                        "reloadStatePreserved":  false,
+                        "reloadWorkspacePreserved":  false,
+                        "reloadGeometryPreserved":  false,
+                        "reloadParentIdPreserved":  false,
+                        "reloadGlazeIdPreserved":  true,
+                        "reloadDisplayStatePreserved":  false,
+                        "reloadFocusPreserved":  false,
+                        "sameWorkspaceAsNativeOwner":  null
+                    }
+                ],
+    "failures":  [
+                     "main reload state",
+                     "main reload workspace",
+                     "main reload geometry",
+                     "main reload parent",
+                     "main reload display state",
+                     "main reload focus"
+                 ],
+    "incomplete":  [
+
+                   ]
+}

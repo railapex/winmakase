@@ -1,0 +1,156 @@
+﻿{
+    "at":  "2026-09-12T15:05:00.5545213+00:00",
+    "method":  "30 warm event activations; until visible/uncloaked, foreground and UIA Query keyboard focus. Timing includes repeated native/UIA observation, excludes launching the observer. Guest without Glaze management; software rendering and one RDP display. Not physical-input or cold OS benchmark.",
+    "samples":  [
+                    {
+                        "sample":  1,
+                        "ready":  true,
+                        "inputReadyMs":  54.782500000000006
+                    },
+                    {
+                        "sample":  2,
+                        "ready":  true,
+                        "inputReadyMs":  58.0525
+                    },
+                    {
+                        "sample":  3,
+                        "ready":  true,
+                        "inputReadyMs":  36.196000000000005
+                    },
+                    {
+                        "sample":  4,
+                        "ready":  true,
+                        "inputReadyMs":  35.9133
+                    },
+                    {
+                        "sample":  5,
+                        "ready":  true,
+                        "inputReadyMs":  36.0647
+                    },
+                    {
+                        "sample":  6,
+                        "ready":  true,
+                        "inputReadyMs":  35.8496
+                    },
+                    {
+                        "sample":  7,
+                        "ready":  true,
+                        "inputReadyMs":  54.4803
+                    },
+                    {
+                        "sample":  8,
+                        "ready":  true,
+                        "inputReadyMs":  52.8637
+                    },
+                    {
+                        "sample":  9,
+                        "ready":  true,
+                        "inputReadyMs":  53.0944
+                    },
+                    {
+                        "sample":  10,
+                        "ready":  true,
+                        "inputReadyMs":  35.769400000000005
+                    },
+                    {
+                        "sample":  11,
+                        "ready":  true,
+                        "inputReadyMs":  36.683800000000005
+                    },
+                    {
+                        "sample":  12,
+                        "ready":  true,
+                        "inputReadyMs":  35.2074
+                    },
+                    {
+                        "sample":  13,
+                        "ready":  true,
+                        "inputReadyMs":  51.762800000000006
+                    },
+                    {
+                        "sample":  14,
+                        "ready":  true,
+                        "inputReadyMs":  35.6621
+                    },
+                    {
+                        "sample":  15,
+                        "ready":  true,
+                        "inputReadyMs":  41.1087
+                    },
+                    {
+                        "sample":  16,
+                        "ready":  true,
+                        "inputReadyMs":  36.4024
+                    },
+                    {
+                        "sample":  17,
+                        "ready":  true,
+                        "inputReadyMs":  51.790200000000006
+                    },
+                    {
+                        "sample":  18,
+                        "ready":  true,
+                        "inputReadyMs":  36.0463
+                    },
+                    {
+                        "sample":  19,
+                        "ready":  true,
+                        "inputReadyMs":  36.3056
+                    },
+                    {
+                        "sample":  20,
+                        "ready":  true,
+                        "inputReadyMs":  51.792300000000004
+                    },
+                    {
+                        "sample":  21,
+                        "ready":  true,
+                        "inputReadyMs":  36.6283
+                    },
+                    {
+                        "sample":  22,
+                        "ready":  true,
+                        "inputReadyMs":  36.4699
+                    },
+                    {
+                        "sample":  23,
+                        "ready":  true,
+                        "inputReadyMs":  47.5064
+                    },
+                    {
+                        "sample":  24,
+                        "ready":  true,
+                        "inputReadyMs":  36.6672
+                    },
+                    {
+                        "sample":  25,
+                        "ready":  true,
+                        "inputReadyMs":  35.2853
+                    },
+                    {
+                        "sample":  26,
+                        "ready":  true,
+                        "inputReadyMs":  36.6358
+                    },
+                    {
+                        "sample":  27,
+                        "ready":  true,
+                        "inputReadyMs":  35.643100000000004
+                    },
+                    {
+                        "sample":  28,
+                        "ready":  true,
+                        "inputReadyMs":  36.4073
+                    },
+                    {
+                        "sample":  29,
+                        "ready":  true,
+                        "inputReadyMs":  36.1796
+                    },
+                    {
+                        "sample":  30,
+                        "ready":  true,
+                        "inputReadyMs":  29.1946
+                    }
+                ]
+}

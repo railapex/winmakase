@@ -1,19 +1,30 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-12",
+  "updatedAt": "2026-09-12T15:26:00Z",
   "planBaseCommit": "ab32da1",
-  "lastVerifiedBuild": "Glaze 9c8e93b on deployed base 6d62d66 is active and passed the elevated-window recovery scenario. Supervisor adoption fix is active: two regression tests, release build, independent review and live adoption at 69% commit use passed. Future input branch dd8fb7d includes placement recovery; guest binaries remain 371a448.",
-  "stage": "P0 checkpoint: input source and guest artifacts accepted; runtime proofs pending",
+  "lastVerifiedBuild": "Winmakase b236794 includes reviewed dialog probes and the unwired sequence ancestry prototype; integration: 140 library tests passed, 1 explicit taskbar test ignored, 72 fixture assertions passed. Glaze dd8fb7d rebuilt and ran in software-rendered Sandbox. Run: 4 exact argv cases, rename/remove reindexing, 30 warm and 5 process-start activations passed. Dialog tiling/reload failures reproduced. Daily Glaze remains the previously deployed 9c8e93b; no cutover.",
+  "stage": "P0 runtime checkpoint: launcher proofs pass; dialog regression reproduced; ancestry prototype accepted",
   "currentSlice": {
-    "id": "P0.3",
-    "status": "Ready for bounded runtime proofs",
-    "title": "Direct Caps contract and explicit launcher activation",
-    "nextAction": "Rebuild the guest artifacts from reviewed input source including placement recovery, verify Sandbox's first launch, then prove explicit Run activation. WindowsSandbox.exe is now present and cua-driver window discovery passed on 2026-09-12. Physical input, guest operation and launcher acceptance remain open."
+    "id": "P0.D1",
+    "status": "Regression fixtures ready; policy correction next",
+    "title": "Preserve dialog classification and arranged windows across reload",
+    "nextAction": "Implement the bounded owner/resizability and preserve/auto rule correction, stop routine Manage replay, then rerun the dated guest captures. Keep provider discovery/cadence and A2/A3 separate. Input/Run still needs explicit-open key/bar integration and physical/display/elevation acceptance. Resume through the 2026-09-12 handoff and recheck Wire/environment state."
   },
   "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
   "decisions": [],
-  "blockers": [],
+  "blockers": [
+    "Current broad home rules tile fixed owned/modal dialogs and routine reload moves and retiles arranged windows back to policy. D1 correction is required before dependent P1/P3 acceptance.",
+    "R0 remains open: key/bar and physical Caps acceptance, real provider/admission/background input, popup/tray/calendar/split and recovery proofs remain incomplete."
+  ],
   "recentDecisions": [
+    {
+      "title": "Accept sequence ancestry only as an unwired proof",
+      "detail": "Retrospective creation-time ordering was rejected. Unique sequence identities plus adjacent complete observations passed fresh review and bounded fixture tests. Median fresh snapshot-to-answer is 0.6611 ms; provider discovery, event cadence and HWND placement remain unproved."
+    },
+    {
+      "title": "Use native Run shortcuts; guard explicit-open",
+      "detail": "Four same-executable shortcuts preserve exact arguments, including Unicode. Rename/remove reindexing works after Run restart. The activation event toggles, so explicit-open must inspect visibility/focus. No launcher plugin is justified by these results."
+    },
     {
       "title": "Measure agent ancestry before choosing cooperation",
       "detail": "Recognize validated native agent roots independently of Muxel; one Agents workspace needs coarse agent-origin classification. Two Sol research passes selected native snapshot/creation validation as the first prototype, with cooperation only for gaps. Component query timings are recorded, but A1–A4 and placement remain unproved. Browser-group movement is deferred."
@@ -36,6 +47,16 @@
     }
   ],
   "evidence": [
+    {
+      "label": "Launcher and dialog guest runtime checkpoint",
+      "href": "../../verification/v1/2026-09-12-p0/README.md",
+      "detail": "Pinned offline guest runs: four argv cases, rename/remove indexing, warm p95 54.78 ms, five process starts 2.28–2.83 s. Exact dialog/reload failures and native lifetime evidence retained. No R0 or deployment claim."
+    },
+    {
+      "label": "Accepted sequence-feed ancestry prototype",
+      "href": "../../verification/v1/2026-09-12-agent-proof/README.md",
+      "detail": "Worker 460575e accepted; isolated regression correction 5cd8699 integrated through b236794. Native fixture retains two observed edges after ancestor exit. Integration 140 library tests passed; provider recognition and policy wiring remain open."
+    },
     {
       "label": "Accepted Zebar resource baseline",
       "href": "../../verification/v1/2026-09-08-p0/zebar-resources.md",
@@ -83,6 +104,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-12T15:26:00Z",
+      "summary": "First bounded build batch: dialog fixtures and sequence ancestry passed independent review and integration. Software-rendered Sandbox with pinned PowerToys/VC runtime runs rebuilt Glaze dd8fb7d. Launcher exact arguments, restart reindexing and activation samples pass. Dialogs are incorrectly tiled by the broad home rule; reload moves an arranged main from workspace 2 to 1 and floating to tiling without changing identity. New dialog from a hidden parent lacks Glaze representation; A3 remains open. Runtime/source evidence and the next D1 correction are recorded; all package and round gates remain unchecked."
+    },
     {
       "at": "2026-09-12",
       "summary": "Two Sol research passes and independent source review completed. Native provider detection can be prototyped without mandatory wrappers or Muxel; exact conversation labels are optional. Filtered WMI subscriptions failed for this standard token; 100 own-process native identity queries succeeded. Full ancestry/Toolhelp/admission latency remains unmeasured. Existing Manage rules precede final platform_sync, making same-event routing a candidate; no UI or acceptance gate passed. Research artifacts are linked from the ownership proof plan."

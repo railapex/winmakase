@@ -18,12 +18,12 @@
 - Regression failed on prior behavior where applicable: exact-path supervisor lookup tests passed in the library phase. Supervisor integration was environment-blocked by the existing >50% commit-pressure fresh-start gate; no pass is claimed.
 - Unverified cases / failed checks / unresolved defects: automatic provider discovery, provider processes, event cadence/loss, HWND, placement, brokers and observer restart recovery remain outside this prototype. Workspace-wide format and unmodified strict Clippy checks retain their baseline blockers.
 - Independent reviewer and disposition: review cycle 1 rejected timestamp ordering, exited-handle liveness and retrospective parent matching. Review cycle 2 accepted the temporal rule and held on fixed-record extent validation, public-ingestion bounds and native-test skip precision. Those bounded fixes are implemented; fresh review remains lead-owned.
-- Integration checks and accepting owner: lead-owned.
+- Integration checks and accepting owner: lead accepted worker `460575e` after fresh review plus test-only `5cd8699`, integrated through main `b236794`. Lead library check: 140 passed, 1 explicit taskbar test ignored. No production placement wiring.
 
 ## Checkpoint
 
 - Actual HEAD / clean status / claims: base `bea1f00bd300dbcdac8ad8570dd613248b4e128e`; initial prototype `1861586`; sequence fix `44ab088`; final cycle 2 commit/status are reported to the lead after commit; no environment claim.
-- Running processes/tasks and exact owner; cleanup needed: no fixture process remains. The local hook rejected recursive cleanup of two integration scratch directories; three failed example-run directories also remain. All five exact paths are listed in `README.md`; no bypass was attempted.
+- Running processes/tasks and exact owner; cleanup needed: no fixture process remains. The lead completed inspected, nonrecursive cleanup of 17 exact files and seven empty directories after the worker's broad recursive request was rejected. All five historical scratch paths in `README.md` are absent.
 - Decisions for Chris: none at prototype start.
 - Next executable action and its prerequisites: fresh review of the sequence parser, continuity reset, root binding and adjacent-observation edge rule. If accepted, A1 still needs automatic provider candidate discovery and real provider/event coverage before production policy wiring.
 - Next recenter trigger: completed bounded prototype or a shared-interface uncertainty.

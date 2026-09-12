@@ -1,0 +1,41 @@
+﻿{
+    "at":  "2026-09-12T15:10:13.2717350+00:00",
+    "method":  "Five complete guest PowerToys runner/Run process restarts with warm OS/file caches. From Start-Process until event exists, signal, visible/uncloaked Run foreground and UIA Query focus. Observer polling included. Pinned guest Glaze running; nonfixture windows ignored. Not cold boot, physical key or catalog readiness.",
+    "samples":  [
+                    {
+                        "sample":  1,
+                        "ready":  true,
+                        "eventAvailableMs":  181.17700000000002,
+                        "restartToInputReadyMs":  2375.0625,
+                        "runPid":  7424
+                    },
+                    {
+                        "sample":  2,
+                        "ready":  true,
+                        "eventAvailableMs":  128.567,
+                        "restartToInputReadyMs":  2280.5079,
+                        "runPid":  3252
+                    },
+                    {
+                        "sample":  3,
+                        "ready":  true,
+                        "eventAvailableMs":  129.88150000000002,
+                        "restartToInputReadyMs":  2278.1652,
+                        "runPid":  3272
+                    },
+                    {
+                        "sample":  4,
+                        "ready":  true,
+                        "eventAvailableMs":  113.4774,
+                        "restartToInputReadyMs":  2313.9246000000003,
+                        "runPid":  7728
+                    },
+                    {
+                        "sample":  5,
+                        "ready":  true,
+                        "eventAvailableMs":  143.9172,
+                        "restartToInputReadyMs":  2834.5644,
+                        "runPid":  2956
+                    }
+                ]
+}

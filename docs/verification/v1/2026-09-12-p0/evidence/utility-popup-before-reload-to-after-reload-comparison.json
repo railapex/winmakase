@@ -1,0 +1,60 @@
+{
+    "schemaVersion":  2,
+    "fixtureId":  "utility-popup",
+    "beforePhase":  "before-reload",
+    "afterPhase":  "after-reload",
+    "verdict":  "fail",
+    "processIdentityPreserved":  true,
+    "windows":  [
+                    {
+                        "role":  "main",
+                        "nativeOwnerMatchesIntended":  true,
+                        "nativeResizableMatchesIntended":  true,
+                        "nativeHandlePreserved":  true,
+                        "nativeCaptureLifetimeStable":  true,
+                        "nativeLifetimePreserved":  true,
+                        "nativeStylesPreserved":  true,
+                        "glazeManagedBefore":  true,
+                        "glazeManagedAfter":  true,
+                        "reloadGlazeManagementPreserved":  true,
+                        "beforeStateType":  "tiling",
+                        "afterStateType":  "tiling",
+                        "reloadStatePreserved":  true,
+                        "reloadWorkspacePreserved":  true,
+                        "reloadGeometryPreserved":  false,
+                        "reloadParentIdPreserved":  true,
+                        "reloadGlazeIdPreserved":  true,
+                        "reloadDisplayStatePreserved":  true,
+                        "reloadFocusPreserved":  true,
+                        "sameWorkspaceAsNativeOwner":  null
+                    },
+                    {
+                        "role":  "utility",
+                        "nativeOwnerMatchesIntended":  true,
+                        "nativeResizableMatchesIntended":  true,
+                        "nativeHandlePreserved":  true,
+                        "nativeCaptureLifetimeStable":  true,
+                        "nativeLifetimePreserved":  true,
+                        "nativeStylesPreserved":  true,
+                        "glazeManagedBefore":  false,
+                        "glazeManagedAfter":  false,
+                        "reloadGlazeManagementPreserved":  true,
+                        "beforeStateType":  null,
+                        "afterStateType":  null,
+                        "reloadStatePreserved":  null,
+                        "reloadWorkspacePreserved":  null,
+                        "reloadGeometryPreserved":  null,
+                        "reloadParentIdPreserved":  null,
+                        "reloadGlazeIdPreserved":  null,
+                        "reloadDisplayStatePreserved":  null,
+                        "reloadFocusPreserved":  null,
+                        "sameWorkspaceAsNativeOwner":  null
+                    }
+                ],
+    "failures":  [
+                     "main reload geometry"
+                 ],
+    "incomplete":  [
+                       "utility was not represented in both Glaze captures"
+                   ]
+}

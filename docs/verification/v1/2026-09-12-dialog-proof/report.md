@@ -2,6 +2,8 @@
 
 Status: source and pure-host proof complete; disposable guest UI not run by this worker.
 
+Lead follow-up: worker fixes through `16af7d6` passed fresh review and were integrated as `d21584f`; 72 assertions pass in both PowerShell versions and on integration. [Guest runtime captures](../2026-09-12-p0/dialog-runtime.md) now validate the native probe and reproduce policy failures. The production correction remains unimplemented.
+
 ## Baselines and worker
 
 - Winmakase source: `bea1f00bd300dbcdac8ad8570dd613248b4e128e`, branch `p0-dialog-proof`, clean before this slice.

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stagedAt": "2026-09-12T14:14:06.2971608+00:00",
+  "sourceCommit": "dd8fb7d515eb73c7dc1210076922e75c742bb702",
+  "sourceClean": true,
+  "cargoLockSha256": "8881BF13179AA3CC9C7ADE85F7D584D9AA118DB0767C3C2B50F469999794B49A",
+  "rustc": "rustc 1.100.0-nightly (17fd5b8a3 2026-08-28)",
+  "cargo": "cargo 1.100.0-nightly (e8cb624d5 2026-08-22)",
+  "build": {
+    "command": "cargo +nightly build --release --locked --target x86_64-pc-windows-msvc -p wm -p wm-cli -p wm-watcher --bin glazewm --bin glazewm-cli --bin glazewm-watcher",
+    "versionNumber": "3.10.1",
+    "profile": "release",
+    "target": "x86_64-pc-windows-msvc",
+    "defaultFeatures": true,
+    "uiAccess": false,
+    "result": "PASS; 25.63 seconds"
+  },
+  "artifacts": [
+    {
+      "name": "glazewm.exe",
+      "bytes": 8550912,
+      "sha256": "226E0E4BFCD4B308A9415DC6DE011CF0EA1E01EC0E2621A4DC06078D08401BA3"
+    },
+    {
+      "name": "glazewm-cli.exe",
+      "bytes": 4271104,
+      "sha256": "E71C0AB13E95B7096F25DF89CFE3FBC726A14987F63D241A261972B87DF8CE34"
+    },
+    {
+      "name": "glazewm-watcher.exe",
+      "bytes": 4122624,
+      "sha256": "011B14170FE1F203EABF59DA85CA9C5400F466C7824F67553329EF8D0C517D62"
+    }
+  ],
+  "runtime": "Launched successfully in a software-rendered Windows Sandbox after installing pinned VC runtime 14.51.36247.0. CLI workspace query and dialog fixture captures passed; broad home-rule/reload policy failures reproduced. Physical Caps, key/bar, GPU/display and elevation acceptance remain open. No host deployment.",
+  "guestArchive": {
+    "name": "glazewm-p0-dd8fb7d-x64.zip",
+    "bytes": 6480070,
+    "sha256": "8ABC5D6A77FA1BB835A61C0AF9E3B7F898F3529F46F6BCD41F7040F16ACB7C78"
+  }
+}

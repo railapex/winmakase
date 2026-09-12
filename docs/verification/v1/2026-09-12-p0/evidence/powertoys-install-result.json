@@ -1,0 +1,9 @@
+﻿{
+    "startedAt":  "2026-09-12T14:35:32.9466611+00:00",
+    "completed":  true,
+    "elapsedMs":  144992,
+    "installerPid":  2464,
+    "exitCode":  0,
+    "user":  "WDAGUtilityAccount",
+    "networking":  "Disabled by Sandbox config"
+}

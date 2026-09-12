@@ -1,0 +1,25 @@
+general:
+  startup_commands: []
+  shutdown_commands: []
+  config_reload_commands: []
+  cursor_jump: { enabled: false }
+  focus_follows_cursor: false
+  toggle_workspace_on_refocus: false
+  hide_method: cloak
+  show_all_in_taskbar: true
+gaps:
+  inner_gap: 8px
+  outer_gap: { top: 8px, right: 8px, bottom: 8px, left: 8px }
+workspaces:
+  - name: '1'
+  - name: '2'
+  - name: 'Agents'
+window_rules:
+  - commands: ['ignore']
+    match:
+      - window_process: { not_equals: 'WinmakaseP0Fixture' }
+  - commands: ['move --workspace 1', 'set-tiling']
+    on: ['manage']
+    match:
+      - window_process: { equals: 'WinmakaseP0Fixture' }
+keybindings: []

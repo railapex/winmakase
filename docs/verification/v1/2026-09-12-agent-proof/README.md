@@ -1,6 +1,6 @@
 # A1 sequence-feed ancestry prototype
 
-Status: bounded algorithm and controlled native fixture proof passed after review cycle 2 fixes. This does not pass A1, automatic provider recognition, HWND ownership, placement or background input.
+Status: bounded algorithm and controlled native fixture proof passed; fresh review accepted cycle 2 at worker `460575e`, followed by isolated test correction `5cd8699`. Integrated on main through `b236794`; 140 library tests passed with 1 explicit taskbar test ignored. This does not pass A1, automatic provider recognition, HWND ownership, placement or background input.
 
 ## Review correction
 
@@ -59,7 +59,7 @@ The measured full fresh-snapshot cost is recorded separately from lookup against
 - Scoped Clippy with the two known untouched lint classes allowed passed for all `winmakase` targets; `git diff --check` passed.
 - Supervisor process-spawning integration remains environment-blocked by the existing host commit-pressure gate; it was not rerun in this review cycle.
 
-No fixture process remains. The local hook rejected recursive cleanup of the first two paths below. Three failed example-run directories also remain; no bypass was attempted. Exact cleanup targets are:
+No fixture process remains. At worker handoff, a local Friday PreToolUse hook had rejected broad recursive cleanup of the first two paths below; three failed example-run directories were also retained. The lead subsequently inspected every child and confirmed no fixture processes, then removed 17 exact files without recursion and seven verified empty directories. All five paths below are now absent. No automatic approval-review rejection occurred.
 
 - `D:/temp/windows/winmakase-test-110912-2-adopt-bin`
 - `D:/temp/windows/winmakase-test-60720-1-start-failure`

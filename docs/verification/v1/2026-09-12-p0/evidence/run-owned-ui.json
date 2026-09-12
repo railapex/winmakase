@@ -1,0 +1,301 @@
+﻿{
+    "query":  "Winmakase P0 - Owned Dialog",
+    "hwnd":  262788,
+    "elements":  [
+                     {
+                         "name":  "",
+                         "type":  "ControlType.Custom",
+                         "automationId":  "SearchBox",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Winmakase P0 - Owned Dialog",
+                         "type":  "ControlType.Text",
+                         "automationId":  "AutoCompleteTextBlock",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Query",
+                         "type":  "ControlType.Edit",
+                         "automationId":  "QueryTextBox",
+                         "offscreen":  false,
+                         "focused":  true,
+                         "patterns":  [
+                                          "ValuePatternIdentifiers.Pattern",
+                                          "ScrollPatternIdentifiers.Pattern",
+                                          "TextPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Search Icon",
+                         "type":  "ControlType.Text",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "",
+                         "type":  "ControlType.Custom",
+                         "automationId":  "ListBox",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Results",
+                         "type":  "ControlType.List",
+                         "automationId":  "SuggestionsList",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionPatternIdentifiers.Pattern",
+                                          "ScrollPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern",
+                                          "ItemContainerPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Winmakase P0 - Owned Dialog : Application, 4 Appended controls available",
+                         "type":  "ControlType.ListItem",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionItemPatternIdentifiers.Pattern",
+                                          "ScrollItemPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Application Icon",
+                         "type":  "ControlType.Image",
+                         "automationId":  "AppIcon",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Title",
+                         "type":  "ControlType.Text",
+                         "automationId":  "Title",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Subtitle",
+                         "type":  "ControlType.Text",
+                         "automationId":  "Path",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Items Collection",
+                         "type":  "ControlType.List",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionPatternIdentifiers.Pattern",
+                                          "ScrollPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern",
+                                          "ItemContainerPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Run as administrator (Ctrl+Shift+Enter)",
+                         "type":  "ControlType.ListItem",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionItemPatternIdentifiers.Pattern",
+                                          "ScrollItemPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Item",
+                         "type":  "ControlType.Button",
+                         "automationId":  "commandButton",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "InvokePatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Icon",
+                         "type":  "ControlType.Text",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Run as different user (Ctrl+Shift+U)",
+                         "type":  "ControlType.ListItem",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionItemPatternIdentifiers.Pattern",
+                                          "ScrollItemPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Item",
+                         "type":  "ControlType.Button",
+                         "automationId":  "commandButton",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "InvokePatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Icon",
+                         "type":  "ControlType.Text",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Open containing folder (Ctrl+Shift+E)",
+                         "type":  "ControlType.ListItem",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionItemPatternIdentifiers.Pattern",
+                                          "ScrollItemPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Item",
+                         "type":  "ControlType.Button",
+                         "automationId":  "commandButton",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "InvokePatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Icon",
+                         "type":  "ControlType.Text",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Open path in console (Ctrl+Shift+C)",
+                         "type":  "ControlType.ListItem",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionItemPatternIdentifiers.Pattern",
+                                          "ScrollItemPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Item",
+                         "type":  "ControlType.Button",
+                         "automationId":  "commandButton",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "InvokePatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Context Menu Icon",
+                         "type":  "ControlType.Text",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Winmakase P0 - Owned Dialog : Search the web in Microsoft Edge, ",
+                         "type":  "ControlType.ListItem",
+                         "automationId":  "",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SelectionItemPatternIdentifiers.Pattern",
+                                          "ScrollItemPatternIdentifiers.Pattern",
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Application Icon",
+                         "type":  "ControlType.Image",
+                         "automationId":  "AppIcon",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Title",
+                         "type":  "ControlType.Text",
+                         "automationId":  "Title",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     },
+                     {
+                         "name":  "Subtitle",
+                         "type":  "ControlType.Text",
+                         "automationId":  "Path",
+                         "offscreen":  false,
+                         "focused":  false,
+                         "patterns":  [
+                                          "SynchronizedInputPatternIdentifiers.Pattern"
+                                      ]
+                     }
+                 ]
+}
