@@ -383,7 +383,7 @@ mod tests {
             identity_fields(0),
         ]);
         let used = header_size * 2 - 1;
-        assert!(parse_sequence_processes(words.as_ptr().cast(), used, 1).is_err());
+        assert!(parse_sequence_processes(words.as_ptr().cast(), used, 2).is_err());
     }
 
     #[test]
