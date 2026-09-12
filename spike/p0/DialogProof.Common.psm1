@@ -170,14 +170,31 @@ function Find-ProofWindow {
     return $matches[0]
 }
 
+function Test-NativeLifetimeEqual {
+    param($Left, $Right)
+
+    return [long] $Left.handle -ne 0 -and
+        [int] $Left.processId -gt 0 -and
+        [long] $Left.processCreationTimeUtcTicks -gt 0 -and
+        [long] $Left.windowGeneration -gt 0 -and
+        [long] $Right.handle -ne 0 -and
+        [int] $Right.processId -gt 0 -and
+        [long] $Right.processCreationTimeUtcTicks -gt 0 -and
+        [long] $Right.windowGeneration -gt 0 -and
+        [long] $Left.handle -eq [long] $Right.handle -and
+        [int] $Left.processId -eq [int] $Right.processId -and
+        [long] $Left.processCreationTimeUtcTicks -eq [long] $Right.processCreationTimeUtcTicks -and
+        [long] $Left.windowGeneration -eq [long] $Right.windowGeneration
+}
+
 function Compare-P0DialogProofObjects {
     param(
         [Parameter(Mandatory)] $Before,
         [Parameter(Mandatory)] $After
     )
 
-    if ([int] $Before.schemaVersion -ne 1 -or [int] $After.schemaVersion -ne 1) {
-        throw 'Dialog proof schemaVersion must be 1.'
+    if ([int] $Before.schemaVersion -ne 2 -or [int] $After.schemaVersion -ne 2) {
+        throw 'Dialog proof schemaVersion must be 2.'
     }
     if ([string] $Before.fixtureId -cne [string] $After.fixtureId) {
         throw 'Dialog proofs belong to different fixture actions.'
@@ -190,6 +207,16 @@ function Compare-P0DialogProofObjects {
     $rows = @()
     $failures = @()
     $incomplete = @()
+    $proofProcessIdentityPreserved =
+        [int] $Before.processId -gt 0 -and
+        [long] $Before.processCreationTimeUtcTicks -gt 0 -and
+        [int] $After.processId -gt 0 -and
+        [long] $After.processCreationTimeUtcTicks -gt 0 -and
+        [int] $Before.processId -eq [int] $After.processId -and
+        [long] $Before.processCreationTimeUtcTicks -eq [long] $After.processCreationTimeUtcTicks
+    if (-not $proofProcessIdentityPreserved) {
+        $failures += 'proof process identity'
+    }
     foreach ($beforeNative in @($Before.nativeWindows)) {
         $role = [string] $beforeNative.role
         $afterNative = Find-ProofWindow $After.nativeWindows $role
@@ -215,16 +242,36 @@ function Compare-P0DialogProofObjects {
             [bool] $beforeNative.intended.resizable -eq [bool] $beforeNative.observed.isResizable -and
             [bool] $afterNative.intended.resizable -eq [bool] $afterNative.observed.isResizable
         $nativeHandlePreserved = [long] $beforeNative.observed.handle -eq [long] $afterNative.observed.handle
+        $beforeCaptureStable = Test-NativeLifetimeEqual `
+            $beforeNative.observedBeforeGlaze `
+            $beforeNative.observedAfterGlaze
+        $beforeCaptureStable = $beforeCaptureStable -and
+            (Test-NativeLifetimeEqual $beforeNative.observedAfterGlaze $beforeNative.observed)
+        $afterCaptureStable = Test-NativeLifetimeEqual `
+            $afterNative.observedBeforeGlaze `
+            $afterNative.observedAfterGlaze
+        $afterCaptureStable = $afterCaptureStable -and
+            (Test-NativeLifetimeEqual $afterNative.observedAfterGlaze $afterNative.observed)
+        $nativeLifetimePreserved =
+            $beforeCaptureStable -and
+            $afterCaptureStable -and
+            (Test-NativeLifetimeEqual $beforeNative.observed $afterNative.observed) -and
+            [int] $beforeNative.observed.processId -eq [int] $Before.processId -and
+            [long] $beforeNative.observed.processCreationTimeUtcTicks -eq [long] $Before.processCreationTimeUtcTicks -and
+            [int] $afterNative.observed.processId -eq [int] $After.processId -and
+            [long] $afterNative.observed.processCreationTimeUtcTicks -eq [long] $After.processCreationTimeUtcTicks
         $nativeStylePreserved =
             [string] $beforeNative.observed.className -ceq [string] $afterNative.observed.className -and
             [string] $beforeNative.observed.styleHex -ceq [string] $afterNative.observed.styleHex -and
             [string] $beforeNative.observed.extendedStyleHex -ceq [string] $afterNative.observed.extendedStyleHex
 
         $managedBoth = [bool] $beforeGlaze.managed -and [bool] $afterGlaze.managed
+        $glazeManagementPreserved = [bool] $beforeGlaze.managed -eq [bool] $afterGlaze.managed
         $statePreserved = $null
         $workspacePreserved = $null
         $geometryPreserved = $null
         $glazeParentPreserved = $null
+        $glazeIdPreserved = $null
         $displayStatePreserved = $null
         $focusPreserved = $null
         $sameOwnerWorkspace = $null
@@ -237,6 +284,9 @@ function Compare-P0DialogProofObjects {
                 [int] $beforeGlaze.width -eq [int] $afterGlaze.width -and
                 [int] $beforeGlaze.height -eq [int] $afterGlaze.height
             $glazeParentPreserved = [string] $beforeGlaze.parentId -ceq [string] $afterGlaze.parentId
+            $glazeIdPreserved =
+                -not [string]::IsNullOrEmpty([string] $beforeGlaze.id) -and
+                [string] $beforeGlaze.id -ceq [string] $afterGlaze.id
             $displayStatePreserved = [string] $beforeGlaze.displayState -ceq [string] $afterGlaze.displayState
             $focusPreserved = [bool] $beforeGlaze.hasFocus -eq [bool] $afterGlaze.hasFocus
             if (-not [string]::IsNullOrEmpty($ownerRole)) {
@@ -257,11 +307,15 @@ function Compare-P0DialogProofObjects {
             @{ name = "$role native owner"; value = $beforeOwnerMatches -and $afterOwnerMatches },
             @{ name = "$role native resizable style"; value = $nativeStyleMatches },
             @{ name = "$role native HWND"; value = $nativeHandlePreserved },
+            @{ name = "$role native capture lifetime"; value = $beforeCaptureStable -and $afterCaptureStable },
+            @{ name = "$role native lifetime"; value = $nativeLifetimePreserved },
             @{ name = "$role native styles"; value = $nativeStylePreserved },
+            @{ name = "$role reload Glaze management"; value = $glazeManagementPreserved },
             @{ name = "$role reload state"; value = $statePreserved },
             @{ name = "$role reload workspace"; value = $workspacePreserved },
             @{ name = "$role reload geometry"; value = $geometryPreserved },
             @{ name = "$role reload parent"; value = $glazeParentPreserved },
+            @{ name = "$role reload Glaze ID"; value = $glazeIdPreserved },
             @{ name = "$role reload display state"; value = $displayStatePreserved },
             @{ name = "$role reload focus"; value = $focusPreserved },
             @{ name = "$role owner workspace"; value = $sameOwnerWorkspace }
@@ -276,15 +330,19 @@ function Compare-P0DialogProofObjects {
             nativeOwnerMatchesIntended = $beforeOwnerMatches -and $afterOwnerMatches
             nativeResizableMatchesIntended = $nativeStyleMatches
             nativeHandlePreserved = $nativeHandlePreserved
+            nativeCaptureLifetimeStable = $beforeCaptureStable -and $afterCaptureStable
+            nativeLifetimePreserved = $nativeLifetimePreserved
             nativeStylesPreserved = $nativeStylePreserved
             glazeManagedBefore = [bool] $beforeGlaze.managed
             glazeManagedAfter = [bool] $afterGlaze.managed
+            reloadGlazeManagementPreserved = $glazeManagementPreserved
             beforeStateType = if ([bool] $beforeGlaze.managed) { [string] $beforeGlaze.stateType } else { $null }
             afterStateType = if ([bool] $afterGlaze.managed) { [string] $afterGlaze.stateType } else { $null }
             reloadStatePreserved = $statePreserved
             reloadWorkspacePreserved = $workspacePreserved
             reloadGeometryPreserved = $geometryPreserved
             reloadParentIdPreserved = $glazeParentPreserved
+            reloadGlazeIdPreserved = $glazeIdPreserved
             reloadDisplayStatePreserved = $displayStatePreserved
             reloadFocusPreserved = $focusPreserved
             sameWorkspaceAsNativeOwner = $sameOwnerWorkspace
@@ -293,11 +351,12 @@ function Compare-P0DialogProofObjects {
 
     $verdict = if ($failures.Count -gt 0) { 'fail' } elseif ($incomplete.Count -gt 0) { 'incomplete' } else { 'pass' }
     return [ordered]@{
-        schemaVersion = 1
+        schemaVersion = 2
         fixtureId = [string] $Before.fixtureId
         beforePhase = [string] $Before.phase
         afterPhase = [string] $After.phase
         verdict = $verdict
+        processIdentityPreserved = $proofProcessIdentityPreserved
         windows = $rows
         failures = @($failures)
         incomplete = @($incomplete)

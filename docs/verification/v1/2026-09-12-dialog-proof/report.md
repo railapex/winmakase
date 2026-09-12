@@ -11,17 +11,17 @@ Status: source and pure-host proof complete; disposable guest UI not run by this
 
 ## Delivered proof contract
 
-The accepted four action IDs and their exact checked-in argument arrays are unchanged. An accepted guest process now registers only its own active main plus requested owned/modeless, modal or utility HWND. Registration records the exact action tuple, PID, HWND/title and intended role facts. Duplicate modeless/tool windows are suppressed so each role has one deterministic active HWND.
+The accepted four action IDs and their exact checked-in argument arrays are unchanged. An accepted guest process now registers only its own active main plus requested owned/modeless, modal or utility HWND. Registration records the exact action tuple, PID plus process creation time, HWND/title, a monotonic per-process window generation and intended role facts. The generation is stored as a native property on that HWND. Duplicate modeless/tool windows are suppressed so each role has one deterministic active HWND.
 
-`Capture-P0DialogProof.ps1` repeats the Sandbox user/root/marker/consent guards before loading native interop or invoking Glaze. It reads each registered HWND directly, verifies its PID/title, and records:
+`Capture-P0DialogProof.ps1` repeats the Sandbox user/root/marker/consent guards before loading native interop or invoking Glaze. It reads each registered HWND directly, validates exact PID/process-creation/window-property identity before and after the Glaze query, verifies its title, and records:
 
 - intended classification, native owner role, modality, resizability, taskbar intent and WinForms border style;
-- observed HWND, owner/root-owner HWND, PID/TID, title, class, raw style/ex-style, relevant style flags, visibility/enabled state and rectangle;
+- observed HWND/window generation, owner/root-owner HWND, PID/process creation time/TID, title, class, raw style/ex-style, relevant style flags, visibility/enabled state and rectangle;
 - fixture-filtered Glaze managed status, ID/parent ID, workspace, state/previous state, display/focus state, class/AppUserModelID and geometry.
 
 The Glaze query is `query workspaces`; the raw recursive response remains in memory and is never persisted. Selection is by the registered HWND, followed by exact fixture title/process validation. Unrelated windows are omitted.
 
-`Compare-P0DialogProof.ps1` compares two named phase captures. It reports native owner/resizability/handle/style continuity and Glaze state/workspace/geometry/parent/display/focus continuity. For an owned window represented by Glaze, it also checks that the window stays on its native owner's workspace. A registered window absent from either Glaze capture is reported as incomplete rather than silently passing; this matters for the fixed tool window, which current Glaze manageability code can exclude through `WS_EX_TOOLWINDOW`.
+`Compare-P0DialogProof.ps1` compares two named phase captures. It rejects changed proof PID/process creation identity, changed HWND/process/window generation, and changed Glaze container ID, then reports native owner/resizability/style continuity and Glaze state/workspace/geometry/parent/display/focus continuity. For an owned window represented by Glaze, it also checks that the window stays on its native owner's workspace. A registered window absent from either Glaze capture is reported as incomplete rather than silently passing; this matters for the fixed tool window, which current Glaze manageability code can exclude through `WS_EX_TOOLWINDOW`.
 
 ## Pure host verification
 
@@ -35,10 +35,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./spike/p0/Test-P0Fixtur
 Both passed:
 
 ```text
-PASS: 51 assertions; no fixture UI launched.
+PASS: 62 assertions; no fixture UI launched.
 ```
 
-Coverage includes the original Unicode/space-bearing shortcut and exact argv contract, inbox compilation of the WinForms fixture and HWND interop, non-Sandbox rejection before UI/data/Glaze access, fixture-only recursive Glaze filtering, owner-workspace comparison and a failing reload-state regression case. `git diff --check` passed. No process, window, desktop, Start Menu, task, config or live stack was changed.
+Coverage includes the original Unicode/space-bearing shortcut and exact argv contract, inbox compilation of the WinForms fixture and HWND interop, non-Sandbox rejection before UI/data/Glaze access, fixture-only recursive Glaze filtering, owner-workspace comparison and failing regressions for changed state, replacement PID, reused PID/HWND/title with changed creation/generation identity, changed Glaze management, and changed Glaze container ID. `git diff --check` passed. No persistent process, window, desktop, Start Menu, task, config or live stack was changed.
 
 ## Guest run for the lead
 

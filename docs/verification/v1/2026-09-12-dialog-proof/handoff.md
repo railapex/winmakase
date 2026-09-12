@@ -13,9 +13,9 @@
 
 ## Build return
 
-- Commit(s) and actual changed behavior: the return commit contains this handoff; hash is reported by the worker after commit. The four exact launch tuples are unchanged. Accepted guest processes register exact active fixture HWNDs; guarded scripts capture native facts plus fixture-filtered Glaze state and compare named phases.
-- Required commands, runtime/build/config, executed counts and evidence paths: `pwsh -NoProfile -File ./spike/p0/Test-P0Fixtures.ps1` and inbox `powershell.exe` both pass 51 assertions; full commands, guest invocations and source findings are in `report.md`.
-- Regression failed on prior behavior where applicable: synthetic reload comparison changes the owned dialog from floating to tiling and returns `fail` with `owned reload state`.
+- Commit(s) and actual changed behavior: the return commits contain this handoff; hashes are reported by the worker after commit. The four exact launch tuples are unchanged. Accepted guest processes register exact active fixture HWNDs with process creation and per-window lifetime identity; guarded scripts bracket the fixture-filtered Glaze query with native identity validation and compare process/window plus Glaze container identity across named phases.
+- Required commands, runtime/build/config, executed counts and evidence paths: `pwsh -NoProfile -File ./spike/p0/Test-P0Fixtures.ps1` and inbox `powershell.exe` both pass 62 assertions; full commands, guest invocations and source findings are in `report.md`.
+- Regression failed on prior behavior where applicable: synthetic comparisons now fail for changed state, changed PID, reused PID/HWND/title with new process/window lifetimes, changed Glaze management and a changed Glaze container ID.
 - Unverified cases / failed checks / unresolved defects: disposable guest UI and actual Glaze reload/placement cases remain lead-owned and pending.
 - Independent reviewer and disposition: lead-owned.
 - Integration checks and accepting owner: root lead.

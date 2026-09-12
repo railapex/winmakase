@@ -19,6 +19,8 @@ namespace Winmakase.P0
         public long ownerHandle { get; set; }
         public long rootOwnerHandle { get; set; }
         public int processId { get; set; }
+        public long processCreationTimeUtcTicks { get; set; }
+        public long windowGeneration { get; set; }
         public int threadId { get; set; }
         public string title { get; set; }
         public string className { get; set; }
@@ -46,6 +48,8 @@ namespace Winmakase.P0
         private const int GWL_EXSTYLE = -20;
         private const uint GW_OWNER = 4;
         private const uint GA_ROOTOWNER = 3;
+        private const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+        private const string LifetimePropertyName = "Winmakase.P0.DialogLifetime.v1";
 
         private const long WS_DISABLED = 0x08000000L;
         private const long WS_CAPTION = 0x00C00000L;
@@ -65,6 +69,20 @@ namespace Winmakase.P0
             public int Top;
             public int Right;
             public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct FILETIME
+        {
+            public uint LowDateTime;
+            public uint HighDateTime;
+        }
+
+        private sealed class LifetimeIdentity
+        {
+            public int ProcessId;
+            public long ProcessCreationTimeUtcTicks;
+            public long WindowGeneration;
         }
 
         [DllImport("user32.dll")]
@@ -97,23 +115,44 @@ namespace Winmakase.P0
         [DllImport("user32.dll")]
         private static extern IntPtr GetAncestor(IntPtr handle, uint flags);
 
-        public static DialogWindowSnapshot Snapshot(long rawHandle, int expectedProcessId)
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr GetPropW(IntPtr handle, string propertyName);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern IntPtr OpenProcess(uint desiredAccess, bool inheritHandle, uint processId);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool GetProcessTimes(
+            IntPtr process,
+            out FILETIME creationTime,
+            out FILETIME exitTime,
+            out FILETIME kernelTime,
+            out FILETIME userTime);
+
+        [DllImport("kernel32.dll")]
+        private static extern bool CloseHandle(IntPtr handle);
+
+        public static DialogWindowSnapshot Snapshot(
+            long rawHandle,
+            int expectedProcessId,
+            long expectedProcessCreationTimeUtcTicks,
+            long expectedWindowGeneration)
         {
             IntPtr handle = new IntPtr(rawHandle);
             if (!IsWindow(handle))
             {
                 throw new InvalidOperationException("Registered fixture HWND is no longer valid.");
             }
-
-            uint processId;
-            uint threadId = GetWindowThreadProcessId(handle, out processId);
+            LifetimeIdentity identity = ReadAndValidateLifetime(
+                handle,
+                expectedProcessId,
+                expectedProcessCreationTimeUtcTicks,
+                expectedWindowGeneration);
+            uint ignoredProcessId;
+            uint threadId = GetWindowThreadProcessId(handle, out ignoredProcessId);
             if (threadId == 0)
             {
-                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not read fixture HWND process identity.");
-            }
-            if (processId != unchecked((uint)expectedProcessId))
-            {
-                throw new InvalidOperationException("Registered fixture HWND belongs to a different process.");
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not read fixture HWND thread identity.");
             }
 
             StringBuilder title = new StringBuilder(512);
@@ -134,12 +173,14 @@ namespace Winmakase.P0
 
             IntPtr owner = GetWindow(handle, GW_OWNER);
             IntPtr rootOwner = GetAncestor(handle, GA_ROOTOWNER);
-            return new DialogWindowSnapshot
+            DialogWindowSnapshot snapshot = new DialogWindowSnapshot
             {
                 handle = rawHandle,
                 ownerHandle = owner.ToInt64(),
                 rootOwnerHandle = rootOwner.ToInt64(),
-                processId = unchecked((int)processId),
+                processId = identity.ProcessId,
+                processCreationTimeUtcTicks = identity.ProcessCreationTimeUtcTicks,
+                windowGeneration = identity.WindowGeneration,
                 threadId = unchecked((int)threadId),
                 title = title.ToString(),
                 className = className.ToString(),
@@ -167,6 +208,84 @@ namespace Winmakase.P0
                     height = rect.Bottom - rect.Top
                 }
             };
+
+            // Close the collection race: the same process/lifetime property
+            // must still own the HWND after every other native fact is read.
+            ReadAndValidateLifetime(
+                handle,
+                expectedProcessId,
+                expectedProcessCreationTimeUtcTicks,
+                expectedWindowGeneration);
+            return snapshot;
+        }
+
+        private static LifetimeIdentity ReadAndValidateLifetime(
+            IntPtr handle,
+            int expectedProcessId,
+            long expectedProcessCreationTimeUtcTicks,
+            long expectedWindowGeneration)
+        {
+            if (!IsWindow(handle))
+            {
+                throw new InvalidOperationException("Registered fixture HWND is no longer valid.");
+            }
+            uint processId;
+            if (GetWindowThreadProcessId(handle, out processId) == 0)
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not read fixture HWND process identity.");
+            }
+            if (processId != unchecked((uint)expectedProcessId))
+            {
+                throw new InvalidOperationException("Registered fixture HWND belongs to a different process.");
+            }
+            if (expectedProcessCreationTimeUtcTicks <= 0)
+            {
+                throw new InvalidOperationException("Registered fixture process creation identity is invalid.");
+            }
+
+            long creationTimeUtcTicks = ReadProcessCreationTimeUtcTicks(processId);
+            if (creationTimeUtcTicks != expectedProcessCreationTimeUtcTicks)
+            {
+                throw new InvalidOperationException("Registered fixture PID has a different process creation identity.");
+            }
+
+            long generation = GetPropW(handle, LifetimePropertyName).ToInt64();
+            if (expectedWindowGeneration <= 0 || generation != expectedWindowGeneration)
+            {
+                throw new InvalidOperationException("Registered fixture HWND has a different window lifetime identity.");
+            }
+            return new LifetimeIdentity
+            {
+                ProcessId = unchecked((int)processId),
+                ProcessCreationTimeUtcTicks = creationTimeUtcTicks,
+                WindowGeneration = generation
+            };
+        }
+
+        private static long ReadProcessCreationTimeUtcTicks(uint processId)
+        {
+            IntPtr process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
+            if (process == IntPtr.Zero)
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not open the fixture process.");
+            }
+            try
+            {
+                FILETIME creation;
+                FILETIME exit;
+                FILETIME kernel;
+                FILETIME user;
+                if (!GetProcessTimes(process, out creation, out exit, out kernel, out user))
+                {
+                    throw new Win32Exception(Marshal.GetLastWin32Error(), "Could not read fixture process creation time.");
+                }
+                long fileTime = unchecked((long)(((ulong)creation.HighDateTime << 32) | creation.LowDateTime));
+                return DateTime.FromFileTimeUtc(fileTime).Ticks;
+            }
+            finally
+            {
+                CloseHandle(process);
+            }
         }
 
         private static bool HasFlag(long value, long flag)

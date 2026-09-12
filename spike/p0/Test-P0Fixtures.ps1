@@ -83,6 +83,15 @@ try {
     )
     Assert-Equal 0 $LASTEXITCODE 'dialog fact interop compiles with inbox compiler'
     Assert-True (Test-Path -LiteralPath $dialogInterop -PathType Leaf) 'dialog fact interop assembly was produced'
+    Add-Type -TypeDefinition (Get-Content -LiteralPath (Join-Path $PSScriptRoot 'DialogFactInterop.cs') -Raw)
+    $invalidLifetimeRejected = $false
+    try {
+        [void] [Winmakase.P0.DialogFactReader]::Snapshot(0, 1, 1, 1)
+    }
+    catch {
+        $invalidLifetimeRejected = $_.Exception.Message -match 'no longer valid'
+    }
+    Assert-True $invalidLifetimeRejected 'native fact reader rejects an invalid HWND before reading facts'
 
     $expectationPath = & (Join-Path $PSScriptRoot 'New-LauncherFixtures.ps1') `
         -FixtureRoot $testRoot `
@@ -227,26 +236,36 @@ try {
     Assert-Equal 'floating' $fixtureGlaze[1].stateType 'dialog state is retained in fixture-only Glaze data'
     Assert-True $fixtureGlaze[1].managed 'registered dialog is marked managed'
 
+    $mainObserved = [pscustomobject]@{
+        handle = 101; ownerHandle = 0; isResizable = $true
+        processId = 9001; processCreationTimeUtcTicks = 638000000000000000; windowGeneration = 1
+        className = 'FixtureClass'; styleHex = '0x1'; extendedStyleHex = '0x0'
+    }
+    $ownedObserved = [pscustomobject]@{
+        handle = 202; ownerHandle = 101; isResizable = $false
+        processId = 9001; processCreationTimeUtcTicks = 638000000000000000; windowGeneration = 2
+        className = 'FixtureClass'; styleHex = '0x2'; extendedStyleHex = '0x1'
+    }
     $beforeProof = [pscustomobject]@{
-        schemaVersion = 1
+        schemaVersion = 2
         fixtureId = 'owned-dialog'
         phase = 'initial'
+        processId = 9001
+        processCreationTimeUtcTicks = 638000000000000000
         nativeWindows = @(
             [pscustomobject]@{
                 role = 'main'
                 intended = [pscustomobject]@{ ownerRole = ''; resizable = $true }
-                observed = [pscustomobject]@{
-                    handle = 101; ownerHandle = 0; isResizable = $true
-                    className = 'FixtureClass'; styleHex = '0x1'; extendedStyleHex = '0x0'
-                }
+                observedBeforeGlaze = $mainObserved
+                observedAfterGlaze = $mainObserved
+                observed = $mainObserved
             },
             [pscustomobject]@{
                 role = 'owned'
                 intended = [pscustomobject]@{ ownerRole = 'main'; resizable = $false }
-                observed = [pscustomobject]@{
-                    handle = 202; ownerHandle = 101; isResizable = $false
-                    className = 'FixtureClass'; styleHex = '0x2'; extendedStyleHex = '0x1'
-                }
+                observedBeforeGlaze = $ownedObserved
+                observedAfterGlaze = $ownedObserved
+                observed = $ownedObserved
             }
         )
         glazeWindows = $fixtureGlaze
@@ -262,6 +281,47 @@ try {
     $failedComparison = Compare-P0DialogProofObjects -Before $beforeProof -After $changedProof
     Assert-Equal 'fail' $failedComparison.verdict 'dialog state change fails reload comparison'
     Assert-True (@($failedComparison.failures) -contains 'owned reload state') 'reload failure names changed dialog state'
+
+    $changedPidProof = $afterProof | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $changedPidProof.processId = 9002
+    foreach ($window in @($changedPidProof.nativeWindows)) {
+        $window.observedBeforeGlaze.processId = 9002
+        $window.observedAfterGlaze.processId = 9002
+        $window.observed.processId = 9002
+    }
+    $changedPidComparison = Compare-P0DialogProofObjects -Before $beforeProof -After $changedPidProof
+    Assert-Equal 'fail' $changedPidComparison.verdict 'replacement PID fails preservation comparison'
+    Assert-True (@($changedPidComparison.failures) -contains 'proof process identity') 'replacement PID names proof process identity failure'
+    Assert-True (@($changedPidComparison.failures) -contains 'main native lifetime') 'replacement PID names native window lifetime failure'
+
+    $reusedIdentityProof = $afterProof | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $reusedIdentityProof.processCreationTimeUtcTicks = 638000000000000100
+    foreach ($window in @($reusedIdentityProof.nativeWindows)) {
+        $window.observedBeforeGlaze.processCreationTimeUtcTicks = 638000000000000100
+        $window.observedAfterGlaze.processCreationTimeUtcTicks = 638000000000000100
+        $window.observed.processCreationTimeUtcTicks = 638000000000000100
+        $window.observedBeforeGlaze.windowGeneration = [long] $window.observedBeforeGlaze.windowGeneration + 10
+        $window.observedAfterGlaze.windowGeneration = [long] $window.observedAfterGlaze.windowGeneration + 10
+        $window.observed.windowGeneration = [long] $window.observed.windowGeneration + 10
+    }
+    $reusedIdentityComparison = Compare-P0DialogProofObjects -Before $beforeProof -After $reusedIdentityProof
+    Assert-Equal 'fail' $reusedIdentityComparison.verdict 'reused PID/HWND/title with new lifetimes fails comparison'
+    Assert-True (@($reusedIdentityComparison.failures) -contains 'proof process identity') 'PID reuse names process creation identity failure'
+    Assert-True (@($reusedIdentityComparison.failures) -contains 'owned native lifetime') 'HWND reuse names window generation failure'
+
+    $remanagedProof = $afterProof | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $remanagedProof.glazeWindows[1].id = 'owned-remanaged-id'
+    $remanagedComparison = Compare-P0DialogProofObjects -Before $beforeProof -After $remanagedProof
+    Assert-Equal 'fail' $remanagedComparison.verdict 'new Glaze container ID fails preservation comparison'
+    Assert-True (@($remanagedComparison.failures) -contains 'owned reload Glaze ID') 'remanagement names changed Glaze ID'
+
+    $unmanagedProof = $afterProof | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+    $unmanagedProof.glazeWindows[1] = [pscustomobject]@{
+        role = 'owned'; handle = 202; managed = $false
+    }
+    $unmanagedComparison = Compare-P0DialogProofObjects -Before $beforeProof -After $unmanagedProof
+    Assert-Equal 'fail' $unmanagedComparison.verdict 'changed Glaze management fails preservation comparison'
+    Assert-True (@($unmanagedComparison.failures) -contains 'owned reload Glaze management') 'management loss names Glaze preservation failure'
 
     Write-Output "PASS: $script:Assertions assertions; no fixture UI launched."
 }

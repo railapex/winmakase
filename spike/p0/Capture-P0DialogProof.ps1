@@ -48,9 +48,9 @@ foreach ($required in @($launchPath, $registrationPath)) {
 }
 $launch = Get-Content -LiteralPath $launchPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $registration = Get-Content -LiteralPath $registrationPath -Raw -Encoding UTF8 | ConvertFrom-Json
-if ([int] $launch.schemaVersion -ne 1 -or [int] $registration.schemaVersion -ne 1 -or
+if ([int] $launch.schemaVersion -ne 1 -or [int] $registration.schemaVersion -ne 2 -or
     [string] $launch.fixtureId -cne $ActionId -or [string] $registration.fixtureId -cne $ActionId -or
-    [int] $registration.processId -le 0) {
+    [int] $registration.processId -le 0 -or [long] $registration.processCreationTimeUtcTicks -le 0) {
     throw 'Fixture launch or window registration capture is invalid.'
 }
 
@@ -80,6 +80,10 @@ for ($index = 0; $index -lt $expectedRoles.Count; $index++) {
     if ([string] $registrations[$index].role -cne $expectedRoles[$index]) {
         throw "Action $ActionId registration order/roles are invalid."
     }
+    if ([long] $registrations[$index].handle -eq 0 -or
+        [long] $registrations[$index].windowGeneration -le 0) {
+        throw "Action $ActionId registration lifetime identity is invalid."
+    }
     $titleProperty = $manifest.fixedTitles.PSObject.Properties[[string] $registrations[$index].role]
     if ($null -eq $titleProperty -or [string] $registrations[$index].title -cne [string] $titleProperty.Value) {
         throw "Action $ActionId registration title is invalid."
@@ -98,7 +102,9 @@ $nativeWindows = @()
 foreach ($registered in $registrations) {
     $observed = [Winmakase.P0.DialogFactReader]::Snapshot(
         [long] $registered.handle,
-        [int] $registration.processId)
+        [int] $registration.processId,
+        [long] $registration.processCreationTimeUtcTicks,
+        [long] $registered.windowGeneration)
     if ([string] $observed.title -cne [string] $registered.title -or
         [long] $observed.handle -ne [long] $registered.handle) {
         throw "Registered fixture HWND identity changed for role $($registered.role)."
@@ -114,7 +120,9 @@ foreach ($registered in $registrations) {
             showInTaskbar = [bool] $registered.intended.showInTaskbar
             formBorderStyle = [string] $registered.intended.formBorderStyle
         }
-        observed = $observed
+        observedBeforeGlaze = $observed
+        observedAfterGlaze = $null
+        observed = $null
     }
 }
 
@@ -133,11 +141,36 @@ $glazeWindows = @(Select-P0FixtureGlazeState `
     -GlazeResponse $glazeResponse `
     -Registrations $registrations)
 
+# Bracket the Glaze query with exact native lifetime checks. A destroyed and
+# reused PID/HWND/title tuple has a different process creation time or native
+# property generation and fails before evidence is written.
+foreach ($nativeWindow in $nativeWindows) {
+    $registered = @($registrations | Where-Object { $_.role -ceq $nativeWindow.role })
+    if ($registered.Count -ne 1) {
+        throw "Fixture registration changed during capture for role $($nativeWindow.role)."
+    }
+    $observedAfter = [Winmakase.P0.DialogFactReader]::Snapshot(
+        [long] $registered[0].handle,
+        [int] $registration.processId,
+        [long] $registration.processCreationTimeUtcTicks,
+        [long] $registered[0].windowGeneration)
+    $observedBefore = $nativeWindow.observedBeforeGlaze
+    if ([long] $observedBefore.handle -ne [long] $observedAfter.handle -or
+        [int] $observedBefore.processId -ne [int] $observedAfter.processId -or
+        [long] $observedBefore.processCreationTimeUtcTicks -ne [long] $observedAfter.processCreationTimeUtcTicks -or
+        [long] $observedBefore.windowGeneration -ne [long] $observedAfter.windowGeneration) {
+        throw "Fixture window lifetime changed during capture for role $($nativeWindow.role)."
+    }
+    $nativeWindow.observedAfterGlaze = $observedAfter
+    $nativeWindow.observed = $observedAfter
+}
+
 $proof = [ordered]@{
-    schemaVersion = 1
+    schemaVersion = 2
     fixtureId = $ActionId
     phase = $Phase
     processId = [int] $registration.processId
+    processCreationTimeUtcTicks = [long] $registration.processCreationTimeUtcTicks
     arguments = $expectedArguments
     nativeWindows = $nativeWindows
     glazeQuery = 'query workspaces'

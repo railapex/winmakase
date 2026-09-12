@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
@@ -45,6 +47,7 @@ internal sealed class WindowRegistrationCapture
     public int schemaVersion { get; set; }
     public string fixtureId { get; set; }
     public int processId { get; set; }
+    public long processCreationTimeUtcTicks { get; set; }
     public string[] arguments { get; set; }
     public RegisteredFixtureWindow[] windows { get; set; }
 }
@@ -54,6 +57,7 @@ internal sealed class RegisteredFixtureWindow
     public string role { get; set; }
     public string title { get; set; }
     public long handle { get; set; }
+    public long windowGeneration { get; set; }
     public IntendedWindowFacts intended { get; set; }
 }
 
@@ -73,11 +77,36 @@ internal static class Program
     private const string GuestConsent = "DISPOSABLE-WINDOWS-GUEST";
     private const string MarkerName = ".winmakase-p0-fixture-root";
     private const string MarkerValue = "winmakase-p0-disposable-fixture-v1";
+    private const string LifetimePropertyName = "Winmakase.P0.DialogLifetime.v1";
     private static readonly object RegistrationLock = new object();
+    private static readonly long ProcessCreationTimeUtcTicks =
+        ReadCurrentProcessCreationTimeUtcTicks();
     private static readonly Dictionary<string, RegisteredFixtureWindow> RegisteredWindows =
         new Dictionary<string, RegisteredFixtureWindow>(StringComparer.Ordinal);
     private static readonly Dictionary<string, Form> OpenWindows =
         new Dictionary<string, Form>(StringComparer.Ordinal);
+    private static long NextWindowGeneration;
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool SetPropW(IntPtr handle, string propertyName, IntPtr value);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr RemovePropW(IntPtr handle, string propertyName);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FILETIME
+    {
+        public uint LowDateTime;
+        public uint HighDateTime;
+    }
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetProcessTimes(
+        IntPtr process,
+        out FILETIME creationTime,
+        out FILETIME exitTime,
+        out FILETIME kernelTime,
+        out FILETIME userTime);
 
     [STAThread]
     private static int Main(string[] args)
@@ -441,6 +470,25 @@ internal static class Program
         utility.Show(owner);
     }
 
+    private static long ReadCurrentProcessCreationTimeUtcTicks()
+    {
+        FILETIME creation;
+        FILETIME exit;
+        FILETIME kernel;
+        FILETIME user;
+        using (System.Diagnostics.Process process = System.Diagnostics.Process.GetCurrentProcess())
+        {
+            if (!GetProcessTimes(process.Handle, out creation, out exit, out kernel, out user))
+            {
+                throw new System.ComponentModel.Win32Exception(
+                    Marshal.GetLastWin32Error(),
+                    "Could not read fixture process creation time.");
+            }
+        }
+        long fileTime = unchecked((long)(((ulong)creation.HighDateTime << 32) | creation.LowDateTime));
+        return DateTime.FromFileTimeUtc(fileTime).Ticks;
+    }
+
     private static void RegisterWindow(
         string fixtureRoot,
         FixtureAction action,
@@ -453,11 +501,19 @@ internal static class Program
         bool resizable,
         bool showInTaskbar)
     {
+        long generation = Interlocked.Increment(ref NextWindowGeneration);
+        if (!SetPropW(form.Handle, LifetimePropertyName, new IntPtr(generation)))
+        {
+            throw new System.ComponentModel.Win32Exception(
+                Marshal.GetLastWin32Error(),
+                "Could not set the fixture HWND lifetime property.");
+        }
         RegisteredFixtureWindow window = new RegisteredFixtureWindow
         {
             role = role,
             title = form.Text,
             handle = form.Handle.ToInt64(),
+            windowGeneration = generation,
             intended = new IntendedWindowFacts
             {
                 classification = classification,
@@ -491,6 +547,11 @@ internal static class Program
                 !Object.ReferenceEquals(openWindow, form))
             {
                 return;
+            }
+            RegisteredFixtureWindow registeredWindow;
+            if (RegisteredWindows.TryGetValue(role, out registeredWindow))
+            {
+                RemovePropW(new IntPtr(registeredWindow.handle), LifetimePropertyName);
             }
             OpenWindows.Remove(role);
             RegisteredWindows.Remove(role);
@@ -526,9 +587,10 @@ internal static class Program
 
         WindowRegistrationCapture capture = new WindowRegistrationCapture
         {
-            schemaVersion = 1,
+            schemaVersion = 2,
             fixtureId = action.id,
             processId = System.Diagnostics.Process.GetCurrentProcess().Id,
+            processCreationTimeUtcTicks = ProcessCreationTimeUtcTicks,
             arguments = args,
             windows = ordered.ToArray()
         };
