@@ -19,7 +19,7 @@ The accepted four action IDs and their exact checked-in argument arrays are unch
 - observed HWND/window generation, owner/root-owner HWND, PID/process creation time/TID, title, class, raw style/ex-style, relevant style flags, visibility/enabled state and rectangle;
 - fixture-filtered Glaze managed status, ID/parent ID, workspace, state/previous state, display/focus state, class/AppUserModelID and geometry.
 
-The Glaze query is `query workspaces`; the raw recursive response remains in memory and is never persisted. Selection is by the registered HWND, followed by exact fixture title/process validation. Unrelated windows are omitted.
+The Glaze query is `query workspaces`; a redirected `System.Diagnostics.Process` waits at most ten seconds and reports its actual exit error or timeout. This avoids relying on `$LASTEXITCODE`, which was unset when PowerShell 5.1 launched the GUI-subsystem executable during the guest's missing-runtime loader failure. The raw recursive response remains in memory and is never persisted. Selection is by the registered HWND, followed by exact fixture title/process validation. Unrelated windows are omitted.
 
 `Compare-P0DialogProof.ps1` compares two named phase captures. It rejects changed proof PID/process creation identity, changed HWND/process/window generation, and changed Glaze container ID, then reports native owner/resizability/style continuity and Glaze state/workspace/geometry/parent/display/focus continuity. For an owned window represented by Glaze, it also checks that the window stays on its native owner's workspace. A registered window absent from either Glaze capture is reported as incomplete rather than silently passing; this matters for the fixed tool window, which current Glaze manageability code can exclude through `WS_EX_TOOLWINDOW`.
 
@@ -35,10 +35,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./spike/p0/Test-P0Fixtur
 Both passed:
 
 ```text
-PASS: 62 assertions; no fixture UI launched.
+PASS: 70 assertions; no fixture UI launched.
 ```
 
-Coverage includes the original Unicode/space-bearing shortcut and exact argv contract, inbox compilation of the WinForms fixture and HWND interop, non-Sandbox rejection before UI/data/Glaze access, fixture-only recursive Glaze filtering, owner-workspace comparison and failing regressions for changed state, replacement PID, reused PID/HWND/title with changed creation/generation identity, changed Glaze management, and changed Glaze container ID. `git diff --check` passed. No persistent process, window, desktop, Start Menu, task, config or live stack was changed.
+Coverage includes the original Unicode/space-bearing shortcut and exact argv contract, inbox compilation of the WinForms fixture and HWND interop, non-Sandbox rejection before UI/data/Glaze access, one-role array behavior under strict mode, bounded completion/exit-error/timeout behavior for a delayed GUI-subsystem query stub, fixture-only recursive Glaze filtering, owner-workspace comparison and failing regressions for changed state, replacement PID, reused PID/HWND/title with changed creation/generation identity, changed Glaze management, and changed Glaze container ID. `git diff --check` passed. No persistent process, window, desktop, Start Menu, task, config or live stack was changed.
 
 ## Guest run for the lead
 

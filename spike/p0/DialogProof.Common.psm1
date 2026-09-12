@@ -25,6 +25,75 @@ function Get-StateType {
     return [string] (Get-ObjectProperty $State 'type')
 }
 
+function Get-P0ExpectedRoles {
+    param(
+        [Parameter(Mandatory)]
+        [ValidateSet('main-spaces', 'owned-dialog', 'unicode-modal', 'utility-popup')]
+        [string] $ActionId
+    )
+
+    return @(switch ($ActionId) {
+        'main-spaces' { 'main' }
+        'owned-dialog' { 'main'; 'owned' }
+        'unicode-modal' { 'main'; 'modal' }
+        'utility-popup' { 'main'; 'utility' }
+    })
+}
+
+function Invoke-P0GlazeQueryProcess {
+    param(
+        [Parameter(Mandatory)][string] $GlazeExecutablePath,
+        [ValidateRange(1, 60000)][int] $TimeoutMilliseconds = 10000
+    )
+
+    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $startInfo.FileName = $GlazeExecutablePath
+    $startInfo.Arguments = 'query workspaces'
+    $startInfo.WorkingDirectory = Split-Path -Parent $GlazeExecutablePath
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $startInfo.CreateNoWindow = $true
+
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $startInfo
+    try {
+        if (-not $process.Start()) {
+            throw 'Could not start glazewm query process.'
+        }
+        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
+        $stderrTask = $process.StandardError.ReadToEndAsync()
+        if (-not $process.WaitForExit($TimeoutMilliseconds)) {
+            try {
+                $process.Kill()
+                [void] $process.WaitForExit(5000)
+            }
+            catch {
+                # Preserve the bounded timeout error below; cleanup is best effort.
+            }
+            throw "glazewm query workspaces exceeded $TimeoutMilliseconds ms."
+        }
+
+        $stdout = $stdoutTask.GetAwaiter().GetResult()
+        $stderr = $stderrTask.GetAwaiter().GetResult()
+        $exitCode = $process.ExitCode
+        if ($exitCode -ne 0) {
+            $detail = ([string] $stderr).Trim()
+            if ([string]::IsNullOrEmpty($detail)) {
+                throw "glazewm query workspaces failed with exit code $exitCode."
+            }
+            throw "glazewm query workspaces failed with exit code $exitCode`: $detail"
+        }
+        if ([string]::IsNullOrWhiteSpace([string] $stdout)) {
+            throw 'glazewm query workspaces returned no JSON.'
+        }
+        return [string] $stdout
+    }
+    finally {
+        $process.Dispose()
+    }
+}
+
 function Add-FixtureGlazeNodes {
     param(
         [Parameter(Mandatory)] $Node,
@@ -365,5 +434,7 @@ function Compare-P0DialogProofObjects {
 
 Export-ModuleMember -Function @(
     'Compare-P0DialogProofObjects',
+    'Get-P0ExpectedRoles',
+    'Invoke-P0GlazeQueryProcess',
     'Select-P0FixtureGlazeState'
 )

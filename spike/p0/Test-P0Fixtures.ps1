@@ -93,6 +93,77 @@ try {
     }
     Assert-True $invalidLifetimeRejected 'native fact reader rejects an invalid HWND before reading facts'
 
+    $mainRoles = @(Get-P0ExpectedRoles -ActionId main-spaces)
+    Assert-Equal 1 $mainRoles.Count 'main-only action returns an array with one role under strict mode'
+    Assert-Equal 'main' $mainRoles[0] 'main-only action role is stable'
+    $ownedRoles = @(Get-P0ExpectedRoles -ActionId owned-dialog)
+    Assert-Equal 2 $ownedRoles.Count 'owned-dialog action returns both roles'
+
+    $glazeStubSource = Join-Path $testRoot 'GlazeQueryStub.cs'
+    $glazeStub = Join-Path $testRoot 'bin/glazewm.exe'
+    @'
+using System;
+using System.IO;
+using System.Text;
+using System.Threading;
+
+internal static class GlazeQueryStub
+{
+    private static int Main(string[] args)
+    {
+        Thread.Sleep(250);
+        if (args.Length != 2 || args[0] != "query" || args[1] != "workspaces")
+        {
+            return 17;
+        }
+        if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "fail-query")))
+        {
+            byte[] error = Encoding.UTF8.GetBytes("stub failure");
+            using (Stream stderr = Console.OpenStandardError())
+            {
+                stderr.Write(error, 0, error.Length);
+            }
+            return 23;
+        }
+        byte[] payload = Encoding.UTF8.GetBytes("{\"success\":true,\"data\":{\"workspaces\":[]}}");
+        using (Stream stdout = Console.OpenStandardOutput())
+        {
+            stdout.Write(payload, 0, payload.Length);
+        }
+        return 0;
+    }
+}
+'@ | Set-Content -LiteralPath $glazeStubSource -Encoding UTF8
+    & $compiler @(
+        '/nologo',
+        '/target:winexe',
+        '/reference:System.dll',
+        "/out:$glazeStub",
+        $glazeStubSource
+    )
+    Assert-Equal 0 $LASTEXITCODE 'GUI-subsystem Glaze query stub compiles'
+    $stubJson = Invoke-P0GlazeQueryProcess -GlazeExecutablePath $glazeStub -TimeoutMilliseconds 5000
+    $stubResponse = $stubJson | ConvertFrom-Json
+    Assert-True ([bool] $stubResponse.success) 'GUI-subsystem query waits for completion and returns redirected JSON'
+    Assert-Equal 0 @($stubResponse.data.workspaces).Count 'GUI-subsystem query preserves JSON payload'
+    $stubTimedOut = $false
+    try {
+        [void] (Invoke-P0GlazeQueryProcess -GlazeExecutablePath $glazeStub -TimeoutMilliseconds 10)
+    }
+    catch {
+        $stubTimedOut = $_.Exception.Message -match 'exceeded 10 ms'
+    }
+    Assert-True $stubTimedOut 'GUI-subsystem query has a bounded timeout'
+    Set-Content -LiteralPath (Join-Path (Split-Path -Parent $glazeStub) 'fail-query') -Value '1' -NoNewline
+    $stubFailureReported = $false
+    try {
+        [void] (Invoke-P0GlazeQueryProcess -GlazeExecutablePath $glazeStub -TimeoutMilliseconds 5000)
+    }
+    catch {
+        $stubFailureReported = $_.Exception.Message -match 'exit code 23: stub failure'
+    }
+    Assert-True $stubFailureReported 'GUI-subsystem query reports completed loader/process errors'
+
     $expectationPath = & (Join-Path $PSScriptRoot 'New-LauncherFixtures.ps1') `
         -FixtureRoot $testRoot `
         -ExecutablePath $executable

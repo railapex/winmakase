@@ -66,12 +66,7 @@ foreach ($capturedArguments in @(@($launch.arguments), @($registration.arguments
     }
 }
 
-$expectedRoles = switch ($ActionId) {
-    'main-spaces' { @('main') }
-    'owned-dialog' { @('main', 'owned') }
-    'unicode-modal' { @('main', 'modal') }
-    'utility-popup' { @('main', 'utility') }
-}
+$expectedRoles = @(Get-P0ExpectedRoles -ActionId $ActionId)
 $registrations = @($registration.windows)
 if ($registrations.Count -ne $expectedRoles.Count) {
     throw "Action $ActionId must have active registrations for: $($expectedRoles -join ', ')"
@@ -126,11 +121,9 @@ foreach ($registered in $registrations) {
     }
 }
 
-$glazeOutput = @(& $glaze query workspaces 2>&1)
-if ($LASTEXITCODE -ne 0) {
-    throw "glazewm query workspaces failed with exit code $LASTEXITCODE."
-}
-$glazeJson = ($glazeOutput | ForEach-Object { [string] $_ }) -join [Environment]::NewLine
+$glazeJson = Invoke-P0GlazeQueryProcess `
+    -GlazeExecutablePath $glaze `
+    -TimeoutMilliseconds 10000
 try {
     $glazeResponse = $glazeJson | ConvertFrom-Json
 }

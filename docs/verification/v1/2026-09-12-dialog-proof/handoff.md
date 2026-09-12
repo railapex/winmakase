@@ -14,9 +14,9 @@
 ## Build return
 
 - Commit(s) and actual changed behavior: the return commits contain this handoff; hashes are reported by the worker after commit. The four exact launch tuples are unchanged. Accepted guest processes register exact active fixture HWNDs with process creation and per-window lifetime identity; guarded scripts bracket the fixture-filtered Glaze query with native identity validation and compare process/window plus Glaze container identity across named phases.
-- Required commands, runtime/build/config, executed counts and evidence paths: `pwsh -NoProfile -File ./spike/p0/Test-P0Fixtures.ps1` and inbox `powershell.exe` both pass 62 assertions; full commands, guest invocations and source findings are in `report.md`.
+- Required commands, runtime/build/config, executed counts and evidence paths: `pwsh -NoProfile -File ./spike/p0/Test-P0Fixtures.ps1` and inbox `powershell.exe` both pass 70 assertions; full commands, guest invocations and source findings are in `report.md`.
 - Regression failed on prior behavior where applicable: synthetic comparisons now fail for changed state, changed PID, reused PID/HWND/title with new process/window lifetimes, changed Glaze management and a changed Glaze container ID.
-- Unverified cases / failed checks / unresolved defects: disposable guest UI and actual Glaze reload/placement cases remain lead-owned and pending.
+- Unverified cases / failed checks / unresolved defects: the first lead guest run exposed a single-role PowerShell scalar bug and an unobserved GUI-subsystem loader result; both fixture defects are covered by host regressions. That guest also lacked pinned `VCRUNTIME140.dll`, so actual Glaze query/reload/placement cases remain lead-owned and pending after the runtime prerequisite is restored.
 - Independent reviewer and disposition: lead-owned.
 - Integration checks and accepting owner: root lead.
 
