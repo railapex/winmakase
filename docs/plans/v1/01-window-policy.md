@@ -62,6 +62,14 @@ Make the existing named terminal pad discoverable as one summon/hide toggle with
 
 Reuse P1's per-identity serialization and in-flight launch handling for the named toggle. Concurrent/held cold activation creates one terminal; late startup must not take focus after the user changes context. Verify hide/summon repeatedly, closed-target recovery and ordinary-terminal exclusion. The existing scratch command does not yet prove these launch-race guarantees.
 
+## Agent-created windows — design question raised 2026-09-12
+
+Chris needs Google login/Viscosity dialogs and agent-created browser, test-fixture and terminal windows to stop repeatedly rearranging the human workspace. Floating dialogs and agent output are distinct cases: parent-owned dialogs stay with their task; transient automation surfaces need explicit session ownership and an admission policy before entering the human tiling tree. Do not identify all Chrome or terminal windows as automation, or rely on parent PID alone when an existing browser/terminal broker creates the window.
+
+Proposed first proof: keep ordinary dialogs floating with their parent; route explicitly owned automation surfaces to a dedicated workspace without switching focus, and make inspection deliberate. Compare background CUA delivery with a guest desktop where foreground input is needed. A workspace separates layout, not input or OS state. Off-workspace/cloaked capture and input must be demonstrated before relying on background operation. Headless browser/CLI runs need no visible window; desktop/input/shell tests may need a disposable Windows OS.
+
+This is a proposal, not an implemented agent workspace or an approved new isolation service. Test repeated creation/destruction, authentication handoff, user switching context, shared browser processes and session cleanup: human tile geometry and focus must remain unchanged unless the user deliberately brings a window into that layout. Preserve the option to watch an agent without adding every temporary window to the normal workspace.
+
 ## Verification cases
 
 R1 covers main/dialog windows, modal Open/Save/auth/settings, floating utilities, utility child windows, scratchpad and fullscreen history. Use at least one traditional Win32 and one modern application, plus ordinary disposable Muxel windows only if relevant.

@@ -1,27 +1,18 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-10T17:43:00Z",
+  "updatedAt": "2026-09-12",
   "planBaseCommit": "ab32da1",
   "lastVerifiedBuild": "Glaze 9c8e93b on deployed base 6d62d66 is active and passed the elevated-window recovery scenario. Supervisor adoption fix is active: two regression tests, release build, independent review and live adoption at 69% commit use passed. Future input branch dd8fb7d includes placement recovery; guest binaries remain 371a448.",
   "stage": "P0 checkpoint: input source and guest artifacts accepted; runtime proofs pending",
   "currentSlice": {
     "id": "P0.3",
-    "status": "Waiting on runtime environment",
+    "status": "Ready for bounded runtime proofs",
     "title": "Direct Caps contract and explicit launcher activation",
-    "nextAction": "Verify Sandbox after host restart and prove explicit Run activation. Native desktop access through cua-driver passed on 2026-09-10. The input branch is dd8fb7d after placement recovery; rebuild the guest artifacts before its future cutover. Physical input acceptance and launcher implementation remain open."
+    "nextAction": "Rebuild the guest artifacts from reviewed input source including placement recovery, verify Sandbox's first launch, then prove explicit Run activation. WindowsSandbox.exe is now present and cua-driver window discovery passed on 2026-09-12. Physical input, guest operation and launcher acceptance remain open."
   },
   "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
   "decisions": [],
-  "blockers": [
-    {
-      "title": "Sandbox awaiting host restart",
-      "detail": "Chris enabled Containers-DisposableClientVM. CBS still reports reboot pending and WindowsSandbox.exe is absent; guest tests have not run."
-    },
-    {
-      "title": "Launcher activation still unverified",
-      "detail": "Native desktop access through cua-driver passed on 2026-09-10. The older OpenAI native backend was not retried. P0 Run activation and guest UI acceptance remain unrun."
-    }
-  ],
+  "blockers": [],
   "recentDecisions": [
     {
       "title": "Direct Caps adoption reopened",
@@ -88,6 +79,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-12",
+      "summary": "Restart verified: last boot 2026-09-10T11:17:23.702118Z; WindowsSandbox.exe now exists. Cua-driver CLI 0.26.1 reached its running daemon and returned a targeted window-discovery result. No input or Sandbox launch was attempted. CBS still reports a reboot pending, which is not evidence that the previous restart failed. Old environment blockers removed; R0 remains open. Chris raised agent-created window churn as a separate window-policy requirement."
+    },
     {
       "at": "2026-09-10T17:43:00Z",
       "summary": "Chris authorized restart and layout rebuild. Glaze 9c8e93b is active; a live elevated fixture stayed alive and was automatically excluded from tiling. Supervisor adoption was repaired and deployed after its fixed 50% commit-use gate blocked startup with about 34 GB commit capacity free. New supervisor adopted Glaze, Kanata and Zebar without another layout restart. Fresh-launch cutoff removal remains open; no broader P0/P1 gate closed."
