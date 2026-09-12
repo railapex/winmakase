@@ -1,47 +1,43 @@
 {
-  "cache_hits_after_ancestor_exit": 200,
-  "captures": 25,
-  "classification_misses": 25,
-  "observed_chain_nodes": 3,
+  "fresh_snapshot_cache_hits": 50,
+  "fresh_snapshot_cache_misses_from_new_observed_descendants": 1,
+  "identity": "PID plus SystemBasicProcessInformation SequenceNumber",
   "observed_model": "not exposed to the worker runtime",
   "requested_model": "gpt-5.6-sol/high builder",
   "retained_after_root_and_bridge_exit": true,
-  "scope": "hidden fixture-owned process chain only",
+  "safe_edges_observed": 2,
+  "scope": "hidden explicitly enrolled fixture-owned chain only",
+  "supplied_snapshot_cache_hits": 200,
   "timings_ns": {
-    "cache_hit_owner_identity_revalidation": {
-      "max": 1700,
-      "median": 1300,
-      "p95": 1400
+    "exact_enrolled_root_live_image_validation": {
+      "max": 95500,
+      "median": 51400,
+      "p95": 80300
     },
-    "exact_chain_identity_and_image_queries": {
-      "max": 269000,
-      "median": 112700,
-      "p95": 222400
+    "feed_update": {
+      "max": 71800,
+      "median": 43400,
+      "p95": 64700
     },
-    "exact_chain_identity_revalidation": {
-      "max": 24700,
-      "median": 16800,
-      "p95": 20500
+    "fresh_sequence_snapshot": {
+      "max": 711800,
+      "median": 568300,
+      "p95": 689100
     },
-    "first_full_snapshot": {
-      "max": 39897000,
-      "median": 28768800,
-      "p95": 37704200
+    "fresh_snapshot_to_answer": {
+      "max": 840300,
+      "median": 661100,
+      "p95": 811400
     },
-    "full_capture": {
-      "max": 78608200,
-      "median": 58128300,
-      "p95": 76288800
+    "lookup_after_fresh_snapshot": {
+      "max": 700,
+      "median": 300,
+      "p95": 500
     },
-    "miss_classification": {
-      "max": 34100,
-      "median": 2400,
-      "p95": 4700
-    },
-    "verification_full_snapshot": {
-      "max": 47109800,
-      "median": 28614900,
-      "p95": 38462700
+    "lookup_with_supplied_current_snapshot": {
+      "max": 100,
+      "median": 100,
+      "p95": 100
     }
   }
 }

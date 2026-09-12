@@ -12,29 +12,32 @@
 use std::io;
 use std::path::Path;
 
-use windows_sys::Win32::Foundation::{CloseHandle, FILETIME, GetLastError, INVALID_HANDLE_VALUE};
+use windows_sys::Wdk::System::SystemInformation::NtQuerySystemInformation;
+use windows_sys::Win32::Foundation::{
+    CloseHandle, GetLastError, INVALID_HANDLE_VALUE, WAIT_TIMEOUT,
+};
 use windows_sys::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, PROCESSENTRY32W, Process32FirstW, Process32NextW, TH32CS_SNAPPROCESS,
 };
 use windows_sys::Win32::System::Threading::{
-    GetProcessTimes, OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
+    OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW, WaitForSingleObject,
 };
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct ProcessIdentity {
-    pub pid: u32,
-    pub creation_time: u64,
-}
+const SYNCHRONIZE: u32 = 0x0010_0000;
+const SYSTEM_BASIC_PROCESS_INFORMATION: i32 = 252;
+const STATUS_INFO_LENGTH_MISMATCH: i32 = 0xC000_0004u32 as i32;
+const STATUS_INVALID_INFO_CLASS: i32 = 0xC000_0003u32 as i32;
+const MAX_BASIC_PROCESS_BUFFER: usize = 16 * 1024 * 1024;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(crate) struct ProcessParentEntry {
+pub(crate) struct SequenceProcess {
     pub pid: u32,
     pub parent_pid: u32,
+    pub sequence: u64,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct ProcessInfo {
-    pub identity: ProcessIdentity,
     pub image_path: String,
 }
 
@@ -85,39 +88,9 @@ fn full_image_path(pid: u32) -> Option<String> {
     }
 }
 
-/// Every process as PID and parent PID only.
-///
-/// Callers must treat PID/PPID as a point-in-time hint. The ancestry prototype
-/// pairs it with separately queried creation identities before retaining an
-/// edge. This function intentionally does not query or expose global paths.
-pub(crate) fn process_parent_snapshot() -> io::Result<Vec<ProcessParentEntry>> {
-    let mut out = Vec::new();
-    for_each_process(|entry| {
-        out.push(ProcessParentEntry {
-            pid: entry.th32ProcessID,
-            parent_pid: entry.th32ParentProcessID,
-        });
-    })?;
-    Ok(out)
-}
-
 /// Every process as PID and lowercased executable basename for the existing
 /// supervisor adoption lookup.
 fn image_snapshot() -> io::Result<Vec<(u32, String)>> {
-    let mut out = Vec::new();
-    for_each_process(|entry| {
-        let len = entry
-            .szExeFile
-            .iter()
-            .position(|&c| c == 0)
-            .unwrap_or(entry.szExeFile.len());
-        let base = String::from_utf16_lossy(&entry.szExeFile[..len]).to_lowercase();
-        out.push((entry.th32ProcessID, base));
-    })?;
-    Ok(out)
-}
-
-fn for_each_process(mut visit: impl FnMut(&PROCESSENTRY32W)) -> io::Result<()> {
     unsafe {
         let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
         if snap == INVALID_HANDLE_VALUE {
@@ -126,89 +99,196 @@ fn for_each_process(mut visit: impl FnMut(&PROCESSENTRY32W)) -> io::Result<()> {
                 GetLastError()
             )));
         }
-
         let mut entry: PROCESSENTRY32W = std::mem::zeroed();
         entry.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
-
+        let mut out = Vec::new();
         let mut ok = Process32FirstW(snap, &mut entry);
         while ok != 0 {
-            visit(&entry);
+            let len = entry
+                .szExeFile
+                .iter()
+                .position(|&c| c == 0)
+                .unwrap_or(entry.szExeFile.len());
+            let base = String::from_utf16_lossy(&entry.szExeFile[..len]).to_lowercase();
+            out.push((entry.th32ProcessID, base));
             ok = Process32NextW(snap, &mut entry);
         }
         CloseHandle(snap);
-        Ok(())
+        Ok(out)
     }
 }
 
-/// Creation identity and full image path from one process handle.
+/// Full image path from a process proven live across the query.
 pub(crate) fn process_info(pid: u32) -> Option<ProcessInfo> {
     unsafe {
-        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
+        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, 0, pid);
         if handle.is_null() {
             return None;
         }
-
-        let mut creation: FILETIME = std::mem::zeroed();
-        let mut exit: FILETIME = std::mem::zeroed();
-        let mut kernel: FILETIME = std::mem::zeroed();
-        let mut user: FILETIME = std::mem::zeroed();
-        let got_times = GetProcessTimes(handle, &mut creation, &mut exit, &mut kernel, &mut user);
+        if WaitForSingleObject(handle, 0) != WAIT_TIMEOUT {
+            CloseHandle(handle);
+            return None;
+        }
         let mut buf = [0u16; 1024];
         let mut len = buf.len() as u32;
         let got_path = QueryFullProcessImageNameW(handle, 0, buf.as_mut_ptr(), &mut len);
+        let still_live = WaitForSingleObject(handle, 0) == WAIT_TIMEOUT;
         CloseHandle(handle);
-        (got_times != 0 && got_path != 0).then(|| ProcessInfo {
-            identity: ProcessIdentity {
-                pid,
-                creation_time: (u64::from(creation.dwHighDateTime) << 32)
-                    | u64::from(creation.dwLowDateTime),
-            },
+        (got_path != 0 && still_live).then(|| ProcessInfo {
             image_path: String::from_utf16_lossy(&buf[..len as usize]),
         })
     }
 }
 
-/// Current creation identity, queried from a newly opened process handle.
-pub(crate) fn process_identity(pid: u32) -> Option<ProcessIdentity> {
-    unsafe {
-        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
-        if handle.is_null() {
-            return None;
+/// Windows 11 26100.4770+ process identities. This reads only PID, PPID and the
+/// unique sequence number; image-name pointers in the returned buffer are not
+/// dereferenced. There is no creation-time or Toolhelp ancestry fallback.
+pub(crate) fn sequence_process_snapshot(max_entries: usize) -> io::Result<Vec<SequenceProcess>> {
+    let mut bytes = 64 * 1024usize;
+    loop {
+        if bytes > MAX_BASIC_PROCESS_BUFFER {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot exceeded bounded buffer",
+            ));
         }
-        let mut creation: FILETIME = std::mem::zeroed();
-        let mut exit: FILETIME = std::mem::zeroed();
-        let mut kernel: FILETIME = std::mem::zeroed();
-        let mut user: FILETIME = std::mem::zeroed();
-        let got = GetProcessTimes(handle, &mut creation, &mut exit, &mut kernel, &mut user);
-        CloseHandle(handle);
-        (got != 0).then(|| ProcessIdentity {
+        let words = bytes.div_ceil(std::mem::size_of::<usize>());
+        let mut buffer = vec![0usize; words];
+        let buffer_bytes = buffer.len() * std::mem::size_of::<usize>();
+        let mut returned = 0u32;
+        let status = unsafe {
+            NtQuerySystemInformation(
+                SYSTEM_BASIC_PROCESS_INFORMATION,
+                buffer.as_mut_ptr().cast(),
+                u32::try_from(buffer_bytes).unwrap_or(u32::MAX),
+                &mut returned,
+            )
+        };
+        if status == STATUS_INVALID_INFO_CLASS {
+            return Err(io::Error::new(
+                io::ErrorKind::Unsupported,
+                "SystemBasicProcessInformation is unavailable",
+            ));
+        }
+        if status == STATUS_INFO_LENGTH_MISMATCH {
+            bytes = usize::try_from(returned)
+                .unwrap_or(MAX_BASIC_PROCESS_BUFFER + 1)
+                .max(bytes.saturating_mul(2));
+            continue;
+        }
+        if status < 0 {
+            return Err(io::Error::other(format!(
+                "NtQuerySystemInformation failed with NTSTATUS {status:#x}"
+            )));
+        }
+        let used = usize::try_from(returned).unwrap_or(buffer_bytes);
+        if used > buffer_bytes {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot reported a truncated buffer",
+            ));
+        }
+        return parse_sequence_processes(buffer.as_ptr().cast(), used, max_entries);
+    }
+}
+
+/// Prefix of `SYSTEM_BASICPROCESS_INFORMATION`. The following `ImageName`
+/// member is deliberately omitted so the parser cannot read it accidentally.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct BasicProcessIdentityFields {
+    next_entry_offset: u32,
+    unique_process_id: *mut std::ffi::c_void,
+    inherited_from_unique_process_id: *mut std::ffi::c_void,
+    sequence_number: u64,
+}
+
+fn parse_sequence_processes(
+    buffer: *const u8,
+    used: usize,
+    max_entries: usize,
+) -> io::Result<Vec<SequenceProcess>> {
+    let header_size = std::mem::size_of::<BasicProcessIdentityFields>();
+    let mut offset = 0usize;
+    let mut out = Vec::new();
+    loop {
+        if offset.checked_add(header_size).is_none_or(|end| end > used) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot contained a truncated entry",
+            ));
+        }
+        if out.len() == max_entries {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot exceeded the entry cap",
+            ));
+        }
+        let fields = unsafe {
+            std::ptr::read_unaligned(buffer.add(offset).cast::<BasicProcessIdentityFields>())
+        };
+        let pid = u32::try_from(fields.unique_process_id as usize)
+            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "PID overflow"))?;
+        let parent_pid = u32::try_from(fields.inherited_from_unique_process_id as usize)
+            .map_err(|_| io::Error::new(io::ErrorKind::InvalidData, "PPID overflow"))?;
+        out.push(SequenceProcess {
             pid,
-            creation_time: (u64::from(creation.dwHighDateTime) << 32)
-                | u64::from(creation.dwLowDateTime),
-        })
+            parent_pid,
+            sequence: fields.sequence_number,
+        });
+        if fields.next_entry_offset == 0 {
+            return Ok(out);
+        }
+        let next = usize::try_from(fields.next_entry_offset).unwrap_or(usize::MAX);
+        if next < header_size {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "basic process snapshot contained an invalid next offset",
+            ));
+        }
+        offset = offset.checked_add(next).ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "snapshot offset overflow")
+        })?;
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::os::windows::process::CommandExt;
+    use std::process::Command;
+
+    fn encoded_identity(fields: BasicProcessIdentityFields) -> Vec<usize> {
+        let mut words = vec![
+            0usize;
+            std::mem::size_of::<BasicProcessIdentityFields>()
+                .div_ceil(std::mem::size_of::<usize>())
+        ];
+        unsafe {
+            std::ptr::write_unaligned(
+                words.as_mut_ptr().cast::<BasicProcessIdentityFields>(),
+                fields,
+            );
+        }
+        words
+    }
 
     #[test]
     fn finds_our_own_process_by_its_full_path() {
         let me = std::env::current_exe().unwrap();
         let pids = pids_for_image_path(me.to_str().unwrap()).unwrap();
-        assert!(
-            pids.contains(&std::process::id()),
-            "our own pid must be found by our own image path; got {pids:?}"
-        );
+        assert!(pids.contains(&std::process::id()));
     }
 
     #[test]
     fn forward_slashes_match_the_same_image() {
         let me = std::env::current_exe().unwrap();
         let forward = me.to_str().unwrap().replace('\\', "/");
-        let pids = pids_for_image_path(&forward).unwrap();
-        assert!(pids.contains(&std::process::id()));
+        assert!(
+            pids_for_image_path(&forward)
+                .unwrap()
+                .contains(&std::process::id())
+        );
     }
 
     #[test]
@@ -216,15 +296,71 @@ mod tests {
         let me = std::env::current_exe().unwrap();
         let name = me.file_name().unwrap().to_string_lossy();
         let elsewhere = format!("C:/winmakase-no-such-dir-1c9/{name}");
-        let pids = pids_for_image_path(&elsewhere).unwrap();
-        assert!(
-            pids.is_empty(),
-            "same basename under a different directory must not match: {pids:?}"
-        );
+        assert!(pids_for_image_path(&elsewhere).unwrap().is_empty());
     }
 
     #[test]
     fn a_path_without_a_file_name_is_rejected() {
         assert!(pids_for_image_path("C:/").is_err());
+    }
+
+    #[test]
+    fn sequence_snapshot_contains_our_live_unique_identity() {
+        let snapshot = sequence_process_snapshot(16_384).unwrap();
+        let me = snapshot
+            .iter()
+            .find(|process| process.pid == std::process::id())
+            .unwrap();
+        assert_ne!(me.sequence, 0);
+    }
+
+    #[test]
+    fn sequence_parser_rejects_a_truncated_entry() {
+        let words = encoded_identity(BasicProcessIdentityFields {
+            next_entry_offset: 0,
+            unique_process_id: 10usize as _,
+            inherited_from_unique_process_id: 1usize as _,
+            sequence_number: 100,
+        });
+        let used = std::mem::size_of::<BasicProcessIdentityFields>() - 1;
+        assert!(parse_sequence_processes(words.as_ptr().cast(), used, 1).is_err());
+    }
+
+    #[test]
+    fn sequence_parser_rejects_an_entry_over_the_cap() {
+        let words = encoded_identity(BasicProcessIdentityFields {
+            next_entry_offset: 0,
+            unique_process_id: 10usize as _,
+            inherited_from_unique_process_id: 1usize as _,
+            sequence_number: 100,
+        });
+        let used = words.len() * std::mem::size_of::<usize>();
+        assert!(parse_sequence_processes(words.as_ptr().cast(), used, 0).is_err());
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    #[test]
+    fn sequence_parser_rejects_a_pid_that_does_not_fit_win32() {
+        let words = encoded_identity(BasicProcessIdentityFields {
+            next_entry_offset: 0,
+            unique_process_id: ((u32::MAX as usize) + 1) as _,
+            inherited_from_unique_process_id: 1usize as _,
+            sequence_number: 100,
+        });
+        let used = words.len() * std::mem::size_of::<usize>();
+        assert!(parse_sequence_processes(words.as_ptr().cast(), used, 1).is_err());
+    }
+
+    #[test]
+    fn process_info_rejects_an_exited_but_held_process() {
+        let mut child = Command::new("cmd")
+            .args(["/d", "/c", "exit", "0"])
+            .creation_flags(0x0800_0000)
+            .spawn()
+            .unwrap();
+        let pid = child.id();
+        child.wait().unwrap();
+        assert!(process_info(pid).is_none());
+        drop(child);
     }
 }

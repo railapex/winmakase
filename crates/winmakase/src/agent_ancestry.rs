@@ -1,52 +1,79 @@
-//! Bounded prototype for conservative agent-process ancestry classification.
+//! Unwired A1 prototype: bounded process-start observation by unique sequence.
 //!
-//! This module is intentionally not wired into window policy. It proves the
-//! identity, retention and cache rules needed before that integration exists.
+//! A child edge is retained only when the same unique parent identity existed
+//! in the immediately previous and current complete observations, while the
+//! child identity is new in the current one. There is no retrospective walk.
 
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::io;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use crate::procs::{self, ProcessIdentity, ProcessInfo, ProcessParentEntry};
+use crate::procs;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Ownership {
-    Agent,
-    Unknown,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Classification {
-    pub ownership: Ownership,
-    pub cache_hit: bool,
-}
-
-#[derive(Clone, Debug)]
-struct Node {
-    parent: Option<ProcessIdentity>,
-    is_agent_root: bool,
-}
-
-#[derive(Clone, Debug)]
-pub struct ObservedProcess {
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct ProcessKey {
     pub pid: u32,
-    pub creation_time: u64,
-    pub parent: Option<(u32, u64)>,
-    pub image_path: PathBuf,
+    pub sequence: u64,
 }
 
-impl ObservedProcess {
-    fn identity(&self) -> ProcessIdentity {
-        ProcessIdentity {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct SnapshotProcess {
+    pub pid: u32,
+    pub parent_pid: u32,
+    pub sequence: u64,
+}
+
+impl SnapshotProcess {
+    fn key(self) -> ProcessKey {
+        ProcessKey {
             pid: self.pid,
-            creation_time: self.creation_time,
+            sequence: self.sequence,
         }
     }
+}
 
-    fn parent_identity(&self) -> Option<ProcessIdentity> {
-        self.parent
-            .map(|(pid, creation_time)| ProcessIdentity { pid, creation_time })
+#[derive(Clone, Debug)]
+pub struct ProcessSnapshot {
+    by_pid: HashMap<u32, SnapshotProcess>,
+}
+
+impl ProcessSnapshot {
+    pub fn new(
+        max_entries: usize,
+        processes: impl IntoIterator<Item = SnapshotProcess>,
+    ) -> io::Result<Self> {
+        let mut by_pid = HashMap::new();
+        for process in processes {
+            if by_pid.len() == max_entries {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "process snapshot exceeded the entry cap",
+                ));
+            }
+            if by_pid.insert(process.pid, process).is_some() {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "process snapshot contained a duplicate PID",
+                ));
+            }
+        }
+        Ok(Self { by_pid })
+    }
+
+    fn capture_native(max_entries: usize) -> io::Result<Self> {
+        let entries = procs::sequence_process_snapshot(max_entries)?
+            .into_iter()
+            .map(|process| SnapshotProcess {
+                pid: process.pid,
+                parent_pid: process.parent_pid,
+                sequence: process.sequence,
+            });
+        Self::new(max_entries, entries)
+    }
+
+    pub fn key_for_pid(&self, pid: u32) -> Option<ProcessKey> {
+        self.by_pid.get(&pid).copied().map(SnapshotProcess::key)
     }
 }
 
@@ -56,10 +83,6 @@ pub struct AgentRootPaths {
 }
 
 impl AgentRootPaths {
-    /// Accept only existing absolute `.exe` files. Root recognition later uses
-    /// an exact, case-insensitive normalized path match. Known generic shells,
-    /// runtimes and terminal hosts are rejected even when their path exists;
-    /// caller-side provider validation must reject any additional broker.
     pub fn from_existing_executables(paths: impl IntoIterator<Item = PathBuf>) -> io::Result<Self> {
         let mut normalized = HashSet::new();
         for path in paths {
@@ -104,9 +127,18 @@ impl AgentRootPaths {
         Ok(Self { normalized })
     }
 
-    fn recognizes(&self, path: &Path) -> bool {
-        self.normalized.contains(&normalize_path(path))
+    fn normalized_match(&self, path: &Path) -> Option<String> {
+        let normalized = normalize_path(path);
+        self.normalized.contains(&normalized).then_some(normalized)
     }
+}
+
+fn normalize_path(path: &Path) -> String {
+    let normalized = path.to_string_lossy().replace('/', "\\").to_lowercase();
+    normalized
+        .strip_prefix(r"\\?\")
+        .unwrap_or(&normalized)
+        .to_owned()
 }
 
 fn is_generic_root(basename: &str) -> bool {
@@ -131,98 +163,149 @@ fn is_generic_root(basename: &str) -> bool {
     .any(|generic| basename.eq_ignore_ascii_case(generic))
 }
 
-fn normalize_path(path: &Path) -> String {
-    let normalized = path.to_string_lossy().replace('/', "\\").to_lowercase();
-    normalized
-        .strip_prefix(r"\\?\")
-        .unwrap_or(&normalized)
-        .to_owned()
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Ownership {
+    Agent,
+    Unknown,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Classification {
+    pub ownership: Ownership,
+    pub cache_hit: bool,
+}
+
+#[derive(Clone, Debug)]
+struct Node {
+    parent: Option<ProcessKey>,
+    is_agent_root: bool,
+}
+
+#[derive(Clone, Debug)]
+struct RootEnrollment {
+    bound_identity: Option<ProcessKey>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct ValidatedRoot {
+    identity: ProcessKey,
+    normalized_path: String,
 }
 
 #[derive(Debug)]
 pub struct AncestryTracker {
     roots: AgentRootPaths,
-    capacity: usize,
-    nodes: HashMap<ProcessIdentity, Node>,
-    insertion_order: VecDeque<ProcessIdentity>,
-    cache: HashMap<ProcessIdentity, Ownership>,
+    node_capacity: usize,
+    snapshot_capacity: usize,
+    nodes: HashMap<ProcessKey, Node>,
+    insertion_order: VecDeque<ProcessKey>,
+    cache: HashMap<ProcessKey, Ownership>,
+    previous: Option<ProcessSnapshot>,
+    previous_root_validations: HashMap<ProcessKey, String>,
+    root_enrollments: HashMap<u32, RootEnrollment>,
 }
 
 impl AncestryTracker {
-    pub fn new(roots: AgentRootPaths, capacity: usize) -> io::Result<Self> {
-        if capacity == 0 {
+    pub fn new(
+        roots: AgentRootPaths,
+        node_capacity: usize,
+        snapshot_capacity: usize,
+    ) -> io::Result<Self> {
+        if node_capacity == 0 || snapshot_capacity == 0 {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                "ancestry capacity must be nonzero",
+                "ancestry and snapshot capacities must be nonzero",
             ));
         }
         Ok(Self {
             roots,
-            capacity,
-            nodes: HashMap::with_capacity(capacity),
-            insertion_order: VecDeque::with_capacity(capacity),
-            cache: HashMap::with_capacity(capacity),
+            node_capacity,
+            snapshot_capacity,
+            nodes: HashMap::with_capacity(node_capacity),
+            insertion_order: VecDeque::with_capacity(node_capacity),
+            cache: HashMap::with_capacity(node_capacity),
+            previous: None,
+            previous_root_validations: HashMap::new(),
+            root_enrollments: HashMap::new(),
         })
     }
 
-    /// Retain edges only after the caller validated both creation identities.
-    /// A missing parent must be represented by omitting that parent node, which
-    /// makes classification stop at unknown rather than reconstructing history.
-    pub fn observe(&mut self, observations: impl IntoIterator<Item = ObservedProcess>) {
-        self.cache.clear();
-        for observation in observations {
-            let identity = observation.identity();
-            let parent = observation
-                .parent_identity()
-                .filter(|parent| parent.creation_time <= identity.creation_time);
-            let node = Node {
-                parent,
-                is_agent_root: self.roots.recognizes(&observation.image_path),
-            };
-            if let Some(existing) = self.nodes.get_mut(&identity) {
-                *existing = node;
-                continue;
-            }
-            self.nodes.insert(identity, node);
-            self.insertion_order.push_back(identity);
-            while self.nodes.len() > self.capacity {
-                if let Some(expired) = self.insertion_order.pop_front() {
-                    self.nodes.remove(&expired);
-                    self.cache.remove(&expired);
-                }
-            }
+    /// Explicit proof-only enrollment. Automatic provider candidate discovery
+    /// is intentionally outside this prototype.
+    pub fn enroll_root_pid(&mut self, pid: u32) -> io::Result<()> {
+        if pid == 0
+            || (!self.root_enrollments.contains_key(&pid)
+                && self.root_enrollments.len() == self.node_capacity)
+        {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "invalid or over-capacity root enrollment",
+            ));
         }
+        self.root_enrollments.entry(pid).or_insert(RootEnrollment {
+            bound_identity: None,
+        });
+        Ok(())
     }
 
-    /// Revalidate the queried PID's creation identity before every answer,
-    /// including cache hits. Ancestors may have exited after their edges were
-    /// observed; their retained identities remain valid history for a live
-    /// descendant.
-    pub fn classify_pid(
-        &mut self,
-        pid: u32,
-        mut current_identity: impl FnMut(u32) -> Option<(u32, u64)>,
-    ) -> Classification {
-        let Some((live_pid, creation_time)) = current_identity(pid) else {
+    /// A failed, truncated or unavailable observation breaks adjacency. Old
+    /// validated history remains, but the next complete snapshot is baseline
+    /// only and cannot create edges from the pre-gap snapshot.
+    pub fn invalidate_continuity(&mut self) {
+        self.previous = None;
+        self.previous_root_validations.clear();
+        self.cache.clear();
+    }
+
+    pub fn observe(&mut self, current: ProcessSnapshot) -> Observation {
+        self.advance(current, Vec::new())
+    }
+
+    pub fn refresh_native(&mut self) -> io::Result<NativeRefresh> {
+        let total_started = Instant::now();
+        let started = Instant::now();
+        let snapshot = match ProcessSnapshot::capture_native(self.snapshot_capacity) {
+            Ok(snapshot) => snapshot,
+            Err(error) => {
+                self.invalidate_continuity();
+                return Err(error);
+            }
+        };
+        let snapshot_time = started.elapsed();
+
+        let started = Instant::now();
+        let validated_roots = self.validate_enrolled_roots(&snapshot);
+        let root_validation_time = started.elapsed();
+
+        let started = Instant::now();
+        let observation = self.advance(snapshot, validated_roots);
+        let feed_update_time = started.elapsed();
+        Ok(NativeRefresh {
+            observation,
+            snapshot: snapshot_time,
+            root_validation: root_validation_time,
+            feed_update: feed_update_time,
+            total: total_started.elapsed(),
+        })
+    }
+
+    pub fn classify_current(&mut self, pid: u32) -> Classification {
+        let Some(identity) = self
+            .previous
+            .as_ref()
+            .and_then(|snapshot| snapshot.key_for_pid(pid))
+        else {
             return Classification {
                 ownership: Ownership::Unknown,
                 cache_hit: false,
             };
         };
-        if live_pid != pid {
-            return Classification {
-                ownership: Ownership::Unknown,
-                cache_hit: false,
-            };
-        }
-        let identity = ProcessIdentity { pid, creation_time };
         if let Some(ownership) = self.cache.get(&identity).copied() {
             return Classification {
                 ownership,
                 cache_hit: true,
             };
         }
-
         let ownership = self.classify_identity(identity);
         if self.nodes.contains_key(&identity) {
             self.cache.insert(identity, ownership);
@@ -233,6 +316,20 @@ impl AncestryTracker {
         }
     }
 
+    pub fn classify_native_pid(&mut self, pid: u32) -> io::Result<NativeClassification> {
+        let total_started = Instant::now();
+        let refresh = self.refresh_native()?;
+        let started = Instant::now();
+        let classification = self.classify_current(pid);
+        let lookup = started.elapsed();
+        Ok(NativeClassification {
+            classification,
+            refresh,
+            supplied_snapshot_lookup: lookup,
+            total: total_started.elapsed(),
+        })
+    }
+
     pub fn retained_nodes(&self) -> usize {
         self.nodes.len()
     }
@@ -241,7 +338,133 @@ impl AncestryTracker {
         self.cache.len()
     }
 
-    fn classify_identity(&self, mut identity: ProcessIdentity) -> Ownership {
+    fn validate_enrolled_roots(&mut self, snapshot: &ProcessSnapshot) -> Vec<ValidatedRoot> {
+        let mut validated = Vec::new();
+        for (&pid, enrollment) in &mut self.root_enrollments {
+            let Some(identity) = snapshot.key_for_pid(pid) else {
+                continue;
+            };
+            let bound = enrollment.bound_identity.get_or_insert(identity);
+            if *bound != identity {
+                continue;
+            }
+            let Some(info) = procs::process_info(pid) else {
+                continue;
+            };
+            if let Some(normalized_path) = self.roots.normalized_match(Path::new(&info.image_path))
+            {
+                validated.push(ValidatedRoot {
+                    identity,
+                    normalized_path,
+                });
+            }
+        }
+        validated
+    }
+
+    fn advance(
+        &mut self,
+        current: ProcessSnapshot,
+        validated_roots: Vec<ValidatedRoot>,
+    ) -> Observation {
+        let previous = self.previous.take();
+        let baseline_only = previous.is_none();
+        let mut added_edges = 0;
+        let mut promoted_roots = 0;
+        let mut graph_changed = false;
+        let current_root_validations = validated_roots
+            .into_iter()
+            .map(|root| (root.identity, root.normalized_path))
+            .collect::<HashMap<_, _>>();
+        let promotable_roots = current_root_validations
+            .iter()
+            .filter_map(|(identity, path)| {
+                (self.previous_root_validations.get(identity) == Some(path)
+                    && previous
+                        .as_ref()
+                        .and_then(|snapshot| snapshot.key_for_pid(identity.pid))
+                        == Some(*identity)
+                    && current.key_for_pid(identity.pid) == Some(*identity))
+                .then_some(*identity)
+            })
+            .collect::<HashSet<_>>();
+
+        if let Some(previous) = &previous {
+            for child in current.by_pid.values() {
+                let child_key = child.key();
+                if previous.key_for_pid(child.pid) == Some(child_key) {
+                    continue;
+                }
+                let Some(parent_before) = previous.key_for_pid(child.parent_pid) else {
+                    continue;
+                };
+                let Some(parent_now) = current.key_for_pid(child.parent_pid) else {
+                    continue;
+                };
+                if parent_before != parent_now
+                    || (!self.nodes.contains_key(&parent_now)
+                        && !promotable_roots.contains(&parent_now))
+                {
+                    continue;
+                }
+                graph_changed |= self.insert_node(child_key, Some(parent_now), false);
+                added_edges += 1;
+            }
+        }
+
+        for identity in promotable_roots {
+            let changed = self.insert_node(identity, None, true);
+            graph_changed |= changed;
+            promoted_roots += usize::from(changed);
+        }
+
+        if graph_changed {
+            self.cache.clear();
+        }
+        self.previous = Some(current);
+        self.previous_root_validations = current_root_validations;
+        Observation {
+            added_edges,
+            promoted_roots,
+            baseline_only,
+        }
+    }
+
+    fn insert_node(
+        &mut self,
+        identity: ProcessKey,
+        parent: Option<ProcessKey>,
+        is_agent_root: bool,
+    ) -> bool {
+        if let Some(node) = self.nodes.get_mut(&identity) {
+            let before = node.clone();
+            if is_agent_root {
+                node.is_agent_root = true;
+            } else if node.parent.is_none() {
+                node.parent = parent;
+            } else if node.parent != parent {
+                node.parent = None;
+            }
+            return node.parent != before.parent || node.is_agent_root != before.is_agent_root;
+        }
+        self.nodes.insert(
+            identity,
+            Node {
+                parent,
+                is_agent_root,
+            },
+        );
+        self.insertion_order.push_back(identity);
+        while self.nodes.len() > self.node_capacity {
+            if let Some(expired) = self.insertion_order.pop_front() {
+                self.nodes.remove(&expired);
+                self.cache.remove(&expired);
+            }
+        }
+        true
+    }
+
+    fn classify_identity(&self, mut identity: ProcessKey) -> Ownership {
         let mut visited = HashSet::new();
         while visited.insert(identity) {
             let Some(node) = self.nodes.get(&identity) else {
@@ -257,183 +480,30 @@ impl AncestryTracker {
         }
         Ownership::Unknown
     }
-
-    pub fn observe_native_chain(&mut self, owner_pid: u32) -> io::Result<NativeCapture> {
-        let total_started = Instant::now();
-
-        let started = Instant::now();
-        let first_snapshot = procs::process_parent_snapshot()?;
-        let first_snapshot_time = started.elapsed();
-        let first_by_pid = snapshot_by_pid(&first_snapshot);
-
-        let started = Instant::now();
-        let mut queried = Vec::new();
-        let mut cursor = owner_pid;
-        let mut seen = HashSet::new();
-        let mut failure = None;
-        let mut chain_ended = false;
-        while seen.insert(cursor) && queried.len() < self.capacity {
-            let Some(entry) = first_by_pid.get(&cursor) else {
-                failure = Some(NativeGap::MissingSnapshotEntry);
-                break;
-            };
-            let Some(info) = procs::process_info(cursor) else {
-                failure = Some(NativeGap::InaccessibleProcess);
-                break;
-            };
-            let is_root = self.roots.recognizes(Path::new(&info.image_path));
-            queried.push(QueriedProcess {
-                info,
-                parent_pid: (!is_root && entry.parent_pid != 0).then_some(entry.parent_pid),
-            });
-            if is_root || entry.parent_pid == 0 {
-                chain_ended = true;
-                break;
-            }
-            cursor = entry.parent_pid;
-        }
-        if failure.is_none() && !chain_ended {
-            failure = Some(NativeGap::CycleOrDepthLimit);
-        }
-        let chain_query_time = started.elapsed();
-
-        let started = Instant::now();
-        let verification_snapshot = procs::process_parent_snapshot()?;
-        let verification_snapshot_time = started.elapsed();
-        let verification_by_pid = snapshot_by_pid(&verification_snapshot);
-
-        let started = Instant::now();
-        if failure.is_none() {
-            failure = validate_queried_chain(&queried, &verification_by_pid);
-        }
-        let chain_revalidation_time = started.elapsed();
-
-        if failure.is_none() {
-            let observations = queried
-                .iter()
-                .map(|process| ObservedProcess {
-                    pid: process.info.identity.pid,
-                    creation_time: process.info.identity.creation_time,
-                    parent: process.parent_pid.and_then(|parent_pid| {
-                        queried
-                            .iter()
-                            .find(|candidate| candidate.info.identity.pid == parent_pid)
-                            .map(|parent| {
-                                (parent.info.identity.pid, parent.info.identity.creation_time)
-                            })
-                    }),
-                    image_path: PathBuf::from(&process.info.image_path),
-                })
-                .collect::<Vec<_>>();
-            self.observe(observations);
-        }
-
-        let started = Instant::now();
-        let classification = if failure.is_none() {
-            self.classify_pid(owner_pid, |pid| {
-                procs::process_identity(pid).map(|identity| (identity.pid, identity.creation_time))
-            })
-        } else {
-            Classification {
-                ownership: Ownership::Unknown,
-                cache_hit: false,
-            }
-        };
-        let classification_time = started.elapsed();
-
-        Ok(NativeCapture {
-            classification,
-            observed_nodes: queried.len(),
-            failure,
-            timings: NativeTimings {
-                first_snapshot: first_snapshot_time,
-                chain_queries: chain_query_time,
-                verification_snapshot: verification_snapshot_time,
-                chain_revalidation: chain_revalidation_time,
-                classification: classification_time,
-                total: total_started.elapsed(),
-            },
-        })
-    }
-
-    pub fn classify_native_pid(&mut self, pid: u32) -> Classification {
-        self.classify_pid(pid, |queried_pid| {
-            procs::process_identity(queried_pid)
-                .map(|identity| (identity.pid, identity.creation_time))
-        })
-    }
-}
-
-fn snapshot_by_pid(entries: &[ProcessParentEntry]) -> HashMap<u32, &ProcessParentEntry> {
-    entries.iter().map(|entry| (entry.pid, entry)).collect()
-}
-
-#[derive(Clone, Debug)]
-struct QueriedProcess {
-    info: ProcessInfo,
-    parent_pid: Option<u32>,
-}
-
-fn validate_queried_chain(
-    chain: &[QueriedProcess],
-    verification: &HashMap<u32, &ProcessParentEntry>,
-) -> Option<NativeGap> {
-    for process in chain {
-        let Some(current_entry) = verification.get(&process.info.identity.pid) else {
-            return Some(NativeGap::MissingSnapshotEntry);
-        };
-        if process
-            .parent_pid
-            .is_some_and(|parent_pid| current_entry.parent_pid != parent_pid)
-        {
-            return Some(NativeGap::ChangedDuringCapture);
-        }
-        let Some(current_identity) = procs::process_identity(process.info.identity.pid) else {
-            return Some(NativeGap::InaccessibleProcess);
-        };
-        if current_identity != process.info.identity {
-            return Some(NativeGap::ChangedDuringCapture);
-        }
-    }
-    for pair in chain.windows(2) {
-        let child = &pair[0];
-        let parent = &pair[1];
-        if child.parent_pid != Some(parent.info.identity.pid) {
-            return Some(NativeGap::MissingValidatedParent);
-        }
-        if parent.info.identity.creation_time > child.info.identity.creation_time {
-            return Some(NativeGap::ReusedParentPid);
-        }
-    }
-    None
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum NativeGap {
-    MissingSnapshotEntry,
-    InaccessibleProcess,
-    ChangedDuringCapture,
-    MissingValidatedParent,
-    ReusedParentPid,
-    CycleOrDepthLimit,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct NativeTimings {
-    pub first_snapshot: Duration,
-    pub chain_queries: Duration,
-    pub verification_snapshot: Duration,
-    pub chain_revalidation: Duration,
-    pub classification: Duration,
+pub struct Observation {
+    pub added_edges: usize,
+    pub promoted_roots: usize,
+    pub baseline_only: bool,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct NativeRefresh {
+    pub observation: Observation,
+    pub snapshot: Duration,
+    pub root_validation: Duration,
+    pub feed_update: Duration,
     pub total: Duration,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct NativeCapture {
+pub struct NativeClassification {
     pub classification: Classification,
-    pub observed_nodes: usize,
-    pub failure: Option<NativeGap>,
-    pub timings: NativeTimings,
+    pub refresh: NativeRefresh,
+    pub supplied_snapshot_lookup: Duration,
+    pub total: Duration,
 }
 
 #[cfg(test)]
@@ -444,59 +514,143 @@ mod tests {
         AgentRootPaths::from_existing_executables([std::env::current_exe().unwrap()]).unwrap()
     }
 
-    fn observed(
-        pid: u32,
-        created: u64,
-        parent: Option<(u32, u64)>,
-        path: PathBuf,
-    ) -> ObservedProcess {
-        ObservedProcess {
-            pid,
-            creation_time: created,
-            parent,
-            image_path: path,
+    fn tracker(capacity: usize) -> AncestryTracker {
+        AncestryTracker::new(roots(), capacity, 16_384).unwrap()
+    }
+
+    fn snapshot(rows: &[(u32, u32, u64)]) -> ProcessSnapshot {
+        ProcessSnapshot::new(
+            64,
+            rows.iter()
+                .map(|&(pid, parent_pid, sequence)| SnapshotProcess {
+                    pid,
+                    parent_pid,
+                    sequence,
+                }),
+        )
+        .unwrap()
+    }
+
+    fn root(pid: u32, sequence: u64) -> ValidatedRoot {
+        ValidatedRoot {
+            identity: ProcessKey { pid, sequence },
+            normalized_path: normalize_path(&std::env::current_exe().unwrap()),
         }
     }
 
     #[test]
-    fn complete_observed_chain_reaches_exact_configured_root() {
-        let root_path = std::env::current_exe().unwrap();
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([
-            observed(10, 100, None, root_path),
-            observed(
-                20,
-                200,
-                Some((10, 100)),
-                PathBuf::from("C:/Windows/cmd.exe"),
-            ),
-            observed(30, 300, Some((20, 200)), PathBuf::from("C:/fixture.exe")),
-        ]);
-
-        let result = tracker.classify_pid(30, |_| Some((30, 300)));
-        assert_eq!(result.ownership, Ownership::Agent);
-        assert!(!result.cache_hit);
+    fn child_is_admitted_only_after_parent_was_present() {
+        let mut tracker = tracker(8);
+        tracker.advance(snapshot(&[(10, 1, 900)]), vec![root(10, 900)]);
+        tracker.advance(snapshot(&[(10, 1, 900), (20, 10, 1)]), vec![root(10, 900)]);
+        assert_eq!(tracker.classify_current(20).ownership, Ownership::Agent);
     }
 
     #[test]
-    fn generic_shell_and_same_basename_are_not_roots() {
-        let configured = std::env::current_exe().unwrap();
-        let same_name = PathBuf::from("C:/elsewhere").join(configured.file_name().unwrap());
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([
-            observed(10, 100, None, same_name),
-            observed(
-                20,
-                200,
-                Some((10, 100)),
-                PathBuf::from("C:/Windows/cmd.exe"),
-            ),
-        ]);
-
-        assert_eq!(
-            tracker.classify_pid(20, |_| Some((20, 200))).ownership,
-            Ownership::Unknown
+    fn nonmonotonic_sequence_values_make_no_chronology_claim() {
+        let mut tracker = tracker(8);
+        tracker.advance(snapshot(&[(10, 1, 9_000)]), vec![root(10, 9_000)]);
+        tracker.advance(
+            snapshot(&[(10, 1, 9_000), (20, 10, 1)]),
+            vec![root(10, 9_000)],
         );
+        assert_eq!(tracker.classify_current(20).ownership, Ownership::Agent);
+    }
+
+    #[test]
+    fn existing_unobserved_ancestry_stays_unknown() {
+        let mut tracker = tracker(8);
+        tracker.advance(
+            snapshot(&[(10, 1, 100), (20, 10, 200)]),
+            vec![root(10, 100)],
+        );
+        tracker.advance(
+            snapshot(&[(10, 1, 100), (20, 10, 200)]),
+            vec![root(10, 100)],
+        );
+        assert_eq!(tracker.classify_current(20).ownership, Ownership::Unknown);
+    }
+
+    #[test]
+    fn parent_and_child_first_seen_together_leave_child_unknown() {
+        let mut tracker = tracker(8);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(
+            snapshot(&[(10, 1, 100), (20, 10, 200), (30, 20, 300)]),
+            vec![],
+        );
+        assert_eq!(tracker.classify_current(30).ownership, Ownership::Unknown);
+    }
+
+    #[test]
+    fn observation_gap_prevents_comparison_across_the_gap() {
+        let mut tracker = tracker(8);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.invalidate_continuity();
+        tracker.observe(snapshot(&[(10, 1, 100), (20, 10, 200)]));
+        assert_eq!(tracker.classify_current(20).ownership, Ownership::Unknown);
+    }
+
+    #[test]
+    fn pid_reuse_after_a_gap_does_not_hit_the_old_cache() {
+        let mut tracker = tracker(8);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(
+            snapshot(&[(10, 1, 100), (20, 10, 200)]),
+            vec![root(10, 100)],
+        );
+        assert_eq!(tracker.classify_current(20).ownership, Ownership::Agent);
+        assert!(tracker.classify_current(20).cache_hit);
+        tracker.invalidate_continuity();
+        tracker.observe(snapshot(&[(10, 1, 100), (20, 10, 999)]));
+        let reused = tracker.classify_current(20);
+        assert_eq!(reused.ownership, Ownership::Unknown);
+        assert!(!reused.cache_hit);
+    }
+
+    #[test]
+    fn missing_or_inaccessible_parent_is_unknown() {
+        let mut tracker = tracker(8);
+        tracker.observe(snapshot(&[(30, 20, 300)]));
+        tracker.observe(snapshot(&[(30, 20, 300), (40, 30, 400)]));
+        assert_eq!(tracker.classify_current(40).ownership, Ownership::Unknown);
+    }
+
+    #[test]
+    fn root_requires_the_same_image_binding_twice() {
+        let mut tracker = tracker(8);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![]);
+        assert_eq!(tracker.classify_current(10).ownership, Ownership::Unknown);
+    }
+
+    #[test]
+    fn retained_edges_survive_ancestor_exit() {
+        let mut tracker = tracker(8);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(
+            snapshot(&[(10, 1, 100), (20, 10, 200)]),
+            vec![root(10, 100)],
+        );
+        tracker.observe(snapshot(&[(20, 10, 200), (30, 20, 300)]));
+        tracker.observe(snapshot(&[(30, 20, 300)]));
+        assert_eq!(tracker.classify_current(30).ownership, Ownership::Agent);
+    }
+
+    #[test]
+    fn retained_nodes_and_cached_answers_are_bounded() {
+        let mut tracker = tracker(2);
+        tracker.advance(snapshot(&[(10, 1, 100)]), vec![root(10, 100)]);
+        tracker.advance(
+            snapshot(&[(10, 1, 100), (20, 10, 200)]),
+            vec![root(10, 100)],
+        );
+        tracker.observe(snapshot(&[(10, 1, 100), (20, 10, 200), (30, 20, 300)]));
+        assert_eq!(tracker.retained_nodes(), 2);
+        let _ = tracker.classify_current(30);
+        assert!(tracker.cached_answers() <= tracker.retained_nodes());
     }
 
     #[test]
@@ -507,160 +661,14 @@ mod tests {
     }
 
     #[test]
-    fn missing_parent_history_stays_unknown() {
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([observed(
-            30,
-            300,
-            Some((20, 200)),
-            PathBuf::from("C:/fixture.exe"),
-        )]);
-
+    fn native_self_root_needs_two_live_image_validations() {
+        let mut tracker = tracker(8);
+        tracker.enroll_root_pid(std::process::id()).unwrap();
+        tracker.refresh_native().unwrap();
+        tracker.refresh_native().unwrap();
         assert_eq!(
-            tracker.classify_pid(30, |_| Some((30, 300))).ownership,
-            Ownership::Unknown
-        );
-    }
-
-    #[test]
-    fn reused_parent_pid_does_not_bridge_to_a_new_identity() {
-        let root_path = std::env::current_exe().unwrap();
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([
-            observed(20, 250, None, root_path),
-            observed(30, 300, Some((20, 200)), PathBuf::from("C:/fixture.exe")),
-        ]);
-
-        assert_eq!(
-            tracker.classify_pid(30, |_| Some((30, 300))).ownership,
-            Ownership::Unknown
-        );
-    }
-
-    #[test]
-    fn newer_reused_parent_identity_is_rejected_at_observation() {
-        let root_path = std::env::current_exe().unwrap();
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([
-            observed(20, 400, None, root_path),
-            observed(30, 300, Some((20, 400)), PathBuf::from("C:/fixture.exe")),
-        ]);
-
-        assert_eq!(
-            tracker.classify_pid(30, |_| Some((30, 300))).ownership,
-            Ownership::Unknown
-        );
-    }
-
-    #[test]
-    fn inaccessible_parent_cannot_be_inferred_from_its_pid() {
-        let root_path = std::env::current_exe().unwrap();
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([
-            observed(10, 100, None, root_path),
-            // The raw PPID may have been 10, but without access to its creation
-            // identity the child has no validated parent edge to retain.
-            observed(20, 200, None, PathBuf::from("C:/fixture.exe")),
-        ]);
-
-        assert_eq!(
-            tracker.classify_pid(20, |_| Some((20, 200))).ownership,
-            Ownership::Unknown
-        );
-    }
-
-    #[test]
-    fn observed_lineage_survives_parent_and_root_exit() {
-        let root_path = std::env::current_exe().unwrap();
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([
-            observed(10, 100, None, root_path),
-            observed(20, 200, Some((10, 100)), PathBuf::from("C:/bridge.exe")),
-            observed(30, 300, Some((20, 200)), PathBuf::from("C:/leaf.exe")),
-        ]);
-
-        // Only the queried descendant is revalidated. The retained edge is the
-        // evidence for ancestors that have since exited.
-        assert_eq!(
-            tracker
-                .classify_pid(30, |pid| (pid == 30).then_some((30, 300)))
-                .ownership,
+            tracker.classify_current(std::process::id()).ownership,
             Ownership::Agent
         );
-    }
-
-    #[test]
-    fn cache_hits_still_revalidate_and_reject_pid_reuse_or_inaccessibility() {
-        let root_path = std::env::current_exe().unwrap();
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        tracker.observe([
-            observed(10, 100, None, root_path),
-            observed(20, 200, Some((10, 100)), PathBuf::from("C:/leaf.exe")),
-        ]);
-        let mut calls = 0;
-        let first = tracker.classify_pid(20, |_| {
-            calls += 1;
-            Some((20, 200))
-        });
-        let second = tracker.classify_pid(20, |_| {
-            calls += 1;
-            Some((20, 200))
-        });
-        let reused = tracker.classify_pid(20, |_| {
-            calls += 1;
-            Some((20, 999))
-        });
-        let inaccessible = tracker.classify_pid(20, |_| {
-            calls += 1;
-            None
-        });
-
-        assert!(!first.cache_hit);
-        assert!(second.cache_hit);
-        assert_eq!(reused.ownership, Ownership::Unknown);
-        assert!(!reused.cache_hit);
-        assert_eq!(inaccessible.ownership, Ownership::Unknown);
-        assert!(!inaccessible.cache_hit);
-        assert_eq!(calls, 4);
-    }
-
-    #[test]
-    fn bounded_retention_evicts_old_history_and_answers() {
-        let root_path = std::env::current_exe().unwrap();
-        let mut tracker = AncestryTracker::new(roots(), 2).unwrap();
-        tracker.observe([
-            observed(10, 100, None, root_path),
-            observed(20, 200, Some((10, 100)), PathBuf::from("C:/leaf.exe")),
-        ]);
-        assert_eq!(
-            tracker.classify_pid(20, |_| Some((20, 200))).ownership,
-            Ownership::Agent
-        );
-        tracker.observe([observed(30, 300, None, PathBuf::from("C:/human.exe"))]);
-
-        assert_eq!(tracker.retained_nodes(), 2);
-        assert!(tracker.cached_answers() <= 2);
-        assert_eq!(
-            tracker.classify_pid(20, |_| Some((20, 200))).ownership,
-            Ownership::Unknown
-        );
-
-        for pid in 100..1_000 {
-            let _ = tracker.classify_pid(pid, |_| Some((pid, u64::from(pid))));
-        }
-        assert!(tracker.cached_answers() <= tracker.retained_nodes());
-    }
-
-    #[test]
-    fn native_self_capture_uses_validated_path_and_revalidates_cache_hit() {
-        let mut tracker = AncestryTracker::new(roots(), 8).unwrap();
-        let first = tracker.observe_native_chain(std::process::id()).unwrap();
-        assert_eq!(first.failure, None);
-        assert_eq!(first.classification.ownership, Ownership::Agent);
-        assert!(!first.classification.cache_hit);
-
-        let cached = tracker.classify_native_pid(std::process::id());
-        assert_eq!(cached.ownership, Ownership::Agent);
-        assert!(cached.cache_hit);
     }
 }

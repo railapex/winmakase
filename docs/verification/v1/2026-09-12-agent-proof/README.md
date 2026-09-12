@@ -1,58 +1,70 @@
-# A1 native ancestry prototype
+# A1 sequence-feed ancestry prototype
 
-Status: bounded algorithm and native fixture proof passed. This does not pass A1, provider recognition, HWND ownership, placement or background-input coverage.
+Status: bounded algorithm and controlled native fixture proof passed after review cycle 1. This does not pass A1, automatic provider recognition, HWND ownership, placement or background input.
 
-## Result
+## Review correction
 
-The conservative lineage algorithm worked for the tested identity and retention cases. It recognizes only configured existing executable paths, keys every retained node by PID plus creation time, retains only validated parent identities, revalidates the queried owner on every cache hit and returns unknown when history or access is missing. Dynamic retention and cached answers share one fixed node cap.
+The first commit's retrospective Toolhelp walk was unsafe. Process creation times are UTC timestamps, not monotonic identities. If a true unseen parent exits, the clock moves backward and an unrelated configured executable reuses that PPID with an earlier timestamp, two matching Toolhelp snapshots plus timestamp ordering can still produce false agent ownership. `GetProcessTimes` can also succeed for an exited process object while another handle keeps it alive.
 
-The native miss path is evidence against running the full scan unconditionally on every window event. In the final release benchmark, two Toolhelp PID/PPID snapshots dominated a three-node capture: 58.1283 ms median and 76.2888 ms p95 end to end. Exact-chain image and creation queries were 0.1127 ms median. After the root and intermediate exited, retained ancestry classified the surviving leaf in 200/200 cache-hit queries; owner creation revalidation was 0.0013 ms median.
+The corrected prototype removes retrospective timestamp ancestry entirely. It uses Windows 11 26100.4770+ `SystemBasicProcessInformation`, whose `SequenceNumber` is documented as unique and intended to detect PID reuse. Microsoft also describes this information class as faster and lower-memory than `SystemProcessInformation`. No chronological meaning is assigned to sequence values. [Microsoft `NtQuerySystemInformation`](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation)
 
-This supports retained observation plus cheap cache-hit validation. It does not establish which process-start observer can feed the cache reliably or whether a miss can complete in the same Glaze Manage pass. PPID plus an older parent creation time still cannot restore an edge that was never observed.
+## Safe feed contract
 
-## Implemented contract
+- Each complete observation retains only PID, PPID and unique sequence number. The parser does not dereference or retain the returned global image-name pointers.
+- A child edge is admitted only when the child sequence identity is absent from the immediately previous complete observation, present now, and the same unique parent identity is present in both observations. The parent must already be a retained agent root or descendant.
+- Existing ancestry at observer start, a parent and child first seen together, a missing/inaccessible parent and any failed/truncated/over-cap observation remain unknown. An observation failure breaks continuity; the next success is baseline only.
+- Observer restart starts with no lineage. There is no persistence or reconstruction from timestamps.
+- Root enrollment is an explicit fixture-owned PID in this proof. The PID binds once to its first observed sequence identity. The exact configured executable path must match while the process is live in two consecutive complete observations before the root is promoted. The helper checks process liveness before and after its exact image query.
+- Cached answers key on PID plus sequence. Lookup against a supplied current snapshot rejects a missing or reused PID. End-to-end native lookup first captures a fresh sequence snapshot, advances the feed, then classifies.
+- Retained nodes, cache answers, root enrollments, snapshot entries and native query buffer all have hard caps. Only descendants of retained roots/descendants enter the dynamic graph.
+- Unsupported `SystemBasicProcessInformation`, malformed/truncated data and cap overflow fail closed. There is no Toolhelp or creation-time attribution fallback.
+- Known generic shell, runtime and terminal-host executable names are rejected as configured roots. Automatic provider candidate discovery and package-entry enrollment remain open.
 
-- `agent_ancestry.rs` is an unwired prototype module. `AgentRootPaths` accepts only existing absolute `.exe` files and compares normalized full paths. It rejects known generic shell, runtime and terminal-host executable names even when configured; caller-side provider validation must reject any additional broker. This proof configured only its copied fixture root.
-- `ObservedProcess` carries the child identity and an optional already-validated parent identity. Missing/inaccessible parents have no edge. A parent newer than its child is rejected as a reused PID.
-- `AncestryTracker` follows retained creation identities to a recognized root. A gap, stale child identity, inaccessible owner, cycle, evicted node or reused PID yields `Unknown`.
-- Cache lookup first reopens the queried PID for its current creation identity. Unknown identities are not cached, so arbitrary misses cannot grow memory beyond the retention cap.
-- Native capture takes an initial PID/PPID-only Toolhelp snapshot, queries image and creation data only for the exact requested chain, takes a verification PID/PPID snapshot, reopens every queried identity and requires the child edges to agree before retention. Global process paths, commands and environment were neither collected nor printed.
-- The existing supervisor image-path lookup still uses its basename prefilter plus exact full-path check. The shared Toolhelp enumerator was refactored without changing that contract.
+The existing supervisor lookup still uses its original Toolhelp basename prefilter plus exact full-path match. No production policy calls the new feed.
 
 ## Deterministic coverage
 
-Eleven focused tests cover:
+Twelve ancestry tests cover prior-parent admission, existing ancestry, same-observation parent/child, missing parent, observation gaps, PID reuse, exact root binding twice, retained edges after ancestor exit, bounded memory, generic-root rejection, native sequence capture and deliberately nonmonotonic sequence values. Nine process-helper tests include the existing supervisor exact-path regressions, native sequence identity for the current process, rejection of an exited-but-held hidden child, and parser rejection of truncation, PID overflow and entry-cap overflow.
 
-- complete observed root/bridge/leaf classification;
-- exact configured path versus same-basename and generic-shell negatives;
-- rejection of a configured exact `cmd.exe` path as a generic root;
-- missing and inaccessible parent history;
-- a reused parent PID with a different creation identity;
-- a currently newer parent identity rejected during observation;
-- retained classification after parent and root exit;
-- cache-hit owner revalidation, inaccessible owner and reused owner PID;
-- bounded node/cache memory and loss of classification after required history is evicted;
-- a native self-root capture using the real Toolhelp and process-time path.
+The hidden native fixture stages each edge across separate observations:
 
-The hidden native benchmark used two copied fixture executables: one configured provider root and one bridge/leaf image. The observer launched the root with `CREATE_NO_WINDOW`; root, bridge and leaf were the only processes whose paths/creation identities were queried. Twenty-five cold captures passed with three observed nodes and 25 cache misses. The fixture then exited root and bridge while leaving the leaf alive; 200 retained cache-hit classifications passed. Fixtures exited and the temporary directory was removed.
+1. Explicitly enroll the copied root PID and validate its sequence/path twice.
+2. Signal the root to create the bridge, then observe the bridge edge.
+3. Signal the bridge to create the leaf, then observe the leaf edge.
+4. Classify the leaf, exit root and bridge, refresh, and classify the surviving leaf through retained edges.
 
-Exact release timings are in [benchmark.json](benchmark.json). The benchmark reports distributions in nanoseconds and contains no raw PIDs or global process data.
+The fixture queried image/liveness only for its explicitly enrolled copied root. It did not launch a provider or inspect any global image name, command, environment, HWND or `muxel-live` process/path.
 
-## Verification
+## Release timings
 
-- `cargo test -p winmakase agent_ancestry -- --nocapture`: 11 passed, 0 failed.
-- `cargo run --release -p winmakase --example agent_ancestry_proof`: 25 captures and 200 retained cache hits passed; timings recorded in `benchmark.json`.
-- `cargo test -p winmakase --lib`: 130 passed with one real-taskbar test ignored, including all four existing exact-path process-lookup regressions.
-- `cargo test --workspace`: an earlier library phase passed 129 tests with one real-taskbar test ignored before the final generic-root test was added. The supervisor integration phase was environment-blocked: 18 fixture-start cases failed after the host's existing commit-pressure gate refused fresh Glaze fixture starts. A serial rerun reproduced the gate; its own supervisor log said `Windows commit pressure is above 50% — delaying GlazeWM until headroom returns`. This is not a test pass.
-- `cargo clippy -p winmakase --all-targets -- -D warnings`: blocked by three pre-existing warnings in untouched `supervisor.rs` and `taskbar.rs` (`collapsible_if`, `new_without_default`). `cargo clippy -p winmakase --all-targets -- -D warnings -A clippy::collapsible_if -A clippy::new_without_default` passed, preserving strict checks for the changed code while allowing only those known baseline classes.
-- `cargo fmt --all -- --check`: blocked by pre-existing formatting drift in untouched `taskbar.rs`. The changed Rust files were formatted directly with Rustfmt.
+The final release run passed two staged fixture edges, 200/200 cache lookups against an already supplied current snapshot and 50/50 end-to-end cache hits with a fresh sequence snapshot. One warm-up classification missed cache because a new owned descendant appeared and changed the graph; ownership remained agent and the cache repopulated.
 
-Requested worker routing was `gpt-5.6-sol` at high effort. Actual model metadata was not exposed to this worker runtime, so no substitution claim is made.
+| Operation | Median | p95 | Maximum |
+|---|---:|---:|---:|
+| Lookup with supplied current snapshot | 0.0001 ms | 0.0001 ms | 0.0001 ms |
+| Fresh sequence snapshot | 0.5683 ms | 0.6891 ms | 0.7118 ms |
+| Exact enrolled-root live image validation | 0.0514 ms | 0.0803 ms | 0.0955 ms |
+| Feed update | 0.0434 ms | 0.0647 ms | 0.0718 ms |
+| Fresh snapshot to answer | 0.6611 ms | 0.8114 ms | 0.8403 ms |
 
-## Limits and next decision
+Exact nanosecond distributions are in [benchmark.json](benchmark.json). They contain no raw PIDs or global process data.
 
-No provider, terminal, browser, CUA, HWND, Glaze, guest, task, service or live configuration was launched or changed. The proof does not cover process-start event loss/order, short-lived unseen intermediates, observer restart, two simultaneous real agents, warm brokers, detached provider children, console HWND ownership or placement latency. Those remain A1 cases.
+The 0.6611 ms median fresh-snapshot path is evidence against capturing a new global snapshot unconditionally for every Manage event. A caller that already owns the current observation can use the supplied-snapshot lookup; event cadence and batching still need integration proof.
 
-The failed workspace run left one reported test stub, PID 10916; it was stopped explicitly. A later exact check found neither PID 10916, the serial runner PID 60720 nor the fixture-specific `winmakase-adoptee` image running. The Friday PreToolUse hook rejected recursive removal of `D:/temp/windows/winmakase-test-110912-2-adopt-bin` and `D:/temp/windows/winmakase-test-60720-1-start-failure` even after both paths were resolved beneath the temp root. Those two scratch directories remain; they contain only test output and a copied fixture executable.
+## Verification and limits
 
-The next tracker experiment should populate this bounded identity graph before window admission and use the 1.3 µs median cache-hit path during admission. A cold two-snapshot miss can remain conservative and return unknown, or run outside the immediate placement path. Selecting an event source or integration seam still needs evidence; this prototype does not justify WMI, a Job Object or production policy wiring.
+- `cargo test -p winmakase agent_ancestry -- --nocapture`: 12 passed.
+- `cargo test -p winmakase procs -- --nocapture`: 9 passed.
+- `cargo test -p winmakase --lib`: 136 passed, 1 explicit real-taskbar test ignored.
+- Scoped Clippy with the two known untouched lint classes allowed passed for all `winmakase` targets; `git diff --check` passed.
+- Supervisor process-spawning integration remains environment-blocked by the existing host commit-pressure gate; it was not rerun in this review cycle.
+
+No fixture process remains. The local hook rejected recursive cleanup of the first two paths below. Three failed example-run directories also remain; no bypass was attempted. Exact cleanup targets are:
+
+- `D:/temp/windows/winmakase-test-110912-2-adopt-bin`
+- `D:/temp/windows/winmakase-test-60720-1-start-failure`
+- `D:/temp/windows/winmakase-agent-ancestry-102864-1789224733192744500`
+- `D:/temp/windows/winmakase-agent-ancestry-56976-1789224803210753900`
+- `D:/temp/windows/winmakase-agent-ancestry-94400-1789224786174435000`
+
+The proof does not cover automatic provider discovery, real provider helpers, event cadence/loss, two simultaneous agents, detached descendants, observer restart recovery, warm brokers, HWND ownership or placement timing. This result supports the sequence-feed identity and edge rule on the controlled fixture. It does not establish production readiness or provider coverage.
