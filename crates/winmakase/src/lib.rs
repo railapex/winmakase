@@ -4,6 +4,8 @@
 //! The library half exists so the supervisor's behaviour can be driven from
 //! tests. See [`supervisor`] for the linked-pair rule that shapes most of it.
 
+#[doc(hidden)]
+pub mod agent_ancestry;
 pub mod backoff;
 pub mod commands;
 pub mod commit_pressure;

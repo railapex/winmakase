@@ -1,0 +1,47 @@
+{
+  "cache_hits_after_ancestor_exit": 200,
+  "captures": 25,
+  "classification_misses": 25,
+  "observed_chain_nodes": 3,
+  "observed_model": "not exposed to the worker runtime",
+  "requested_model": "gpt-5.6-sol/high builder",
+  "retained_after_root_and_bridge_exit": true,
+  "scope": "hidden fixture-owned process chain only",
+  "timings_ns": {
+    "cache_hit_owner_identity_revalidation": {
+      "max": 1700,
+      "median": 1300,
+      "p95": 1400
+    },
+    "exact_chain_identity_and_image_queries": {
+      "max": 269000,
+      "median": 112700,
+      "p95": 222400
+    },
+    "exact_chain_identity_revalidation": {
+      "max": 24700,
+      "median": 16800,
+      "p95": 20500
+    },
+    "first_full_snapshot": {
+      "max": 39897000,
+      "median": 28768800,
+      "p95": 37704200
+    },
+    "full_capture": {
+      "max": 78608200,
+      "median": 58128300,
+      "p95": 76288800
+    },
+    "miss_classification": {
+      "max": 34100,
+      "median": 2400,
+      "p95": 4700
+    },
+    "verification_full_snapshot": {
+      "max": 47109800,
+      "median": 28614900,
+      "p95": 38462700
+    }
+  }
+}
