@@ -16,7 +16,7 @@ $ErrorActionPreference = 'Stop'
 
 $bin = Join-Path $env:USERPROFILE '.winmakase\bin'
 New-Item -ItemType Directory -Force $bin | Out-Null
-foreach ($exe in 'winmakase.exe', 'winmakased.exe') {
+foreach ($exe in 'winmakase.exe', 'winmakased.exe', 'winmakase-run.exe') {
     $src = Join-Path $BuildDir $exe
     if (-not (Test-Path $src)) { throw "$src not found - build first: cargo build --release" }
     try {

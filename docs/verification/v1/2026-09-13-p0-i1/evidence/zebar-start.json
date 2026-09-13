@@ -1,0 +1,17 @@
+﻿{
+    "at":  "2026-09-13T13:15:55.0918421+00:00",
+    "binary":  "C:/WinmakaseAssets/zebar-portable/zebar.exe",
+    "sha256":  "16EF0B5B586F30DF132DE93CFB31C4D9105571EC3525685B4BDA6D8D6D5C84D0",
+    "zebarPid":  2820,
+    "pack":  "C:\\Users\\WDAGUtilityAccount\\.glzr\\zebar\\winmakase",
+    "settings":  {
+                     "startupConfigs":  [
+                                            {
+                                                "widget":  "bar",
+                                                "preset":  "default",
+                                                "pack":  "winmakase"
+                                            }
+                                        ],
+                     "$schema":  "https://github.com/glzr-io/zebar/raw/v3.3.1/resources/settings-schema.json"
+                 }
+}

@@ -1,0 +1,21 @@
+{
+  "sourceVersion": "0.1.8",
+  "sourceParent": "71b77d3c43d4c78c94cb053fe1288f71a4dcc825",
+  "winmakaseSha256": "D79F8D743A1BEB9B8A7084827C4A2C4D64517D9B617B92FAC505F0B2B6DBF3F8",
+  "winmakaseRunSha256": "FD5574DECF9DEE5DC7F2A1F074AFDCE774089AF47036E1B92985A6AF6AA9AF6F",
+  "winmakaseRunSubsystem": "IMAGE_SUBSYSTEM_WINDOWS_GUI",
+  "powerToysVersion": "0.100.2",
+  "powerToysInstallerSha256": "945FDF327E4D38E4CED61B0727B7AB8A1222958782982052989DDF7CB7096F62",
+  "powerToysRunSha256": "062ED25AA8F343C83641277111BCCAC366B25EBF80021B1E4D783EEF25D2E688",
+  "zebarVersion": "3.3.1",
+  "zebarInstallerSha256": "1D5584BE8DEF58F828D55ED09CEE52FE80FDD60EA118141F37963AA80E902C28",
+  "zebarPortableSha256": "16EF0B5B586F30DF132DE93CFB31C4D9105571EC3525685B4BDA6D8D6D5C84D0",
+  "guest": {
+    "windowsBuild": 26100,
+    "vGpu": false,
+    "clipboard": false,
+    "printer": false,
+    "audioInput": false,
+    "networking": "enabled only for the final CDN-backed Zebar interaction pass"
+  }
+}

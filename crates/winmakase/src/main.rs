@@ -86,6 +86,12 @@ enum Cmd {
         action: KanataAction,
     },
 
+    /// Open or focus PowerToys Run without toggling an open launcher closed.
+    Launcher {
+        #[command(subcommand)]
+        action: LauncherAction,
+    },
+
     /// Explain a documented gap — bound to chords whose omarchy feature the
     /// stack cannot provide, so the key explains itself instead of dying
     /// silently.
@@ -154,6 +160,19 @@ enum KanataAction {
 }
 
 #[derive(Subcommand)]
+enum LauncherAction {
+    /// Observe PowerToys Run, then focus it or signal its invoke event once.
+    Open {
+        /// Print a machine-readable result (including structured failures).
+        #[arg(long)]
+        json: bool,
+        /// Total readiness/activation deadline after acquiring the caller lock.
+        #[arg(long, default_value_t = 1500, value_name = "MILLISECONDS")]
+        timeout_ms: u64,
+    },
+}
+
+#[derive(Subcommand)]
 enum KeymapAction {
     /// Check structural rules, chord conflicts, and print coverage.
     Check {
@@ -185,7 +204,28 @@ enum KeymapAction {
         /// Write to a file instead of stdout.
         #[arg(long, value_name = "FILE")]
         out: Option<PathBuf>,
+        /// Physical key that owns abstract SUPER bindings.
+        #[arg(long, value_enum, default_value_t = SuperKeyArg::RightWin)]
+        super_key: SuperKeyArg,
     },
+}
+
+#[derive(Copy, Clone, Default, ValueEnum)]
+enum SuperKeyArg {
+    /// Caps is mapped to right-Win by kanata; physical left Win stays native.
+    #[default]
+    RightWin,
+    /// Patched GlazeWM owns Caps directly as its leader.
+    CapsLock,
+}
+
+impl From<SuperKeyArg> for winmakase_keymap::SuperKey {
+    fn from(value: SuperKeyArg) -> Self {
+        match value {
+            SuperKeyArg::RightWin => Self::RightWin,
+            SuperKeyArg::CapsLock => Self::CapsLock,
+        }
+    }
 }
 
 /// A `logs` target: any supervised component, plus the supervisor's own log.
@@ -267,6 +307,7 @@ fn main() -> ExitCode {
         Cmd::Reload { timeout } => return reload(&paths, timeout),
         Cmd::Keymap { action } => keymap_cmd(&paths, action),
         Cmd::Kanata { action } => kanata_cmd(&paths, action),
+        Cmd::Launcher { action } => return launcher_cmd(action),
         Cmd::Gap { name } => {
             gap_cmd(name);
             Ok(())
@@ -280,6 +321,44 @@ fn main() -> ExitCode {
     match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(e) => fail(e),
+    }
+}
+
+fn launcher_cmd(action: LauncherAction) -> ExitCode {
+    match action {
+        LauncherAction::Open { json, timeout_ms } => {
+            let options = winmakase::launcher::OpenOptions {
+                activation_timeout: Duration::from_millis(timeout_ms),
+                ..Default::default()
+            };
+            match winmakase::launcher::open_run(options) {
+                Ok(report) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::to_string(&report).expect("launcher report serializes")
+                        );
+                    } else {
+                        println!(
+                            "PowerToys Run: {:?} ({} ms)",
+                            report.outcome, report.elapsed_ms
+                        );
+                    }
+                    ExitCode::SUCCESS
+                }
+                Err(error) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::to_string(&error).expect("launcher error serializes")
+                        );
+                    } else {
+                        eprintln!("winmakase: {error}");
+                    }
+                    ExitCode::FAILURE
+                }
+            }
+        }
     }
 }
 
@@ -455,6 +534,7 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
             config,
             base,
             out,
+            super_key,
         } => {
             let (_, file, _) = load(keymap, local)?;
             let (expanded, _) = checked(&file)?;
@@ -487,10 +567,23 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
                     let text = std::fs::read_to_string(&path).map_err(|e| {
                         io::Error::new(e.kind(), format!("{}: {e}", path.display()))
                     })?;
-                    winmakase_keymap::render_glazewm_config(&text, &expanded, &apps)
-                        .map_err(invalid)?
+                    winmakase_keymap::render_glazewm_config_with_super(
+                        &text,
+                        &expanded,
+                        &apps,
+                        super_key.into(),
+                    )
+                    .map_err(invalid)?
                 }
-                None if apps.is_empty() => winmakase_keymap::render_glazewm(&expanded),
+                None if apps.is_empty() && matches!(super_key, SuperKeyArg::RightWin) => {
+                    winmakase_keymap::render_glazewm(&expanded)
+                }
+                None if matches!(super_key, SuperKeyArg::CapsLock) => {
+                    return Err(invalid(
+                        "--super-key caps-lock requires --base so the required general.keybinding_leader can be generated"
+                            .into(),
+                    ));
+                }
                 None => {
                     return Err(invalid(
                         "configured app window rules require --base so workspaces and existing host rules can be validated"

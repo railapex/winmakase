@@ -1,0 +1,1173 @@
+﻿{
+    "at":  "2026-09-13T13:15:37.6917164+00:00",
+    "machine":  "C278226E-FEE8-4",
+    "user":  "WDAGUtilityAccount",
+    "hiddenBefore":  {
+                         "launcher":  [
+                                          {
+                                              "hwnd":  196972,
+                                              "pid":  1704,
+                                              "title":  "PowerToys.PowerLauncher",
+                                              "visible":  false,
+                                              "cloaked":  0,
+                                              "rect":  {
+                                                           "left":  1205,
+                                                           "top":  283,
+                                                           "right":  1207,
+                                                           "bottom":  285
+                                                       }
+                                          }
+                                      ],
+                         "allWindows":  [
+                                            {
+                                                "hwnd":  196972,
+                                                "pid":  1704,
+                                                "title":  "PowerToys.PowerLauncher",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  1205,
+                                                             "top":  283,
+                                                             "right":  1207,
+                                                             "bottom":  285
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  262714,
+                                                "pid":  1704,
+                                                "title":  "Hidden Window",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  182,
+                                                             "top":  182,
+                                                             "right":  2470,
+                                                             "bottom":  1052
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  721568,
+                                                "pid":  1704,
+                                                "title":  "DDE Server Window",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  262510,
+                                                "pid":  1704,
+                                                "title":  "",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  136,
+                                                             "bottom":  39
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  197288,
+                                                "pid":  1704,
+                                                "title":  "GDI+ Window (PowerToys.PowerLauncher.exe)",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  1,
+                                                             "bottom":  1
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  262812,
+                                                "pid":  1704,
+                                                "title":  ".NET-BroadcastEventWindow.358a177.0",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  197268,
+                                                "pid":  1704,
+                                                "title":  "MediaContextNotificationWindow",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  524394,
+                                                "pid":  1704,
+                                                "title":  "",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  136,
+                                                             "bottom":  39
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  196812,
+                                                "pid":  1704,
+                                                "title":  "SystemResourceNotifyWindow",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  262836,
+                                                "pid":  1704,
+                                                "title":  "MSCTFIME UI",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  196758,
+                                                "pid":  1704,
+                                                "title":  "Default IME",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  262486,
+                                                "pid":  1704,
+                                                "title":  "CiceroUIWndFrame",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  200,
+                                                             "top":  200,
+                                                             "right":  400,
+                                                             "bottom":  400
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  131768,
+                                                "pid":  1704,
+                                                "title":  "CiceroUIWndFrame",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  131756,
+                                                "pid":  1704,
+                                                "title":  "Default IME",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            },
+                                            {
+                                                "hwnd":  197286,
+                                                "pid":  1704,
+                                                "title":  "Default IME",
+                                                "visible":  false,
+                                                "cloaked":  0,
+                                                "rect":  {
+                                                             "left":  0,
+                                                             "top":  0,
+                                                             "right":  0,
+                                                             "bottom":  0
+                                                         }
+                                            }
+                                        ],
+                         "foregroundHwnd":  65700,
+                         "focusedRunElement":  null
+                     },
+    "hiddenOpen":  {
+                       "exitCode":  0,
+                       "text":  "{\"outcome\":\"opened\",\"pid\":1704,\"hwnd\":196972,\"signalled\":true,\"elapsedMs\":31}",
+                       "json":  {
+                                    "outcome":  "opened",
+                                    "pid":  1704,
+                                    "hwnd":  196972,
+                                    "signalled":  true,
+                                    "elapsedMs":  31
+                                }
+                   },
+    "afterHiddenOpen":  {
+                            "launcher":  [
+                                             {
+                                                 "hwnd":  196972,
+                                                 "pid":  1704,
+                                                 "title":  "PowerToys.PowerLauncher",
+                                                 "visible":  true,
+                                                 "cloaked":  0,
+                                                 "rect":  {
+                                                              "left":  1205,
+                                                              "top":  283,
+                                                              "right":  1845,
+                                                              "bottom":  586
+                                                          }
+                                             }
+                                         ],
+                            "allWindows":  [
+                                               {
+                                                   "hwnd":  196972,
+                                                   "pid":  1704,
+                                                   "title":  "PowerToys.PowerLauncher",
+                                                   "visible":  true,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  1205,
+                                                                "top":  283,
+                                                                "right":  1845,
+                                                                "bottom":  586
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  262714,
+                                                   "pid":  1704,
+                                                   "title":  "Hidden Window",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  182,
+                                                                "top":  182,
+                                                                "right":  2470,
+                                                                "bottom":  1052
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  721568,
+                                                   "pid":  1704,
+                                                   "title":  "DDE Server Window",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  262510,
+                                                   "pid":  1704,
+                                                   "title":  "",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  136,
+                                                                "bottom":  39
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  197288,
+                                                   "pid":  1704,
+                                                   "title":  "GDI+ Window (PowerToys.PowerLauncher.exe)",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  1,
+                                                                "bottom":  1
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  262812,
+                                                   "pid":  1704,
+                                                   "title":  ".NET-BroadcastEventWindow.358a177.0",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  197268,
+                                                   "pid":  1704,
+                                                   "title":  "MediaContextNotificationWindow",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  524394,
+                                                   "pid":  1704,
+                                                   "title":  "",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  136,
+                                                                "bottom":  39
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  196812,
+                                                   "pid":  1704,
+                                                   "title":  "SystemResourceNotifyWindow",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  262836,
+                                                   "pid":  1704,
+                                                   "title":  "MSCTFIME UI",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  196758,
+                                                   "pid":  1704,
+                                                   "title":  "Default IME",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  262486,
+                                                   "pid":  1704,
+                                                   "title":  "CiceroUIWndFrame",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  200,
+                                                                "top":  200,
+                                                                "right":  400,
+                                                                "bottom":  400
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  131768,
+                                                   "pid":  1704,
+                                                   "title":  "CiceroUIWndFrame",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  131756,
+                                                   "pid":  1704,
+                                                   "title":  "Default IME",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               },
+                                               {
+                                                   "hwnd":  197286,
+                                                   "pid":  1704,
+                                                   "title":  "Default IME",
+                                                   "visible":  false,
+                                                   "cloaked":  0,
+                                                   "rect":  {
+                                                                "left":  0,
+                                                                "top":  0,
+                                                                "right":  0,
+                                                                "bottom":  0
+                                                            }
+                                               }
+                                           ],
+                            "foregroundHwnd":  196972,
+                            "focusedRunElement":  {
+                                                      "processId":  1704,
+                                                      "name":  "Query",
+                                                      "automationId":  "QueryTextBox",
+                                                      "type":  "ControlType.Edit",
+                                                      "keyboard":  true
+                                                  }
+                        },
+    "repeatedFocused":  {
+                            "exitCode":  0,
+                            "text":  "{\"outcome\":\"already_focused\",\"pid\":1704,\"hwnd\":196972,\"signalled\":false,\"elapsedMs\":13}",
+                            "json":  {
+                                         "outcome":  "already_focused",
+                                         "pid":  1704,
+                                         "hwnd":  196972,
+                                         "signalled":  false,
+                                         "elapsedMs":  13
+                                     }
+                        },
+    "afterRepeatedFocused":  {
+                                 "launcher":  [
+                                                  {
+                                                      "hwnd":  196972,
+                                                      "pid":  1704,
+                                                      "title":  "PowerToys.PowerLauncher",
+                                                      "visible":  true,
+                                                      "cloaked":  0,
+                                                      "rect":  {
+                                                                   "left":  1205,
+                                                                   "top":  283,
+                                                                   "right":  1845,
+                                                                   "bottom":  346
+                                                               }
+                                                  }
+                                              ],
+                                 "allWindows":  [
+                                                    {
+                                                        "hwnd":  196972,
+                                                        "pid":  1704,
+                                                        "title":  "PowerToys.PowerLauncher",
+                                                        "visible":  true,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  1205,
+                                                                     "top":  283,
+                                                                     "right":  1845,
+                                                                     "bottom":  346
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262714,
+                                                        "pid":  1704,
+                                                        "title":  "Hidden Window",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  182,
+                                                                     "top":  182,
+                                                                     "right":  2470,
+                                                                     "bottom":  1052
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  721568,
+                                                        "pid":  1704,
+                                                        "title":  "DDE Server Window",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262510,
+                                                        "pid":  1704,
+                                                        "title":  "",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  136,
+                                                                     "bottom":  39
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  197288,
+                                                        "pid":  1704,
+                                                        "title":  "GDI+ Window (PowerToys.PowerLauncher.exe)",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  1,
+                                                                     "bottom":  1
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262812,
+                                                        "pid":  1704,
+                                                        "title":  ".NET-BroadcastEventWindow.358a177.0",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  197268,
+                                                        "pid":  1704,
+                                                        "title":  "MediaContextNotificationWindow",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  524394,
+                                                        "pid":  1704,
+                                                        "title":  "",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  136,
+                                                                     "bottom":  39
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  196812,
+                                                        "pid":  1704,
+                                                        "title":  "SystemResourceNotifyWindow",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262836,
+                                                        "pid":  1704,
+                                                        "title":  "MSCTFIME UI",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  196758,
+                                                        "pid":  1704,
+                                                        "title":  "Default IME",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262486,
+                                                        "pid":  1704,
+                                                        "title":  "CiceroUIWndFrame",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  200,
+                                                                     "top":  200,
+                                                                     "right":  400,
+                                                                     "bottom":  400
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  131768,
+                                                        "pid":  1704,
+                                                        "title":  "CiceroUIWndFrame",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  131756,
+                                                        "pid":  1704,
+                                                        "title":  "Default IME",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  197286,
+                                                        "pid":  1704,
+                                                        "title":  "Default IME",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    }
+                                                ],
+                                 "foregroundHwnd":  196972,
+                                 "focusedRunElement":  {
+                                                           "processId":  1704,
+                                                           "name":  "Query",
+                                                           "automationId":  "QueryTextBox",
+                                                           "type":  "ControlType.Edit",
+                                                           "keyboard":  true
+                                                       }
+                             },
+    "repeatedQuery":  "winmakase-proof",
+    "concurrent":  {
+                       "processes":  [
+                                         {
+                                             "pid":  5300,
+                                             "exitCode":  null
+                                         },
+                                         {
+                                             "pid":  5756,
+                                             "exitCode":  null
+                                         }
+                                     ],
+                       "reports":  [
+                                       {
+                                           "outcome":  "opened",
+                                           "pid":  1704,
+                                           "hwnd":  196972,
+                                           "signalled":  true,
+                                           "elapsedMs":  34
+                                       },
+                                       {
+                                           "outcome":  "already_focused",
+                                           "pid":  1704,
+                                           "hwnd":  196972,
+                                           "signalled":  false,
+                                           "elapsedMs":  13
+                                       }
+                                   ],
+                       "state":  {
+                                     "launcher":  [
+                                                      {
+                                                          "hwnd":  196972,
+                                                          "pid":  1704,
+                                                          "title":  "PowerToys.PowerLauncher",
+                                                          "visible":  true,
+                                                          "cloaked":  0,
+                                                          "rect":  {
+                                                                       "left":  1205,
+                                                                       "top":  283,
+                                                                       "right":  1845,
+                                                                       "bottom":  473
+                                                                   }
+                                                      }
+                                                  ],
+                                     "allWindows":  [
+                                                        {
+                                                            "hwnd":  196972,
+                                                            "pid":  1704,
+                                                            "title":  "PowerToys.PowerLauncher",
+                                                            "visible":  true,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  1205,
+                                                                         "top":  283,
+                                                                         "right":  1845,
+                                                                         "bottom":  473
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  262714,
+                                                            "pid":  1704,
+                                                            "title":  "Hidden Window",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  182,
+                                                                         "top":  182,
+                                                                         "right":  2470,
+                                                                         "bottom":  1052
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  721568,
+                                                            "pid":  1704,
+                                                            "title":  "DDE Server Window",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  262510,
+                                                            "pid":  1704,
+                                                            "title":  "",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  136,
+                                                                         "bottom":  39
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  197288,
+                                                            "pid":  1704,
+                                                            "title":  "GDI+ Window (PowerToys.PowerLauncher.exe)",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  1,
+                                                                         "bottom":  1
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  262812,
+                                                            "pid":  1704,
+                                                            "title":  ".NET-BroadcastEventWindow.358a177.0",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  197268,
+                                                            "pid":  1704,
+                                                            "title":  "MediaContextNotificationWindow",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  524394,
+                                                            "pid":  1704,
+                                                            "title":  "",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  136,
+                                                                         "bottom":  39
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  196812,
+                                                            "pid":  1704,
+                                                            "title":  "SystemResourceNotifyWindow",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  262836,
+                                                            "pid":  1704,
+                                                            "title":  "MSCTFIME UI",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  196758,
+                                                            "pid":  1704,
+                                                            "title":  "Default IME",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  262486,
+                                                            "pid":  1704,
+                                                            "title":  "CiceroUIWndFrame",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  200,
+                                                                         "top":  200,
+                                                                         "right":  400,
+                                                                         "bottom":  400
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  131768,
+                                                            "pid":  1704,
+                                                            "title":  "CiceroUIWndFrame",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  131756,
+                                                            "pid":  1704,
+                                                            "title":  "Default IME",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        },
+                                                        {
+                                                            "hwnd":  197286,
+                                                            "pid":  1704,
+                                                            "title":  "Default IME",
+                                                            "visible":  false,
+                                                            "cloaked":  0,
+                                                            "rect":  {
+                                                                         "left":  0,
+                                                                         "top":  0,
+                                                                         "right":  0,
+                                                                         "bottom":  0
+                                                                     }
+                                                        }
+                                                    ],
+                                     "foregroundHwnd":  196972,
+                                     "focusedRunElement":  {
+                                                               "processId":  1704,
+                                                               "name":  "Query",
+                                                               "automationId":  "QueryTextBox",
+                                                               "type":  "ControlType.Edit",
+                                                               "keyboard":  true
+                                                           }
+                                 }
+                   },
+    "helper":  {
+                   "exitCode":  0,
+                   "state":  {
+                                 "launcher":  [
+                                                  {
+                                                      "hwnd":  196972,
+                                                      "pid":  1704,
+                                                      "title":  "PowerToys.PowerLauncher",
+                                                      "visible":  true,
+                                                      "cloaked":  0,
+                                                      "rect":  {
+                                                                   "left":  1205,
+                                                                   "top":  283,
+                                                                   "right":  1845,
+                                                                   "bottom":  473
+                                                               }
+                                                  }
+                                              ],
+                                 "allWindows":  [
+                                                    {
+                                                        "hwnd":  196972,
+                                                        "pid":  1704,
+                                                        "title":  "PowerToys.PowerLauncher",
+                                                        "visible":  true,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  1205,
+                                                                     "top":  283,
+                                                                     "right":  1845,
+                                                                     "bottom":  473
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262714,
+                                                        "pid":  1704,
+                                                        "title":  "Hidden Window",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  182,
+                                                                     "top":  182,
+                                                                     "right":  2470,
+                                                                     "bottom":  1052
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  721568,
+                                                        "pid":  1704,
+                                                        "title":  "DDE Server Window",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262510,
+                                                        "pid":  1704,
+                                                        "title":  "",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  136,
+                                                                     "bottom":  39
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  197288,
+                                                        "pid":  1704,
+                                                        "title":  "GDI+ Window (PowerToys.PowerLauncher.exe)",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  1,
+                                                                     "bottom":  1
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262812,
+                                                        "pid":  1704,
+                                                        "title":  ".NET-BroadcastEventWindow.358a177.0",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  197268,
+                                                        "pid":  1704,
+                                                        "title":  "MediaContextNotificationWindow",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  524394,
+                                                        "pid":  1704,
+                                                        "title":  "",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  136,
+                                                                     "bottom":  39
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  196812,
+                                                        "pid":  1704,
+                                                        "title":  "SystemResourceNotifyWindow",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262836,
+                                                        "pid":  1704,
+                                                        "title":  "MSCTFIME UI",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  196758,
+                                                        "pid":  1704,
+                                                        "title":  "Default IME",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  262486,
+                                                        "pid":  1704,
+                                                        "title":  "CiceroUIWndFrame",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  200,
+                                                                     "top":  200,
+                                                                     "right":  400,
+                                                                     "bottom":  400
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  131768,
+                                                        "pid":  1704,
+                                                        "title":  "CiceroUIWndFrame",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  131756,
+                                                        "pid":  1704,
+                                                        "title":  "Default IME",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    },
+                                                    {
+                                                        "hwnd":  197286,
+                                                        "pid":  1704,
+                                                        "title":  "Default IME",
+                                                        "visible":  false,
+                                                        "cloaked":  0,
+                                                        "rect":  {
+                                                                     "left":  0,
+                                                                     "top":  0,
+                                                                     "right":  0,
+                                                                     "bottom":  0
+                                                                 }
+                                                    }
+                                                ],
+                                 "foregroundHwnd":  196972,
+                                 "focusedRunElement":  {
+                                                           "processId":  1704,
+                                                           "name":  "Query",
+                                                           "automationId":  "QueryTextBox",
+                                                           "type":  "ControlType.Edit",
+                                                           "keyboard":  true
+                                                       }
+                             }
+               },
+    "missingProcess":  {
+                           "exitCode":  1,
+                           "text":  "{\"kind\":\"not_running\",\"message\":\"PowerToys Run is not running from a supported path (C:\\\\Program Files\\\\PowerToys\\\\PowerToys.PowerLauncher.exe or C:\\\\Program Files\\\\PowerToys\\\\WinUI3Apps\\\\PowerToys.PowerLauncher.exe or C:\\\\Users\\\\WDAGUtilityAccount\\\\AppData\\\\Local\\\\PowerToys\\\\PowerToys.PowerLauncher.exe or C:\\\\Users\\\\WDAGUtilityAccount\\\\AppData\\\\Local\\\\PowerToys\\\\WinUI3Apps\\\\PowerToys.PowerLauncher.exe)\",\"signalled\":false}",
+                           "json":  {
+                                        "kind":  "not_running",
+                                        "message":  "PowerToys Run is not running from a supported path (C:\\Program Files\\PowerToys\\PowerToys.PowerLauncher.exe or C:\\Program Files\\PowerToys\\WinUI3Apps\\PowerToys.PowerLauncher.exe or C:\\Users\\WDAGUtilityAccount\\AppData\\Local\\PowerToys\\PowerToys.PowerLauncher.exe or C:\\Users\\WDAGUtilityAccount\\AppData\\Local\\PowerToys\\WinUI3Apps\\PowerToys.PowerLauncher.exe)",
+                                        "signalled":  false
+                                    }
+                       },
+    "verdict":  "pass"
+}

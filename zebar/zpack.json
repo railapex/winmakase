@@ -31,6 +31,10 @@
           {
             "program": "C:/Users/chris/.winmakase/bin/winmakase.exe",
             "argsRegex": "^status --json$"
+          },
+          {
+            "program": "C:/Users/chris/.winmakase/bin/winmakase-run.exe",
+            "argsRegex": "^$"
           }
         ]
       },

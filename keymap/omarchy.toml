@@ -41,6 +41,7 @@ editor = "code"
 # Bare name assumes PATH; a machine's local.toml overrides it with the
 # deployed full path (~/.winmakase/bin/winmakase.exe) until install owns PATH.
 winmakase = "winmakase"
+winmakase_run = "winmakase-run"
 
 # ============================================================ tiling.lua
 
@@ -554,10 +555,10 @@ note = "Win+V clipboard history."
 [[bind]]
 id = "launcher"
 chord = "SUPER + SPACE"
-desc = "Omarchy menu / launcher"
+desc = "Open or focus PowerToys Run"
 src = "utilities"
-status = "native"
-note = "Launcher's own activation hotkey: installer sets PT Run to Win+Space; caps-hold+Space arrives as rwin+space and matches (spike-verified)."
+map = ["shell-exec --hide-window {winmakase_run}"]
+note = "Shared explicit-open adapter observes visibility/focus, serializes Winmakase callers, and signals PowerToys Run's invoke event at most once. The helper is GUI-subsystem, so Glaze and Zebar use the same console-free action."
 
 [[bind]]
 id = "apps-menu"

@@ -172,6 +172,35 @@ body,
   margin-right: 20px;
 }
 
+.launcher-button {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 8%);
+  cursor: pointer;
+}
+
+.launcher-button i {
+  margin: 0;
+  color: inherit;
+}
+
+.launcher-button:hover {
+  background: rgb(75 115 255 / 50%);
+}
+
+.launcher-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.launcher-error {
+  background: rgb(224 86 86 / 70%);
+}
+
 /* Supervisor health: green = all running, amber = restarting,
    red = down or supervisor dead, gray = no signal. */
 .health-dot {

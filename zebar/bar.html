@@ -62,11 +62,12 @@
       // (something restarting), down (stack stopped or supervisor dead),
       // unknown (no winmakase, no health state yet).
       const HEALTH_POLL_MS = 5000;
+      const WINMAKASE_BIN = 'C:/Users/chris/.winmakase/bin';
 
       async function readHealth() {
         try {
           const result = await zebar.shellExec(
-            'C:/Users/chris/.winmakase/bin/winmakase.exe',
+            `${WINMAKASE_BIN}/winmakase.exe`,
             ['status', '--json'],
           );
           const health = JSON.parse(result.stdout);
@@ -107,10 +108,27 @@
         const [output, setOutput] = useState(providers.outputMap);
         const [health, setHealth] = useState('unknown');
         const [trayExpanded, setTrayExpanded] = useState(false);
+        const [launcherState, setLauncherState] = useState('idle');
 
         useEffect(() => {
           providers.onOutput(() => setOutput(providers.outputMap));
         }, []);
+
+        async function openLauncher() {
+          if (launcherState === 'pending') return;
+          setLauncherState('pending');
+          try {
+            const result = await zebar.shellExec(
+              `${WINMAKASE_BIN}/winmakase-run.exe`,
+              [],
+            );
+            if (!result.success) throw new Error(`launcher exit ${result.code}`);
+            setLauncherState('idle');
+          } catch {
+            setLauncherState('error');
+            setTimeout(() => setLauncherState('idle'), 3000);
+          }
+        }
 
         useEffect(() => {
           let cancelled = false;
@@ -195,6 +213,19 @@
                 className={`health-dot health-${health}`}
                 title={`winmakase stack: ${health}`}
               ></span>
+              <button
+                className={`launcher-button launcher-${launcherState}`}
+                title={
+                  launcherState === 'error'
+                    ? 'PowerToys Run could not open'
+                    : 'Open or focus PowerToys Run'
+                }
+                aria-label="Open or focus PowerToys Run"
+                disabled={launcherState === 'pending'}
+                onClick={openLauncher}
+              >
+                <i className="nf nf-md-magnify"></i>
+              </button>
               {output.glazewm && (
                 <div className="workspaces">
                   {output.glazewm.currentWorkspaces

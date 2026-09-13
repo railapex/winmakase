@@ -16,6 +16,7 @@ pub mod display_watch;
 pub mod glazewm;
 pub mod health;
 pub mod kanata_kbd;
+pub mod launcher;
 pub mod monitors;
 pub mod notify;
 pub mod paths;

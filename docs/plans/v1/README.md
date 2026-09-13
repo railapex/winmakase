@@ -1,6 +1,6 @@
 # Coherent v1
 
-Accepted scope: 2026-09-08. Status: P0 active; no verification round passed. The existing direct Caps Glaze spike is being reassessed for Kanata retirement before the input dependency is frozen.
+Accepted scope: 2026-09-08. Status: P0 active; no verification round passed. Direct-Caps rendering and guarded PowerToys Run activation are accepted in source and a disposable guest; physical Caps/fullscreen/elevation/display acceptance still decides whether Kanata can retire.
 
 Deliver a solid daily desktop on **GlazeWM + Zebar + Kanata + PowerToys Run**: launch, tile, control, theme, recover. Omarchy is the compatibility target. Exact keys where supported, matching patterns elsewhere, explicit gaps with later convergence. No application catalog or platform replacement in v1.
 

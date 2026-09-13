@@ -21,6 +21,12 @@ path = "src/main.rs"
 name = "winmakased"
 path = "src/bin/winmakased.rs"
 
+# Narrow GUI-subsystem launcher entrypoint for GlazeWM and Zebar. It shares
+# the CLI's observed open-or-focus adapter without flashing a console window.
+[[bin]]
+name = "winmakase-run"
+path = "src/bin/winmakase-run.rs"
+
 # Versions are pinned exactly (repo rule: never "latest"); bump deliberately in
 # their own commit, same as the scoop tool pins.
 [dependencies]
@@ -34,10 +40,12 @@ windows-sys = { version = "=0.61.2", features = [
     "Win32_Foundation",
     "Win32_Graphics_Dwm",
     "Win32_Graphics_Gdi",
+    "Win32_Security",
     "Win32_System_Console",
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_LibraryLoader",
     "Win32_System_Registry",
+    "Win32_System_RemoteDesktop",
     "Win32_System_SystemInformation",
     "Win32_System_Threading",
     "Win32_UI_Shell",

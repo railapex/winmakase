@@ -1,22 +1,26 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-13T11:51:43Z",
+  "updatedAt": "2026-09-13T13:04:39Z",
   "planBaseCommit": "ab32da1",
-  "lastVerifiedBuild": "Winmakase 0.1.7 D1 source passes 14 keymap, 14 app-rule, 2 real-keymap and 16 config tests plus strict keymap Clippy. Glaze 6bc83d1 release built and ran in software-rendered Sandbox. Main windows home and tile; owned/modal fixed dialogs float with their owner; routine reload preserves arranged state. Utility tool-window admission and hidden-owner admission remain open. Daily Glaze remains the deployed 9c8e93b; no cutover.",
-  "stage": "P0 runtime checkpoint: launcher proofs pass; D1 dialog/reload accepted; ancestry prototype accepted",
+  "lastVerifiedBuild": "Winmakase 0.1.8 I1 release passes 33 keymap, 4 launcher, all-target check and targeted strict Clippy. In a fresh Windows Sandbox, hidden/repeated/concurrent Run activation, GUI helper, stopped-process error and a real rendered Zebar click pass. Direct-Caps config generation passes. The final bar interaction required networking because the current bar still uses CDNs. D1 Glaze 6bc83d1 dialog/reload results remain accepted. Daily Glaze remains deployed 9c8e93b; no cutover.",
+  "stage": "P0 runtime checkpoint: D1 dialog/reload and I1 guarded Run activation accepted; ancestry prototype accepted",
   "currentSlice": {
-    "id": "P0.I1",
-    "status": "D1 accepted; explicit-open integration next",
-    "title": "Prove explicit PowerToys Run activation from key and bar",
-    "nextAction": "Implement one explicit-open Run action using the observed activation event and current visibility/focus, wire the direct-Caps key and bounded bar action, then prove both in the disposable guest. Keep physical Caps, fullscreen/elevation, focused-monitor placement and daily cutover as separate acceptance. Provider discovery/cadence and A2/A3 remain independent."
+    "id": "P0.I2",
+    "status": "D1 and I1 accepted; physical input/context acceptance next",
+    "title": "Decide direct Caps adoption across real input contexts",
+    "nextAction": "Inject physical Caps through the patched Glaze candidate and test fullscreen, elevated and focused-monitor origins in the disposable guest; then decide whether Kanata can retire. Keep P2 offline-bar packaging and remaining R0 provider/admission/classification proofs separate."
   },
   "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
   "decisions": [],
   "blockers": [
-    "Direct Caps still lacks an explicit-open PowerToys Run action wired through the generated keymap and bar; physical/fullscreen/elevated/display acceptance remains separate.",
+    "Direct-Caps rendering and explicit Run activation pass, but physical Caps/fullscreen/elevated/focused-monitor acceptance still determines whether Kanata can retire. The bar still needs network-free production assets in P2.",
     "R0 remains open: real provider/admission/background input, popup/tray/calendar/split and recovery proofs remain incomplete."
   ],
   "recentDecisions": [
+    {
+      "title": "Accept guarded Run activation",
+      "detail": "Winmakase 0.1.8 admits the exact current-user Run process, observes visible/focus state, serializes callers and persists uncertainty before using the native toggle event. Final guest replay passes hidden, repeated, concurrent, GUI-helper, stopped-process and real Zebar-click cases. Direct-Caps config generation passes; physical/context acceptance and offline bar packaging remain open."
+    },
     {
       "title": "Accept D1 dialog and reload policy",
       "detail": "Winmakase homes now target unowned resizable main windows and default to preserve state. Paired Glaze 6bc83d1 floats owned/fixed windows, keeps managed dialogs with their owner and retains completed Manage rules across reload. Guest comparisons pass for main, owned and modal windows; utility and hidden-owner admission remain explicit gaps. Mixed versions are unsupported."
@@ -51,6 +55,11 @@
     }
   ],
   "evidence": [
+    {
+      "label": "Accepted I1 guarded Run activation",
+      "href": "../../verification/v1/2026-09-13-p0-i1/README.md",
+      "detail": "Reviewed Winmakase 0.1.8 source and hash-pinned guest runtime. Hidden/repeated/concurrent activation, GUI helper, stopped-process error and a real rendered Zebar click pass. Direct-Caps config generation passes. Physical/context input, focused-monitor placement and offline bar startup remain open; no host deployment."
+    },
     {
       "label": "Accepted D1 dialog and reload policy",
       "href": "../../verification/v1/2026-09-13-p0-d1/README.md",
@@ -113,6 +122,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-13T13:04:39Z",
+      "summary": "P0.I1 accepted after independent source review and final-binary disposable guest replay. One guarded adapter now owns PowerToys Run activation for the generated chord and Zebar button. Hidden/repeated/concurrent calls, GUI-subsystem helper, stopped-process error and a real rendered-bar click pass; the latter leaves one foreground launcher with QueryTextBox keyboard focus. Direct-Caps config generation passes. The networked bar proof does not close P2 offline packaging, and visible-unfocused could not be held because native Run hides on deactivation. Physical Caps, fullscreen/elevation, focused-monitor placement and daily cutover remain open."
+    },
     {
       "at": "2026-09-13T11:51:43Z",
       "summary": "P0.D1 accepted after source review and disposable guest replay. Generated homes match only unowned resizable mains and preserve requested state; Glaze floats owned/fixed windows, uses a managed owner's workspace and retains completed Manage rules on reload. The arranged control preserves workspace 2, floating state, 250,200 / 700x450 geometry, identity, display state and focus. Owned and modal dialogs float with their owner. Utility remains unmanaged and a dialog created from a cloaked owner remains outside Glaze; A3 is unchanged. No host cutover."
