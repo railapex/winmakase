@@ -103,7 +103,7 @@ adopt = true
 # launch_args = ["--profile-directory=Default"]
 # process = "chrome"
 # app_id = "Chrome"
-# state = "tiling"
+# state = "preserve"
 # Add a workspace only in machine-local config; portable defaults do not own
 # anyone's numbered monitor map.
 
@@ -165,6 +165,12 @@ pub struct AppConfig {
     pub app_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub workspace: Option<String>,
+    /// Exact native-owner eligibility for explicit dialog/utility rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub has_owner: Option<bool>,
+    /// Exact native resizability eligibility for explicit dialog/utility rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resizable: Option<bool>,
     #[serde(default)]
     pub state: AppState,
 }
@@ -173,6 +179,8 @@ pub struct AppConfig {
 #[serde(rename_all = "lowercase")]
 pub enum AppState {
     #[default]
+    #[serde(alias = "auto")]
+    Preserve,
     Tiling,
     Floating,
     Ignored,
@@ -212,6 +220,17 @@ impl AppConfig {
         if self.state == AppState::Ignored && self.workspace.is_some() {
             return Err(format!(
                 "{prefix} is ignored and cannot have a workspace home"
+            ));
+        }
+        let uses_main_window_policy = self.workspace.is_some() || self.state == AppState::Tiling;
+        if uses_main_window_policy && self.has_owner == Some(true) {
+            return Err(format!(
+                "{prefix} main-window policy cannot target an owned window"
+            ));
+        }
+        if uses_main_window_policy && self.resizable == Some(false) {
+            return Err(format!(
+                "{prefix} main-window policy cannot target a fixed-size window"
             ));
         }
         Ok(())
@@ -611,6 +630,8 @@ mod tests {
             title = "Stable marker"
             app_id = "Chrome"
             workspace = "2"
+            has_owner = false
+            resizable = true
             state = "floating"
             "#,
         )
@@ -623,10 +644,32 @@ mod tests {
         assert_eq!(app.title.as_deref(), Some("Stable marker"));
         assert_eq!(app.app_id.as_deref(), Some("Chrome"));
         assert_eq!(app.workspace.as_deref(), Some("2"));
+        assert_eq!(app.has_owner, Some(false));
+        assert_eq!(app.resizable, Some(true));
         assert_eq!(app.state, AppState::Floating);
 
         let serialized = toml::to_string(&cfg).unwrap();
         assert_eq!(Config::parse(&serialized).unwrap(), cfg);
+    }
+
+    #[test]
+    fn app_state_defaults_to_preserve_and_accepts_auto_alias() {
+        let config = |state: &str| {
+            Config::parse(&format!(
+                "[kanata]\ncommand = 'k.exe'\n[glazewm]\ncommand = 'g.exe'\n[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\n{state}"
+            ))
+            .unwrap()
+        };
+
+        assert_eq!(config("").apps["browser"].state, AppState::Preserve);
+        assert_eq!(
+            config("state = 'preserve'\n").apps["browser"].state,
+            AppState::Preserve
+        );
+        assert_eq!(
+            config("state = 'auto'\n").apps["browser"].state,
+            AppState::Preserve
+        );
     }
 
     #[test]
@@ -657,6 +700,14 @@ mod tests {
             (
                 "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\napp_id = ''\n",
                 "apps.browser.app_id must not be empty",
+            ),
+            (
+                "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nworkspace = '2'\nhas_owner = true\n",
+                "main-window policy cannot target an owned window",
+            ),
+            (
+                "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nstate = 'tiling'\nresizable = false\n",
+                "main-window policy cannot target a fixed-size window",
             ),
             (
                 "[apps.browser]\nlaunch = 'chrome'\nprocess = 'chrome'\nstate = 'parked'\n",

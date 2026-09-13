@@ -1,0 +1,18 @@
+﻿[
+    {
+        "action":  "main-spaces",
+        "success":  true
+    },
+    {
+        "action":  "owned-dialog",
+        "success":  true
+    },
+    {
+        "action":  "unicode-modal",
+        "success":  true
+    },
+    {
+        "action":  "utility-popup",
+        "success":  true
+    }
+]

@@ -4,13 +4,15 @@ Status: not started. Depends on P0 classification/profile evidence. Exit: R1.
 
 ## Problem
 
-Generated app homes currently include an explicit state, defaulting to tiling. That can override Glaze's initial floating decision. Base exceptions appearing first do not make them authoritative when subsequent matching rules also execute. Glaze replays manage rules on reload, so configuration changes can rehome/retile windows the user arranged.
+P0.D1 corrected the unsafe app-home base: homes now target unowned resizable main windows, preserve state by default, and the paired Glaze no longer replays completed Manage rules on routine reload. Owned and modal fixture dialogs float with their managed owner; arranged-window reload preservation passes. Utility tool-window admission and dialogs created while their owner is cloaked remain open. [Accepted D1 evidence](../../verification/v1/2026-09-13-p0-d1/README.md).
 
 Existing typed launch definitions also coexist with direct keymap launch strings. Profile-aware homes do not yet provide profile-aware focus-or-launch.
 
 ## Changes
 
 ### 1. Classification and safe homes
+
+The bounded owner/resizability, preserve-state, owner-workspace and routine-reload foundation shipped in Winmakase 0.1.7 with paired Glaze `6bc83d1`. The remaining P1 work below covers broader real-app classification, deliberate reconcile/adoption, restart recovery and shared composition.
 
 - Add preserve/auto initial state and separate main-window home identity from dialog/utility classification. Define precedence explicitly: ignored shell/tool surfaces; owned/modal/non-resizable dialogs; explicit utility policy; main-window app policy; normal tile default.
 - Keep dialog ownership and placement with the parent. A dialog must not jump to an app's home workspace while its parent is elsewhere.
@@ -74,7 +76,7 @@ For supported owned output, preserve the human tree, proportions, geometry and f
 
 Automatic Claude/Codex browser-tab/group relocation is deferred from this first cut. Existing provider-created tabs inside personal browser windows remain under provider/user placement. A later same-profile agent window can be revisited separately; no extension integration or CUA group-moving workflow is required for P1.
 
-No ownership mechanism is wired into production or approved as a new service. The [accepted bounded sequence-feed prototype](../../verification/v1/2026-09-12-agent-proof/README.md) rejects unsafe retrospective timestamp ancestry and retains only edges proven by adjacent complete observations. Provider discovery and placement remain open. R1 covers twenty creation/destruction cycles for the P0-supported classes, concurrent sessions, human negative controls, late windows, authentication handoff, inspection/return, observer restart and expired identities. Record unsupported surfaces explicitly; do not claim universal routing. Dialog precedence/reload correction proceeds independently of this work; the [guest failure captures](../../verification/v1/2026-09-12-p0/dialog-runtime.md) are its regression target.
+No ownership mechanism is wired into production or approved as a new service. The [accepted bounded sequence-feed prototype](../../verification/v1/2026-09-12-agent-proof/README.md) rejects unsafe retrospective timestamp ancestry and retains only edges proven by adjacent complete observations. Provider discovery and placement remain open. R1 covers twenty creation/destruction cycles for the P0-supported classes, concurrent sessions, human negative controls, late windows, authentication handoff, inspection/return, observer restart and expired identities. Record unsupported surfaces explicitly; do not claim universal routing. The independent [D1 dialog/reload foundation](../../verification/v1/2026-09-13-p0-d1/README.md) is accepted; hidden-owner admission remains an A3 boundary.
 
 ## Verification cases
 

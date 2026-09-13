@@ -38,6 +38,8 @@ window_rules:
       equals: chrome
     window_app_id:
       equals: Chrome
+    window_has_owner: false
+    window_is_resizable: true
   on:
   - manage
 

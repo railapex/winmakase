@@ -1,22 +1,26 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-12T15:26:00Z",
+  "updatedAt": "2026-09-13T11:51:43Z",
   "planBaseCommit": "ab32da1",
-  "lastVerifiedBuild": "Winmakase b236794 includes reviewed dialog probes and the unwired sequence ancestry prototype; integration: 140 library tests passed, 1 explicit taskbar test ignored, 72 fixture assertions passed. Glaze dd8fb7d rebuilt and ran in software-rendered Sandbox. Run: 4 exact argv cases, rename/remove reindexing, 30 warm and 5 process-start activations passed. Dialog tiling/reload failures reproduced. Daily Glaze remains the previously deployed 9c8e93b; no cutover.",
-  "stage": "P0 runtime checkpoint: launcher proofs pass; dialog regression reproduced; ancestry prototype accepted",
+  "lastVerifiedBuild": "Winmakase 0.1.7 D1 source passes 14 keymap, 14 app-rule, 2 real-keymap and 16 config tests plus strict keymap Clippy. Glaze 6bc83d1 release built and ran in software-rendered Sandbox. Main windows home and tile; owned/modal fixed dialogs float with their owner; routine reload preserves arranged state. Utility tool-window admission and hidden-owner admission remain open. Daily Glaze remains the deployed 9c8e93b; no cutover.",
+  "stage": "P0 runtime checkpoint: launcher proofs pass; D1 dialog/reload accepted; ancestry prototype accepted",
   "currentSlice": {
-    "id": "P0.D1",
-    "status": "Regression fixtures ready; policy correction next",
-    "title": "Preserve dialog classification and arranged windows across reload",
-    "nextAction": "Implement the bounded owner/resizability and preserve/auto rule correction, stop routine Manage replay, then rerun the dated guest captures. Keep provider discovery/cadence and A2/A3 separate. Input/Run still needs explicit-open key/bar integration and physical/display/elevation acceptance. Resume through the 2026-09-12 handoff and recheck Wire/environment state."
+    "id": "P0.I1",
+    "status": "D1 accepted; explicit-open integration next",
+    "title": "Prove explicit PowerToys Run activation from key and bar",
+    "nextAction": "Implement one explicit-open Run action using the observed activation event and current visibility/focus, wire the direct-Caps key and bounded bar action, then prove both in the disposable guest. Keep physical Caps, fullscreen/elevation, focused-monitor placement and daily cutover as separate acceptance. Provider discovery/cadence and A2/A3 remain independent."
   },
   "nextCheckpoint": "R0 interaction proof: tray/calendar, split controls, role identity and terminal toggle. Check in after two accepted slices or 60–90 active minutes.",
   "decisions": [],
   "blockers": [
-    "Current broad home rules tile fixed owned/modal dialogs and routine reload moves and retiles arranged windows back to policy. D1 correction is required before dependent P1/P3 acceptance.",
-    "R0 remains open: key/bar and physical Caps acceptance, real provider/admission/background input, popup/tray/calendar/split and recovery proofs remain incomplete."
+    "Direct Caps still lacks an explicit-open PowerToys Run action wired through the generated keymap and bar; physical/fullscreen/elevated/display acceptance remains separate.",
+    "R0 remains open: real provider/admission/background input, popup/tray/calendar/split and recovery proofs remain incomplete."
   ],
   "recentDecisions": [
+    {
+      "title": "Accept D1 dialog and reload policy",
+      "detail": "Winmakase homes now target unowned resizable main windows and default to preserve state. Paired Glaze 6bc83d1 floats owned/fixed windows, keeps managed dialogs with their owner and retains completed Manage rules across reload. Guest comparisons pass for main, owned and modal windows; utility and hidden-owner admission remain explicit gaps. Mixed versions are unsupported."
+    },
     {
       "title": "Accept sequence ancestry only as an unwired proof",
       "detail": "Retrospective creation-time ordering was rejected. Unique sequence identities plus adjacent complete observations passed fresh review and bounded fixture tests. Median fresh snapshot-to-answer is 0.6611 ms; provider discovery, event cadence and HWND placement remain unproved."
@@ -47,6 +51,11 @@
     }
   ],
   "evidence": [
+    {
+      "label": "Accepted D1 dialog and reload policy",
+      "href": "../../verification/v1/2026-09-13-p0-d1/README.md",
+      "detail": "Reviewed Winmakase 0.1.7 plus Glaze 6bc83d1 source and hash-pinned guest runtime. Main/owned/modal classification and arranged-window reload preservation pass. Utility and hidden-owner admission remain open; no host deployment."
+    },
     {
       "label": "Launcher and dialog guest runtime checkpoint",
       "href": "../../verification/v1/2026-09-12-p0/README.md",
@@ -104,6 +113,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-13T11:51:43Z",
+      "summary": "P0.D1 accepted after source review and disposable guest replay. Generated homes match only unowned resizable mains and preserve requested state; Glaze floats owned/fixed windows, uses a managed owner's workspace and retains completed Manage rules on reload. The arranged control preserves workspace 2, floating state, 250,200 / 700x450 geometry, identity, display state and focus. Owned and modal dialogs float with their owner. Utility remains unmanaged and a dialog created from a cloaked owner remains outside Glaze; A3 is unchanged. No host cutover."
+    },
     {
       "at": "2026-09-12T15:26:00Z",
       "summary": "First bounded build batch: dialog fixtures and sequence ancestry passed independent review and integration. Software-rendered Sandbox with pinned PowerToys/VC runtime runs rebuilt Glaze dd8fb7d. Launcher exact arguments, restart reindexing and activation samples pass. Dialogs are incorrectly tiled by the broad home rule; reload moves an arranged main from workspace 2 to 1 and floating to tiling without changing identity. New dialog from a hidden parent lacks Glaze representation; A3 remains open. Runtime/source evidence and the next D1 correction are recorded; all package and round gates remain unchecked."

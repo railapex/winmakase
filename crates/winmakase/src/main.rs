@@ -472,7 +472,10 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
                     title: app.title.clone(),
                     app_id: app.app_id.clone(),
                     workspace: app.workspace.clone(),
+                    has_owner: app.has_owner,
+                    resizable: app.resizable,
                     state: match app.state {
+                        AppState::Preserve => winmakase_keymap::WindowRuleState::Preserve,
                         AppState::Tiling => winmakase_keymap::WindowRuleState::Tiling,
                         AppState::Floating => winmakase_keymap::WindowRuleState::Floating,
                         AppState::Ignored => winmakase_keymap::WindowRuleState::Ignored,

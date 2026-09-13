@@ -263,11 +263,14 @@ pub struct AppWindowRule {
     pub title: Option<String>,
     pub app_id: Option<String>,
     pub workspace: Option<String>,
+    pub has_owner: Option<bool>,
+    pub resizable: Option<bool>,
     pub state: WindowRuleState,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WindowRuleState {
+    Preserve,
     Tiling,
     Floating,
     Ignored,
@@ -290,6 +293,10 @@ struct RenderedWindowMatch<'a> {
     window_title: Option<EqualsMatch<'a>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     window_app_id: Option<EqualsMatch<'a>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_has_owner: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    window_is_resizable: Option<bool>,
 }
 
 #[derive(Serialize)]
@@ -309,6 +316,8 @@ struct BaseWindowMatch {
     class: Option<BaseSelector>,
     title: Option<BaseSelector>,
     app_id: Option<BaseSelector>,
+    has_owner: Option<bool>,
+    is_resizable: Option<bool>,
 }
 
 #[derive(Debug)]
@@ -362,9 +371,10 @@ pub fn render_glazewm_config(
         .split_once('\n')
         .expect("the generated keybindings header always ends with a newline");
 
-    // Zero app definitions is the W0 compatibility contract: parse and
-    // validate the base, but leave its comments and bytes untouched.
-    let base_body = if apps.is_empty() {
+    // App definitions without manage policy are launch identities only. Parse
+    // and validate the base, but leave its comments and bytes untouched.
+    let has_app_rules = apps.iter().any(|app| !window_rule_commands(app).is_empty());
+    let base_body = if !has_app_rules {
         normalized.trim_end().to_string()
     } else {
         let mut ordered = apps.to_vec();
@@ -375,7 +385,7 @@ pub fn render_glazewm_config(
         });
         let generated = ordered
             .iter()
-            .map(rendered_window_rule)
+            .filter_map(rendered_window_rule)
             .map(serde_yaml_ng::to_value)
             .collect::<Result<Vec<_>, _>>()
             .map_err(|error| format!("could not serialize generated window rule: {error}"))?;
@@ -509,6 +519,8 @@ fn parse_base_window_match(
             "window_class",
             "window_title",
             "window_app_id",
+            "window_has_owner",
+            "window_is_resizable",
         ]
         .contains(&key)
         {
@@ -519,17 +531,40 @@ fn parse_base_window_match(
     let class = base_selector(mapping, "window_class", &prefix)?;
     let title = base_selector(mapping, "window_title", &prefix)?;
     let app_id = base_selector(mapping, "window_app_id", &prefix)?;
-    if process.is_none() && class.is_none() && title.is_none() && app_id.is_none() {
-        return Err(format!(
-            "{prefix} needs a process, class, title, or app ID matcher"
-        ));
+    let has_owner = base_bool(mapping, "window_has_owner", &prefix)?;
+    let is_resizable = base_bool(mapping, "window_is_resizable", &prefix)?;
+    if process.is_none()
+        && class.is_none()
+        && title.is_none()
+        && app_id.is_none()
+        && has_owner.is_none()
+        && is_resizable.is_none()
+    {
+        return Err(format!("{prefix} needs at least one window matcher"));
     }
     Ok(BaseWindowMatch {
         process,
         class,
         title,
         app_id,
+        has_owner,
+        is_resizable,
     })
+}
+
+fn base_bool(
+    mapping: &serde_yaml_ng::Mapping,
+    field: &str,
+    prefix: &str,
+) -> Result<Option<bool>, String> {
+    let key = serde_yaml_ng::Value::String(field.into());
+    let Some(value) = mapping.get(&key) else {
+        return Ok(None);
+    };
+    value
+        .as_bool()
+        .map(Some)
+        .ok_or_else(|| format!("{prefix}.{field} must be a boolean"))
 }
 
 fn base_selector(
@@ -616,14 +651,32 @@ fn validate_apps(
                 app.name
             ));
         }
+        let uses_main_window_policy =
+            app.workspace.is_some() || app.state == WindowRuleState::Tiling;
+        if uses_main_window_policy && app.has_owner == Some(true) {
+            return Err(format!(
+                "app {:?} main-window policy cannot target an owned window",
+                app.name
+            ));
+        }
+        if uses_main_window_policy && app.resizable == Some(false) {
+            return Err(format!(
+                "app {:?} main-window policy cannot target a fixed-size window",
+                app.name
+            ));
+        }
     }
 
-    for (index, left) in apps.iter().enumerate() {
-        for right in &apps[index + 1..] {
+    let active_apps = apps
+        .iter()
+        .filter(|app| !window_rule_commands(app).is_empty())
+        .collect::<Vec<_>>();
+    for (index, left) in active_apps.iter().enumerate() {
+        for right in &active_apps[index + 1..] {
             validate_app_overlap(left, right)?;
         }
     }
-    for app in apps {
+    for app in active_apps {
         validate_base_overlap(app, base_rules)?;
     }
     Ok(())
@@ -658,7 +711,7 @@ fn validate_base_overlap(app: &AppWindowRule, rules: &[BaseWindowRule]) -> Resul
                 continue;
             }
             let base_is_narrow_ignore = rule.commands == ["ignore"]
-                && base_match_specificity(base_match) > app_specificity(app);
+                && base_identity_specificity(base_match) > app_identity_specificity(app);
             if base_is_narrow_ignore {
                 continue;
             }
@@ -671,20 +724,13 @@ fn validate_base_overlap(app: &AppWindowRule, rules: &[BaseWindowRule]) -> Resul
     Ok(())
 }
 
-fn rendered_window_rule(app: &AppWindowRule) -> RenderedWindowRule<'_> {
-    let mut commands = Vec::new();
-    if let Some(workspace) = &app.workspace {
-        commands.push(format!("move --workspace {workspace}"));
+fn rendered_window_rule(app: &AppWindowRule) -> Option<RenderedWindowRule<'_>> {
+    let commands = window_rule_commands(app);
+    if commands.is_empty() {
+        return None;
     }
-    commands.push(
-        match app.state {
-            WindowRuleState::Tiling => "set-tiling",
-            WindowRuleState::Floating => "set-floating",
-            WindowRuleState::Ignored => "ignore",
-        }
-        .to_string(),
-    );
-    RenderedWindowRule {
+    let (has_owner, is_resizable) = effective_native_facts(app);
+    Some(RenderedWindowRule {
         commands,
         match_window: vec![RenderedWindowMatch {
             window_process: EqualsMatch {
@@ -693,28 +739,54 @@ fn rendered_window_rule(app: &AppWindowRule) -> RenderedWindowRule<'_> {
             window_class: app.class.as_deref().map(|equals| EqualsMatch { equals }),
             window_title: app.title.as_deref().map(|equals| EqualsMatch { equals }),
             window_app_id: app.app_id.as_deref().map(|equals| EqualsMatch { equals }),
+            window_has_owner: has_owner,
+            window_is_resizable: is_resizable,
         }],
         // Homes are manage-time policy. Glaze defaults rules to manage plus
         // title changes, which can visibly move a window after its provisional
         // title settles. Never inherit that default here.
         on: ["manage"],
+    })
+}
+
+fn window_rule_commands(app: &AppWindowRule) -> Vec<String> {
+    let mut commands = Vec::new();
+    if let Some(workspace) = &app.workspace {
+        commands.push(format!("move --workspace {workspace}"));
+    }
+    if let Some(command) = match app.state {
+        WindowRuleState::Preserve => None,
+        WindowRuleState::Tiling => Some("set-tiling"),
+        WindowRuleState::Floating => Some("set-floating"),
+        WindowRuleState::Ignored => Some("ignore"),
+    } {
+        commands.push(command.to_string());
+    }
+    commands
+}
+
+fn effective_native_facts(app: &AppWindowRule) -> (Option<bool>, Option<bool>) {
+    if app.workspace.is_some() || app.state == WindowRuleState::Tiling {
+        (Some(false), Some(true))
+    } else {
+        (app.has_owner, app.resizable)
     }
 }
 
 fn app_order(app: &AppWindowRule) -> (u8, std::cmp::Reverse<usize>) {
     (
         u8::from(app.state != WindowRuleState::Ignored),
-        std::cmp::Reverse(app_specificity(app)),
+        std::cmp::Reverse(app_identity_specificity(app)),
     )
 }
 
-fn app_specificity(app: &AppWindowRule) -> usize {
+fn app_identity_specificity(app: &AppWindowRule) -> usize {
     1 + usize::from(app.class.is_some())
         + usize::from(app.title.is_some())
         + usize::from(app.app_id.is_some())
 }
 
-fn base_match_specificity(base_match: &BaseWindowMatch) -> usize {
+fn base_identity_specificity(base_match: &BaseWindowMatch) -> usize {
     usize::from(base_match.process.is_some())
         + usize::from(base_match.class.is_some())
         + usize::from(base_match.title.is_some())
@@ -722,17 +794,24 @@ fn base_match_specificity(base_match: &BaseWindowMatch) -> usize {
 }
 
 fn app_matches_overlap(left: &AppWindowRule, right: &AppWindowRule) -> bool {
+    let (left_has_owner, left_is_resizable) = effective_native_facts(left);
+    let (right_has_owner, right_is_resizable) = effective_native_facts(right);
     left.process == right.process
         && selectors_overlap(left.class.as_deref(), right.class.as_deref())
         && selectors_overlap(left.title.as_deref(), right.title.as_deref())
         && selectors_overlap(left.app_id.as_deref(), right.app_id.as_deref())
+        && bool_selectors_overlap(left_has_owner, right_has_owner)
+        && bool_selectors_overlap(left_is_resizable, right_is_resizable)
 }
 
 fn base_match_overlaps_app(base_match: &BaseWindowMatch, app: &AppWindowRule) -> bool {
+    let (has_owner, is_resizable) = effective_native_facts(app);
     base_selector_overlaps_exact(base_match.process.as_ref(), Some(&app.process))
         && base_selector_overlaps_exact(base_match.class.as_ref(), app.class.as_deref())
         && base_selector_overlaps_exact(base_match.title.as_ref(), app.title.as_deref())
         && base_selector_overlaps_exact(base_match.app_id.as_ref(), app.app_id.as_deref())
+        && bool_selectors_overlap(base_match.has_owner, has_owner)
+        && bool_selectors_overlap(base_match.is_resizable, is_resizable)
 }
 
 fn base_selector_overlaps_exact(base: Option<&BaseSelector>, app: Option<&str>) -> bool {
@@ -763,16 +842,21 @@ fn selectors_overlap(left: Option<&str>, right: Option<&str>) -> bool {
     left.is_none() || right.is_none() || left == right
 }
 
+fn bool_selectors_overlap(left: Option<bool>, right: Option<bool>) -> bool {
+    left.is_none() || right.is_none() || left == right
+}
+
 fn app_matches_equal(left: &AppWindowRule, right: &AppWindowRule) -> bool {
     left.process == right.process
         && left.class == right.class
         && left.title == right.title
         && left.app_id == right.app_id
+        && effective_native_facts(left) == effective_native_facts(right)
 }
 
 fn ignore_exception_precedes(exception: &AppWindowRule, broad: &AppWindowRule) -> bool {
     exception.state == WindowRuleState::Ignored
-        && app_specificity(exception) > app_specificity(broad)
+        && app_identity_specificity(exception) > app_identity_specificity(broad)
 }
 
 fn yaml_list(items: &[String]) -> String {

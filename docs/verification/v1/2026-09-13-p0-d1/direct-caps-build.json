@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "stagedAt": "2026-09-13T11:51:43.8559344Z",
+  "sourceCommit": "6bc83d1a9682e885c507ac489ca0208f20f985e0",
+  "sourceClean": true,
+  "cargoLockSha256": "8881BF13179AA3CC9C7ADE85F7D584D9AA118DB0767C3C2B50F469999794B49A",
+  "rustc": "rustc 1.100.0-nightly (17fd5b8a3 2026-08-28)",
+  "cargo": "cargo 1.100.0-nightly (e8cb624d5 2026-08-22)",
+  "build": {
+    "command": "cargo +nightly build --release --locked --target x86_64-pc-windows-msvc -p wm -p wm-cli -p wm-watcher --bin glazewm --bin glazewm-cli --bin glazewm-watcher",
+    "versionNumber": "3.10.1",
+    "profile": "release",
+    "target": "x86_64-pc-windows-msvc",
+    "defaultFeatures": true,
+    "uiAccess": false,
+    "result": "PASS; 17.55 seconds"
+  },
+  "artifacts": [
+    {
+      "name": "glazewm.exe",
+      "bytes": 8526336,
+      "sha256": "5B5EEE5068E44C4B93ACD1F3448C483B3AC78673BBEFBC3FC3A76D1CEA8B8A15"
+    },
+    {
+      "name": "glazewm-cli.exe",
+      "bytes": 4275200,
+      "sha256": "9CB864C7BFF00FD7EA336DDDC50A3C3A73453E9E2D3AC5EBE9A25EE03D4105FC"
+    },
+    {
+      "name": "glazewm-watcher.exe",
+      "bytes": 4126208,
+      "sha256": "EDCEE8ACF69FF6D9994127ADA2B355AAD88C22EE0BF249CA8EC7A1CE0BC5B929"
+    }
+  ],
+  "runtime": "Launched and answered CLI queries in a software-rendered Windows Sandbox after installing pinned VC runtime 14.51.36247.0. Main-window/dialog classification and routine reload preservation passed. The utility tool window remained unmanaged and the hidden-owner dialog remained unadmitted. No host deployment.",
+  "guestArchive": {
+    "name": "glazewm-p0-6bc83d1-x64.zip",
+    "bytes": 6479700,
+    "sha256": "9E975A3E5906760A4E718B57C70614DECF6364FFB6661ABC8E8AD21B4581D14C"
+  }
+}

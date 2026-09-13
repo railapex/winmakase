@@ -1,0 +1,60 @@
+{
+    "schemaVersion":  2,
+    "fixtureId":  "owned-dialog",
+    "beforePhase":  "before-reload",
+    "afterPhase":  "after-reload",
+    "verdict":  "pass",
+    "processIdentityPreserved":  true,
+    "windows":  [
+                    {
+                        "role":  "main",
+                        "nativeOwnerMatchesIntended":  true,
+                        "nativeResizableMatchesIntended":  true,
+                        "nativeHandlePreserved":  true,
+                        "nativeCaptureLifetimeStable":  true,
+                        "nativeLifetimePreserved":  true,
+                        "nativeStylesPreserved":  true,
+                        "glazeManagedBefore":  true,
+                        "glazeManagedAfter":  true,
+                        "reloadGlazeManagementPreserved":  true,
+                        "beforeStateType":  "tiling",
+                        "afterStateType":  "tiling",
+                        "reloadStatePreserved":  true,
+                        "reloadWorkspacePreserved":  true,
+                        "reloadGeometryPreserved":  true,
+                        "reloadParentIdPreserved":  true,
+                        "reloadGlazeIdPreserved":  true,
+                        "reloadDisplayStatePreserved":  true,
+                        "reloadFocusPreserved":  true,
+                        "sameWorkspaceAsNativeOwner":  null
+                    },
+                    {
+                        "role":  "owned",
+                        "nativeOwnerMatchesIntended":  true,
+                        "nativeResizableMatchesIntended":  true,
+                        "nativeHandlePreserved":  true,
+                        "nativeCaptureLifetimeStable":  true,
+                        "nativeLifetimePreserved":  true,
+                        "nativeStylesPreserved":  true,
+                        "glazeManagedBefore":  true,
+                        "glazeManagedAfter":  true,
+                        "reloadGlazeManagementPreserved":  true,
+                        "beforeStateType":  "floating",
+                        "afterStateType":  "floating",
+                        "reloadStatePreserved":  true,
+                        "reloadWorkspacePreserved":  true,
+                        "reloadGeometryPreserved":  true,
+                        "reloadParentIdPreserved":  true,
+                        "reloadGlazeIdPreserved":  true,
+                        "reloadDisplayStatePreserved":  true,
+                        "reloadFocusPreserved":  true,
+                        "sameWorkspaceAsNativeOwner":  true
+                    }
+                ],
+    "failures":  [
+
+                 ],
+    "incomplete":  [
+
+                   ]
+}

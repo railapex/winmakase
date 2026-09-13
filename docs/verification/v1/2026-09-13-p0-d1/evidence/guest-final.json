@@ -1,0 +1,45 @@
+﻿{
+    "at":  "2026-09-13T11:49:26.4977751+00:00",
+    "osVersion":  "10.0.26100.0",
+    "runtimeVersion":  "14.51.36247.0",
+    "ownedProcesses":  [
+                           {
+                               "Id":  6948,
+                               "ProcessName":  "glazewm"
+                           },
+                           {
+                               "Id":  1948,
+                               "ProcessName":  "glazewm-watcher"
+                           },
+                           {
+                               "Id":  1928,
+                               "ProcessName":  "WinmakaseP0Fixture"
+                           },
+                           {
+                               "Id":  2392,
+                               "ProcessName":  "WinmakaseP0Fixture"
+                           },
+                           {
+                               "Id":  3156,
+                               "ProcessName":  "WinmakaseP0Fixture"
+                           },
+                           {
+                               "Id":  6396,
+                               "ProcessName":  "WinmakaseP0Fixture"
+                           }
+                       ],
+    "fixtureScripts":  [
+                           {
+                               "Path":  "C:\\WinmakaseP0\\source\\Capture-P0DialogProof.ps1",
+                               "Hash":  "EB93094B215F9076A949F0575D4333482835FAD37B8709D07CB232B1AF86300D"
+                           },
+                           {
+                               "Path":  "C:\\WinmakaseP0\\source\\DialogProof.Common.psm1",
+                               "Hash":  "2B60F4F8C203C5B75BDEFBB44E57F23B255407B385D05274698311FDF6C50DB5"
+                           },
+                           {
+                               "Path":  "C:\\WinmakaseP0\\bin\\WinmakaseP0Fixture.exe",
+                               "Hash":  "8FF1FAFD0CDBA1C8F77127BCABA27B93CFB72399E99CE1C37CFC180B5AC5A2B3"
+                           }
+                       ]
+}

@@ -1,0 +1,92 @@
+﻿{
+    "at":  "2026-09-13T11:42:21.8374116+00:00",
+    "user":  "WDAGUtilityAccount",
+    "sessions":  " USERNAME              SESSIONNAME        ID  STATE   IDLE TIME  LOGON TIME\r\n\u003ewdagutilityaccount    31c5ce94259d...     1  Active          .  9/13/2026 4:42 AM\r\n",
+    "os":  {
+               "Caption":  "Microsoft Windows 11 Enterprise",
+               "Version":  "10.0.26100",
+               "BuildNumber":  "26100"
+           },
+    "userProfileExists":  true,
+    "sourceExists":  true,
+    "fixtureExists":  true,
+    "services":  [
+                     {
+                         "Name":  "SessionEnv",
+                         "Status":  4
+                     },
+                     {
+                         "Name":  "TermService",
+                         "Status":  4
+                     },
+                     {
+                         "Name":  "UmRdpService",
+                         "Status":  4
+                     }
+                 ],
+    "sessionEvents":  [
+                          {
+                              "TimeCreated":  "\/Date(1789299727261)\/",
+                              "Id":  22,
+                              "Message":  "Remote Desktop Services: Shell start notification received:\r\n\r\nUser: C278226E-FEE8-4\\WDAGUtilityAccount\r\nSession ID: 1\r\nSource Network Address: "
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789299727188)\/",
+                              "Id":  21,
+                              "Message":  "Remote Desktop Services: Session logon succeeded:\r\n\r\nUser: C278226E-FEE8-4\\WDAGUtilityAccount\r\nSession ID: 1\r\nSource Network Address: "
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789299726969)\/",
+                              "Id":  42,
+                              "Message":  "End session arbitration:\r\n\r\nUser: C278226E-FEE8-4\\WDAGUtilityAccount\r\nSession ID: 1"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789299726951)\/",
+                              "Id":  41,
+                              "Message":  "Begin session arbitration:\r\n\r\nUser: C278226E-FEE8-4\\WDAGUtilityAccount\r\nSession ID: 1"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039397192)\/",
+                              "Id":  32,
+                              "Message":  "Plugin RDSAppXPlugin has been successfully initialized"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039388783)\/",
+                              "Id":  23,
+                              "Message":  "Remote Desktop Services: Session logoff succeeded:\r\n\r\nUser: DESKTOP-5QDLRGD\\WDAGUtilityAccount\r\nSession ID: 1"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039387991)\/",
+                              "Id":  54,
+                              "Message":  "Local multi-user session manager received system shutdown message"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039349239)\/",
+                              "Id":  22,
+                              "Message":  "Remote Desktop Services: Shell start notification received:\r\n\r\nUser: DESKTOP-5QDLRGD\\WDAGUtilityAccount\r\nSession ID: 1\r\nSource Network Address: LOCAL"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039349191)\/",
+                              "Id":  21,
+                              "Message":  "Remote Desktop Services: Session logon succeeded:\r\n\r\nUser: DESKTOP-5QDLRGD\\WDAGUtilityAccount\r\nSession ID: 1\r\nSource Network Address: LOCAL"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039348789)\/",
+                              "Id":  42,
+                              "Message":  "End session arbitration:\r\n\r\nUser: DESKTOP-5QDLRGD\\WDAGUtilityAccount\r\nSession ID: 1"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039348774)\/",
+                              "Id":  41,
+                              "Message":  "Begin session arbitration:\r\n\r\nUser: DESKTOP-5QDLRGD\\WDAGUtilityAccount\r\nSession ID: 1"
+                          },
+                          {
+                              "TimeCreated":  "\/Date(1789039348732)\/",
+                              "Id":  59,
+                              "Message":  "RpcGetCurrentSessionCapabilities from \"LogonUI.exe\" /flags:0x2 /state0:0xa39a0855 /state1:0x41c64e6d( #0x1/0x4252 )"
+                          }
+                      ],
+    "applicationErrors":  [
+
+                          ]
+}
