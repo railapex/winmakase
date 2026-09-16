@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 
 use winmakase::commands;
 use winmakase::component::Component;
-use winmakase::config::{AppState, Config};
+use winmakase::config::{Config, InputMode};
 use winmakase::control;
 use winmakase::health::Health;
 use winmakase::paths::Paths;
@@ -204,9 +204,10 @@ enum KeymapAction {
         /// Write to a file instead of stdout.
         #[arg(long, value_name = "FILE")]
         out: Option<PathBuf>,
-        /// Physical key that owns abstract SUPER bindings.
-        #[arg(long, value_enum, default_value_t = SuperKeyArg::RightWin)]
-        super_key: SuperKeyArg,
+        /// Preview override for the physical SUPER owner. Without this flag,
+        /// `[keyboard].input_mode` is authoritative.
+        #[arg(long, value_enum)]
+        super_key: Option<SuperKeyArg>,
     },
 }
 
@@ -219,11 +220,11 @@ enum SuperKeyArg {
     CapsLock,
 }
 
-impl From<SuperKeyArg> for winmakase_keymap::SuperKey {
+impl From<SuperKeyArg> for InputMode {
     fn from(value: SuperKeyArg) -> Self {
         match value {
-            SuperKeyArg::RightWin => Self::RightWin,
-            SuperKeyArg::CapsLock => Self::CapsLock,
+            SuperKeyArg::RightWin => Self::Kanata,
+            SuperKeyArg::CapsLock => Self::DirectCaps,
         }
     }
 }
@@ -538,49 +539,40 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
         } => {
             let (_, file, _) = load(keymap, local)?;
             let (expanded, _) = checked(&file)?;
-            let cfg = match config {
-                Some(path) => Config::load(&path)?,
-                None => Config::load_or_create(&paths.config())?,
+            let (cfg, config_source) = match config {
+                Some(path) => {
+                    let source = path.display().to_string();
+                    (Config::load(&path)?, source)
+                }
+                None => {
+                    let path = paths.config();
+                    let source = path.display().to_string();
+                    (Config::load_or_create(&path)?, source)
+                }
             };
-            let apps = cfg
-                .apps
-                .iter()
-                .map(|(name, app)| winmakase_keymap::AppWindowRule {
-                    name: name.clone(),
-                    process: app.process.clone(),
-                    class: app.class.clone(),
-                    title: app.title.clone(),
-                    app_id: app.app_id.clone(),
-                    workspace: app.workspace.clone(),
-                    has_owner: app.has_owner,
-                    resizable: app.resizable,
-                    state: match app.state {
-                        AppState::Preserve => winmakase_keymap::WindowRuleState::Preserve,
-                        AppState::Tiling => winmakase_keymap::WindowRuleState::Tiling,
-                        AppState::Floating => winmakase_keymap::WindowRuleState::Floating,
-                        AppState::Ignored => winmakase_keymap::WindowRuleState::Ignored,
-                    },
-                })
-                .collect::<Vec<_>>();
+            let roles =
+                winmakase::app_roles::from_config(&config_source, &cfg.apps).map_err(invalid)?;
+            let input_mode = super_key.map_or(cfg.keyboard.input_mode, Into::into);
             let yaml = match base {
                 Some(path) => {
                     let text = std::fs::read_to_string(&path).map_err(|e| {
                         io::Error::new(e.kind(), format!("{}: {e}", path.display()))
                     })?;
-                    winmakase_keymap::render_glazewm_config_with_super(
-                        &text,
-                        &expanded,
-                        &apps,
-                        super_key.into(),
-                    )
+                    winmakase::app_roles::compose_glazewm(winmakase::app_roles::CompositionInput {
+                        base_yaml: &text,
+                        theme: None,
+                        keymap: &expanded,
+                        roles: &roles,
+                        input_mode,
+                    })
                     .map_err(invalid)?
                 }
-                None if apps.is_empty() && matches!(super_key, SuperKeyArg::RightWin) => {
+                None if roles.is_empty() && input_mode == InputMode::Kanata => {
                     winmakase_keymap::render_glazewm(&expanded)
                 }
-                None if matches!(super_key, SuperKeyArg::CapsLock) => {
+                None if input_mode == InputMode::DirectCaps => {
                     return Err(invalid(
-                        "--super-key caps-lock requires --base so the required general.keybinding_leader can be generated"
+                        "direct-Caps rendering requires --base so the required general.keybinding_leader can be generated"
                             .into(),
                     ));
                 }

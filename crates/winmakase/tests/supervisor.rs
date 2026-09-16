@@ -415,7 +415,7 @@ fn health_state_describes_the_live_stack() {
     let (kanata, glazewm) = wait_for("both components to start", || h.both_running());
 
     let state = h.health().unwrap();
-    assert_eq!(state.schema, 1);
+    assert_eq!(state.schema, winmakase::health::SCHEMA);
     assert!(state.supervisor.running);
     assert_eq!(state.supervisor.pid, std::process::id());
     assert_eq!(state.components.len(), 2);

@@ -12,6 +12,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
+use crate::actions::DefaultRoleAction;
 use crate::scratchpad::ScratchpadConfig;
 
 /// Written verbatim when no config exists. Kept as text, not serialized from
@@ -53,6 +54,7 @@ hide_taskbar = true
 #   apps — menu key: tap = context menu, hold = WM chord; Caps stays native.
 # tap_ms/hold_ms: the apps-mode tap-hold decision window (caps mode has no tap).
 [keyboard]
+input_mode = "kanata"
 mode = "caps"
 tap_ms = 200
 hold_ms = 200
@@ -152,9 +154,15 @@ pub struct Config {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AppConfig {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
     pub launch: String,
     #[serde(default)]
     pub launch_args: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub new_window_args: Option<Vec<String>>,
+    #[serde(default)]
+    pub default_action: DefaultRoleAction,
     pub process: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub class: Option<String>,
@@ -195,6 +203,13 @@ impl AppConfig {
         if self.launch.trim().is_empty() {
             return Err(format!("{prefix}.launch must not be empty"));
         }
+        if self
+            .label
+            .as_deref()
+            .is_some_and(|value| value.trim().is_empty())
+        {
+            return Err(format!("{prefix}.label must not be empty"));
+        }
         if self.process.trim().is_empty() {
             return Err(format!("{prefix}.process must not be empty"));
         }
@@ -231,6 +246,11 @@ impl AppConfig {
         if uses_main_window_policy && self.resizable == Some(false) {
             return Err(format!(
                 "{prefix} main-window policy cannot target a fixed-size window"
+            ));
+        }
+        if self.default_action == DefaultRoleAction::LaunchNew && self.new_window_args.is_none() {
+            return Err(format!(
+                "{prefix}.default_action is launch_new but new_window_args is missing"
             ));
         }
         Ok(())
@@ -297,12 +317,24 @@ impl ComponentConfig {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct KeyboardConfig {
+    /// Selected input architecture. Existing configurations omit this field
+    /// and therefore migrate to the proven Kanata path.
+    #[serde(default)]
+    pub input_mode: InputMode,
     #[serde(default)]
     pub mode: KeyboardMode,
     #[serde(default = "d_tap_hold_ms")]
     pub tap_ms: u16,
     #[serde(default = "d_tap_hold_ms")]
     pub hold_ms: u16,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum InputMode {
+    #[default]
+    Kanata,
+    DirectCaps,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -322,6 +354,7 @@ fn d_tap_hold_ms() -> u16 {
 impl Default for KeyboardConfig {
     fn default() -> Self {
         Self {
+            input_mode: InputMode::Kanata,
             mode: KeyboardMode::Caps,
             tap_ms: d_tap_hold_ms(),
             hold_ms: d_tap_hold_ms(),
@@ -489,10 +522,16 @@ impl Default for Config {
 
 impl Config {
     pub fn parse(text: &str) -> Result<Self, String> {
-        let config: Self = toml::from_str(text).map_err(|error| error.to_string())?;
+        Self::parse_from(text, "<config>")
+    }
+
+    pub fn parse_from(text: &str, source: &str) -> Result<Self, String> {
+        let config: Self = toml::from_str(text).map_err(|error| format!("{source}: {error}"))?;
         for (name, app) in &config.apps {
-            app.validate(name)?;
+            app.validate(name)
+                .map_err(|error| format!("{source}: {error}"))?;
         }
+        crate::app_roles::from_config(source, &config.apps)?;
         Ok(config)
     }
 
@@ -512,12 +551,8 @@ impl Config {
     /// Read an existing config without creating a default for a missing path.
     pub fn load(path: &Path) -> io::Result<Self> {
         let text = fs::read_to_string(path)?;
-        Self::parse(&text).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!("{}: {e}", path.display()),
-            )
-        })
+        Self::parse_from(&text, &path.display().to_string())
+            .map_err(|e| io::Error::new(io::ErrorKind::InvalidData, e))
     }
 }
 
@@ -581,6 +616,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(cfg.keyboard, KeyboardConfig::default());
+        assert_eq!(cfg.keyboard.input_mode, InputMode::Kanata);
         assert_eq!(cfg.keyboard.mode, KeyboardMode::Caps);
 
         let cfg = Config::parse(
@@ -598,6 +634,20 @@ mod tests {
         assert_eq!(cfg.keyboard.mode, KeyboardMode::Apps);
         assert_eq!(cfg.keyboard.tap_ms, 150);
         assert_eq!(cfg.keyboard.hold_ms, 200, "hold keeps its default");
+
+        let cfg = Config::parse(
+            r#"
+            [keyboard]
+            input_mode = "direct_caps"
+            mode = "caps"
+            [kanata]
+            command = "k.exe"
+            [glazewm]
+            command = "g.exe"
+            "#,
+        )
+        .unwrap();
+        assert_eq!(cfg.keyboard.input_mode, InputMode::DirectCaps);
 
         // An unknown mode is a loud parse error, not a silent caps fallback.
         let err = Config::parse(
@@ -623,8 +673,11 @@ mod tests {
             [glazewm]
             command = "g.exe"
             [apps.browser]
+            label = "Browser"
             launch = "chrome"
             launch_args = ["--profile-directory=Default"]
+            new_window_args = ["--profile-directory=Default", "--new-window"]
+            default_action = "focus_or_launch"
             process = "chrome"
             class = "Chrome_WidgetWin_1"
             title = "Stable marker"
@@ -637,8 +690,20 @@ mod tests {
         )
         .unwrap();
         let app = &cfg.apps["browser"];
+        assert_eq!(app.label.as_deref(), Some("Browser"));
         assert_eq!(app.launch, "chrome");
         assert_eq!(app.launch_args, ["--profile-directory=Default"]);
+        assert_eq!(
+            app.new_window_args.as_deref(),
+            Some(
+                [
+                    "--profile-directory=Default".to_string(),
+                    "--new-window".to_string()
+                ]
+                .as_slice()
+            )
+        );
+        assert_eq!(app.default_action, DefaultRoleAction::FocusOrLaunch);
         assert_eq!(app.process, "chrome");
         assert_eq!(app.class.as_deref(), Some("Chrome_WidgetWin_1"));
         assert_eq!(app.title.as_deref(), Some("Stable marker"));
@@ -650,6 +715,31 @@ mod tests {
 
         let serialized = toml::to_string(&cfg).unwrap();
         assert_eq!(Config::parse(&serialized).unwrap(), cfg);
+    }
+
+    #[test]
+    fn conflicting_role_identity_reports_the_source_and_both_roles() {
+        let error = Config::parse_from(
+            r#"
+            [kanata]
+            command = "k.exe"
+            [glazewm]
+            command = "g.exe"
+            [apps.work]
+            launch = "chrome"
+            launch_args = ["--profile-directory=Work"]
+            process = "chrome"
+            [apps.personal]
+            launch = "chrome"
+            launch_args = ["--profile-directory=Personal"]
+            process = "CHROME"
+            "#,
+            "roles.toml",
+        )
+        .unwrap_err();
+        assert!(error.contains("roles.toml"), "{error}");
+        assert!(error.contains("apps.work"), "{error}");
+        assert!(error.contains("apps.personal"), "{error}");
     }
 
     #[test]

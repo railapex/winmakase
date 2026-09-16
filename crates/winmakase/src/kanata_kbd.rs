@@ -58,6 +58,7 @@ mod tests {
             mode: KeyboardMode::Apps,
             tap_ms: 150,
             hold_ms: 250,
+            ..KeyboardConfig::default()
         });
         assert!(out.contains("tap-hold-press 150 250"), "{out}");
     }

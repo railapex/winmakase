@@ -1317,14 +1317,16 @@ impl Supervisor {
             .iter()
             .map(|(c, h)| (c.as_str().to_string(), h.clone()))
             .collect();
-        Health::new(
+        let mut snapshot = Health::new(
             SupervisorHealth {
                 running: !self.shutting_down,
                 pid: std::process::id(),
                 since: timefmt::iso8601(self.started_at),
             },
             components,
-        )
+        );
+        snapshot.input_mode = self.cfg.keyboard.input_mode;
+        snapshot
     }
 
     fn write_health(&self) {
