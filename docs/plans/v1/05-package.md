@@ -36,4 +36,4 @@ Run the restored W5 window-discovery decision after at least seven elapsed days 
 
 Finish with independent review of user workflows, unresolved defects, recovery evidence, supported-build matrix, provenance/licenses and documentation. Run full required CI against the release commit. Existing baseline lint failures must be triaged and resolved or explicitly scoped with evidence; they are not a permanent excuse for a red release.
 
-V1 is the product milestone. Choose the release number at release preparation; do not mechanically reuse the old v0.1.0 checklist after later dogfood versions already shipped. No tag or distribution claim until R0–R6 pass.
+V1 is the product milestone. Choose the release number at release preparation; do not mechanically reuse the old v0.1.0 checklist after later dogfood versions already shipped. No public v1 tag or full-release distribution claim until R0–R6 pass. A named dogfood prerelease is a separate, limited milestone after the four-cut evidence and Chris's explicit deployment/publication decision; its release notes retain every outstanding v1 gate.

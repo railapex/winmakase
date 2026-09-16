@@ -1,6 +1,6 @@
 # Winmakase work state
 
-Updated 2026-09-12. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata and PowerToys.** Plans are accepted direction; implementation gates below remain open. The previous M0–M4 ledger is [archived](plans/archive/2026-09-08/TODO.md); its completed evidence remains useful, its unchecked sequence is superseded.
+Updated 2026-09-16. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata and PowerToys.** Plans are accepted direction; implementation gates below remain open. The previous M0–M4 ledger is [archived](plans/archive/2026-09-08/TODO.md); its completed evidence remains useful, its unchecked sequence is superseded. [Builder contracts and work orders](plans/v1/builders/README.md) now define the remaining execution; planning closes no product gate.
 
 ## Already present
 
@@ -37,6 +37,6 @@ P1 and offline-bar work can proceed after their P0 proofs. P4 correctness and pr
 - [ ] R5 — clean install, update, uninstall and offline operation.
 - [ ] R6 — integrated use and release review.
 
-Record build, environment, observations and artifacts under the [verification contract](plans/v1/verification.md). No release tag until all blocking cases pass. Future WM/shell/grouping work lives in [future platforms](plans/future-desktop-platforms.md).
+Record build, environment, observations and artifacts under the [verification contract](plans/v1/verification.md). No public v1 release tag until all blocking cases pass. A separately authorized dogfood prerelease records its limited scope and outstanding gates under the [dispatch contract](plans/v1/builders/README.md). Future WM/shell/grouping work lives in [future platforms](plans/future-desktop-platforms.md).
 
 Use the [execution procedure](plans/v1/execution.md) and [generated progress report](plans/v1/progress.html) for session handoffs and check-ins. Package/round checkboxes here remain the completion source; execution-state.json records only current slice, decisions and evidence. W5 gets a written need/no-need verdict after at least one week with app actions and float recovery.

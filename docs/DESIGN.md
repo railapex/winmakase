@@ -1,5 +1,7 @@
 # Winmakase design
 
+The [v1 builder contract annex](plans/v1/build-contracts.md) specifies the remaining role/action, composition, shell, lifecycle, journal and installation interfaces. These are implementation targets; the current-versus-target distinction below and verification ledger remain authoritative. [Sol work orders](plans/v1/builders/README.md) assign their execution.
+
 Accepted v1 direction, 2026-09-08. **Target contracts below are not claims that current code satisfies them.** [TODO](TODO.md) records status; [plans](plans/v1/README.md) define implementation and evidence. Earlier decisions and completed spike history are preserved in the [design archive](plans/archive/2026-09-08/DESIGN.md).
 
 ## Product boundary

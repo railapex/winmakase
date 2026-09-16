@@ -5,6 +5,8 @@ All notable changes to Winmakase. Format follows [Keep a Changelog](https://keep
 ## [Unreleased]
 
 ### Documentation
+- Added shared v1 contracts and scoped Sol work orders for windows, offline controls, appearance, lifecycle and installation; defined two-builder orchestration, proof dependencies and shared-file ownership. Reconciled the unpublished source checkpoint and dogfood-prerelease versus public-v1 gates. No product behavior or machine state changed.
+- Clarified that the optional daily layout ships with unassigned roles, and recorded current Omarchy layout behavior, PowerToys Workspaces/FancyZones interoperability limits, Command Palette Dock/contribution routes and Whim activity for the later roadmap.
 - Added an Astra/Sol build handoff covering the four cuts to daily dogfood, Glaze patch and upstream-PR strategy, repository hygiene, the path from dogfood to v1, and the v2+ product arc.
 - Started P0 with a read-only artifact/config/task/display inventory, pinned upstream payload comparisons, and a recovered direct-Caps adoption gate. Ordinary bounded desktop checks remain on the rig; disruptive shell/failure tests use disposable Windows. No keyboard or shell cutover was performed.
 - Selected Caps+Ctrl+J as the planned insertion-direction addition while preserving Caps+J, and added one stable NEXT.md entry point for repeatable build-session continuation. No binding was deployed.

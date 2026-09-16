@@ -2,13 +2,15 @@
 
 - **Audience:** Astra lead, Sol builders
 - **State date:** 2026-09-16
-- **Winmakase checkpoint:** `8ec83dc` on `main`
+- **Source checkpoint inspected for builder planning:** `1f47d497069b69a627f9b8c8598d21b4b55f4aa9` on `main` (before the planning branch)
 - **Workspace version:** `0.1.8` (development version; no release tag)
 - **Paired Glaze checkpoint:** `6bc83d1` on `winmakase-v1-input`
 - **Daily deployed Glaze checkpoint:** `9c8e93b` (older than the paired candidate)
 - **State authority:** [`docs/plans/v1/NEXT.md`](docs/plans/v1/NEXT.md) and [`docs/plans/v1/execution-state.json`](docs/plans/v1/execution-state.json)
 
 This file is the build and delegation brief. It explains the product arc, the four cuts to daily dogfood, the Glaze patch strategy, and the release horizon. It does not replace the execution ledger. Every accepted slice still closes through `NEXT.md`, `execution-state.json`, evidence, design/TODO updates where contracts changed, and the changelog.
+
+The 2026-09-16 planning pass adds [concrete contracts](docs/plans/v1/build-contracts.md) and [Sol work orders/dispatch](docs/plans/v1/builders/README.md). Use those for file ownership, dependencies, proof prerequisites and slice acceptance. Planning changes no runtime gate and authorizes no machine cutover. Daily deployment above is the last recorded state, not a fresh live-process observation.
 
 ## Position
 
@@ -196,15 +198,15 @@ This ordering gets the obvious bugs and reusable Windows primitives reviewed fir
 
 The Winmakase commit history is generally sound: current work uses scoped subjects (`[p0]`, `[docs]`, `[supervisor]`, `[window-policy]`, `[keymap]`), accepted slices pair product and evidence, and the changelog records user-visible behavior. D1 and I1 are represented in `[Unreleased]`.
 
-The weak point is publication and release bookkeeping, not granularity. Local `main` is 51 commits ahead of `origin/main`, there are no Winmakase PRs or local tags, and several development version bumps still live under one `[Unreleased]` section. That is too much unpublished history for the next phase. A Cargo version bump is not a release.
+The weak point is publication and release bookkeeping, not granularity. At the 2026-09-16 planning inspection, local `main` was 52 commits ahead of remote `main` (`ff91369`); the original handoff recorded no Winmakase PRs or local tags, and several development version bumps still live under one `[Unreleased]` section. Recheck publication state before building. That is too much unpublished history for the next phase. A Cargo version bump is not a release.
 
 Before parallel building:
 
 1. Publish the current Winmakase checkpoint as the baseline.
 2. Create feature branches/worktrees from that remote baseline.
-3. Merge each of the four cuts through reviewable Winmakase PRs instead of continuing to stack local `main`.
+3. Merge bounded slices through reviewable Winmakase PRs; each cut is an integration milestone, not one large PR. Do not continue stacking local `main`.
 4. Keep Glaze ports in separate branches based on official upstream main.
-5. Tag the first daily-dogfood cut and start a release section instead of letting `[Unreleased]` grow indefinitely.
+5. After its evidence and Chris's deployment/publication decision, tag the first daily-dogfood milestone as an explicit prerelease and start a release section. Public v1 still requires R0–R6.
 6. Add a release manifest that pins the Winmakase version, Glaze base and patch series, dependency artifacts, hashes, licenses/notices, and accepted verification.
 
 For each Winmakase PR, include the trigger, old behavior, new behavior, paired component requirement, checks run, live/disposable evidence, rollback, and open gate. Do not bury a Glaze minimum-version change in a generic feature note.
@@ -235,6 +237,8 @@ For the v1 release candidate:
 The later arc is known well enough to guide boundaries. It is not a promise of dates or a reason to pull future work into v1.
 
 ### v1.x: Polish from use
+
+The [2026-09-16 PowerToys/Omarchy/Whim research](docs/research/layouts-powertoys-2026-09-16.md) adds a concrete later integration route: Command Palette actions and Dock bands, followed by bounded Workspaces/FancyZones interoperability proofs. The first v1 layout remains an optional unassigned recipe; dynamic tiling is the public default. Detailed build plans stop at v1.
 
 - Smooth focus, placement, launcher, tray, and multi-monitor edge cases found in daily use.
 - Add quality-of-life actions where the friction log shows repetition.
@@ -267,8 +271,8 @@ The parked research and triggers are in [`docs/plans/future-desktop-platforms.md
 1. Verify this checkpoint against `NEXT.md`, `execution-state.json`, the current trees, and live deployment state. Fix contradictions before delegating.
 2. Decide whether to publish the current Winmakase baseline immediately or after one small documentation-only reconciliation PR. Do not begin more local-main feature stacking.
 3. Own Cut 1's physical input acceptance and make the Kanata/direct-Caps decision.
-4. Freeze the Cut 2 role/action contracts, then dispatch the two disjoint Sol lanes.
-5. Open a separate official-upstream Glaze port lane beginning with cleanup uncloak or AppUserModelID. This lane may proceed in parallel but cannot block dogfood.
+4. Use the frozen builder contracts and start the first ready slices: F0 shared interfaces and S0 offline assets. Window work serializes around shared files; physical input acceptance does not block independent source work.
+5. Prepare a separate official-upstream Glaze port beginning with cleanup uncloak or AppUserModelID when a builder slot is free. It cannot block dogfood or become a third implementation lane; external PR publication remains Chris's decision.
 6. End each cut with a paired integration review, updated evidence/ledger/changelog, and a named next gate.
 
 ## Decisions that still belong to Chris

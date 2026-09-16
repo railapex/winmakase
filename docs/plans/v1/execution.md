@@ -12,6 +12,8 @@ No installed build-orchestrate skill was found in the inspected user/Friday/plug
 
 ## First batch
 
+The original P0 batch below records the procedure's starting point. Current remaining work is split in [Sol dispatch](builders/README.md); its [contract annex](build-contracts.md) freezes shared behavior. Instantiate F0/S0 from a published accepted baseline before wider fan-out. P0.I2 physical acceptance continues separately and does not block independent source work. Do not repeat accepted D1/I1 proofs without a changed dependency.
+
 Start with P0 proofs, not six simultaneous packages:
 
 1. Record exact provenance and define a disposable Windows test environment, ownership and recovery.

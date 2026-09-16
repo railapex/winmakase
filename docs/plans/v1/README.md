@@ -10,6 +10,8 @@ Deliver a solid daily desktop on **GlazeWM + Zebar + Kanata + PowerToys Run**: l
 
 Start or resume through [NEXT.md](NEXT.md); the same entry point applies to each later session.
 
+The 2026-09-16 [builder contract annex](build-contracts.md) and [Sol work orders](builders/README.md) make the remaining v1 work dispatchable. They retain P0–P5 scope and R0–R6 acceptance, with separate proof gates and file ownership. Independent offline/lifecycle work need not wait for physical Caps. No gate is closed by these plans.
+
 ## Delivery order
 
 | Package | Work | Dependencies | Exit |
