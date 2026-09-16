@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "request_id": "request-7",
+  "action": {
+    "kind": "focus_or_launch",
+    "role_id": "browser.work"
+  },
+  "outcome": "pending",
+  "role_id": "browser.work",
+  "wm_generation": "wm-2",
+  "retry": "wait_for_observation",
+  "diagnostic_code": "startup_grace",
+  "message": "Browser is still starting"
+}

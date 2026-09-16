@@ -305,18 +305,16 @@ mod tests {
 
     #[test]
     fn identity_round_trip_rejects_unknown_versions() {
-        let identity = CanonicalIdentity {
-            schema: ROLE_SCHEMA,
-            process: "WindowsTerminal".into(),
-            class: None,
-            app_id: Some("Terminal".into()),
-        };
+        let identity = CanonicalIdentity::from_json(include_str!(
+            "../tests/fixtures/contracts/role-identity.json"
+        ))
+        .unwrap();
         let text = serde_json::to_string(&identity).unwrap();
         assert_eq!(CanonicalIdentity::from_json(&text).unwrap(), identity);
-        let toml = toml::to_string(&identity).unwrap();
+        let toml = include_str!("../tests/fixtures/contracts/role-identity.toml");
         assert!(toml.contains("schema = 1"));
         assert_eq!(
-            toml::from_str::<CanonicalIdentity>(&toml).unwrap(),
+            toml::from_str::<CanonicalIdentity>(toml).unwrap(),
             identity
         );
 

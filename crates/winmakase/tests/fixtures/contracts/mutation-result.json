@@ -1,0 +1,36 @@
+{
+  "header": {
+    "schema": 1,
+    "install_id": "install-a",
+    "mutation_id": "mutation-9",
+    "base_generation": "generation-3",
+    "candidate_generation": "generation-4",
+    "operation": "theme",
+    "owner_creation_identity": "pid:42@123456",
+    "status": "committed"
+  },
+  "entries": [
+    {
+      "target": {
+        "kind": "registry_value",
+        "key_id": "windows.personalize",
+        "value_name": "AppsUseLightTheme"
+      },
+      "prior": {
+        "type": "absent"
+      },
+      "intended": {
+        "type": "dword",
+        "value": 1
+      },
+      "last_owned": {
+        "type": "dword",
+        "value": 1
+      },
+      "intent": "applied",
+      "apply": "applied",
+      "verify": "verified",
+      "restore": "not_required"
+    }
+  ]
+}

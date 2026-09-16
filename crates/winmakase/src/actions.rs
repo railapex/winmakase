@@ -185,7 +185,11 @@ mod tests {
 
     #[test]
     fn action_result_round_trips_with_the_frozen_shape() {
-        let value = pending();
+        let value = ActionResult::from_json(include_str!(
+            "../tests/fixtures/contracts/action-result.json"
+        ))
+        .unwrap();
+        assert_eq!(value, pending());
         let json = serde_json::to_value(&value).unwrap();
         assert_eq!(json["schema"], ACTION_SCHEMA);
         assert_eq!(json["action"]["kind"], "focus_or_launch");
@@ -208,18 +212,10 @@ mod tests {
 
     #[test]
     fn popup_snapshot_round_trips_without_command_strings() {
-        let snapshot = PopupSnapshot {
-            schema: POPUP_SNAPSHOT_SCHEMA,
-            owner_generation: "owner-4".into(),
-            sequence: 9,
-            actions: vec![ActionDescriptor {
-                id: "launcher".into(),
-                label: "Launcher".into(),
-                action: ActionId::OpenLauncher,
-                available: true,
-                unavailable_reason: None,
-            }],
-        };
+        let snapshot: PopupSnapshot = serde_json::from_str(include_str!(
+            "../tests/fixtures/contracts/popup-snapshot.json"
+        ))
+        .unwrap();
         snapshot.validate().unwrap();
         let text = serde_json::to_string(&snapshot).unwrap();
         let decoded: PopupSnapshot = serde_json::from_str(&text).unwrap();

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "owner_generation": "owner-4",
+  "sequence": 9,
+  "actions": [
+    {
+      "id": "launcher",
+      "label": "Launcher",
+      "action": {
+        "kind": "open_launcher"
+      },
+      "available": true
+    }
+  ]
+}

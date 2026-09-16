@@ -296,6 +296,18 @@ mod tests {
     }
 
     #[test]
+    fn frozen_health_fixture_has_the_supported_shape() {
+        let health: Health =
+            serde_json::from_str(include_str!("../tests/fixtures/contracts/health.json")).unwrap();
+        assert_eq!(health.schema, SCHEMA);
+        assert_eq!(health.generation.owner.0, "999@2026-09-16T11:59:00Z");
+        assert_eq!(health.input_mode, InputMode::Kanata);
+        assert_eq!(health.lifecycle, LifecycleState::Starting);
+        assert_eq!(health.takeover, TakeoverPermission::Unknown);
+        assert_eq!(health.responsive, None);
+    }
+
+    #[test]
     fn set_stamps_the_transition() {
         let mut c = ComponentHealth::stopped_now();
         c.since = "2020-01-01T00:00:00Z".to_string();

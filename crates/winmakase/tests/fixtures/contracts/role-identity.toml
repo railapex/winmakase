@@ -1,0 +1,4 @@
+schema = 1
+process = "chrome"
+class = "chrome_widgetwin_1"
+app_id = "chrome.userdata.profile1"

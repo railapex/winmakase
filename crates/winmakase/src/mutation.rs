@@ -174,12 +174,26 @@ mod tests {
 
     #[test]
     fn journal_round_trip_preserves_absent_and_native_values() {
-        let journal = journal();
+        let journal = MutationJournal::from_json(include_str!(
+            "../tests/fixtures/contracts/mutation-intent.json"
+        ))
+        .unwrap();
         journal.validate().unwrap();
         let json = serde_json::to_string_pretty(&journal).unwrap();
         assert!(json.contains("\"type\": \"absent\""));
         assert!(json.contains("\"type\": \"dword\""));
         assert_eq!(MutationJournal::from_json(&json).unwrap(), journal);
+    }
+
+    #[test]
+    fn committed_result_fixture_preserves_last_owned_value() {
+        let journal = MutationJournal::from_json(include_str!(
+            "../tests/fixtures/contracts/mutation-result.json"
+        ))
+        .unwrap();
+        assert_eq!(journal.header.status, TransactionStatus::Committed);
+        assert_eq!(journal.entries[0].verify, JournalStepStatus::Verified);
+        assert_eq!(journal.entries[0].last_owned, Some(JournalValue::Dword(1)));
     }
 
     #[test]

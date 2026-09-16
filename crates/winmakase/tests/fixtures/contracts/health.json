@@ -1,0 +1,29 @@
+{
+  "schema": 2,
+  "updated": "2026-09-16T12:00:00Z",
+  "generation": {
+    "owner": "999@2026-09-16T11:59:00Z"
+  },
+  "input_mode": "kanata",
+  "lifecycle": "starting",
+  "takeover": "unknown",
+  "responsive": null,
+  "cleanup_failures": [],
+  "degraded_reasons": [
+    "readiness_not_yet_evaluated"
+  ],
+  "supervisor": {
+    "running": true,
+    "pid": 999,
+    "since": "2026-09-16T11:59:00Z"
+  },
+  "components": {
+    "kanata": {
+      "status": "running",
+      "pid": 4321,
+      "since": "2026-09-16T11:59:30Z",
+      "restarts": 0,
+      "last_exit_code": null
+    }
+  }
+}
