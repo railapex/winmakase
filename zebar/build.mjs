@@ -92,6 +92,33 @@ function scanRuntimeAssets(outputs) {
   }
 }
 
+async function validateRuntimeConfiguration() {
+  const runtimePath = path.join(root, 'assets/runtime-config.json');
+  const zpackPath = path.join(root, 'zpack.json');
+  const runtimeText = await readFile(runtimePath, 'utf8');
+  const zpackText = await readFile(zpackPath, 'utf8');
+  const hardcodedUserPath = /[A-Za-z]:[\\/]Users[\\/][^\\/"']+/i;
+  if (hardcodedUserPath.test(runtimeText) || hardcodedUserPath.test(zpackText)) {
+    throw new Error('Runtime configuration contains a hardcoded Windows user path');
+  }
+
+  const runtime = JSON.parse(runtimeText);
+  const zpack = JSON.parse(zpackText);
+  const program = runtime.launcher?.program;
+  if (typeof program !== 'string') {
+    throw new Error('runtime-config launcher.program must be a string');
+  }
+  const allowedPrograms = zpack.widgets.flatMap(widget =>
+    (widget.privileges?.shellCommands ?? []).map(command => command.program),
+  );
+  if (program && !allowedPrograms.includes(program)) {
+    throw new Error('Configured launcher is missing its exact Zebar shell privilege');
+  }
+  if (!program && allowedPrograms.length) {
+    throw new Error('Zebar shell privileges must be empty when no launcher is configured');
+  }
+}
+
 function packageName(packagePath) {
   const marker = 'node_modules/';
   const index = packagePath.lastIndexOf(marker);
@@ -133,6 +160,7 @@ if (licensesOnly) {
   await writeAtomic('THIRD-PARTY-NOTICES.md', await noticeContents());
   console.log('Updated THIRD-PARTY-NOTICES.md');
 } else {
+  await validateRuntimeConfiguration();
   const first = await compile();
   scanRuntimeAssets(first);
   const notices = await noticeContents();

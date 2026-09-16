@@ -33,12 +33,7 @@
         ]
       },
       "privileges": {
-        "shellCommands": [
-          {
-            "program": "C:/Users/chris/.winmakase/bin/winmakase-run.exe",
-            "argsRegex": "^$"
-          }
-        ]
+        "shellCommands": []
       },
       "presets": [
         {
