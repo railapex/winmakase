@@ -1,34 +1,38 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-16T11:59:35Z",
-  "planBaseCommit": "ab32da1",
-  "lastVerifiedBuild": "Winmakase 0.1.8 I1 release passes 33 keymap, 4 launcher, all-target check and targeted strict Clippy. In a fresh Windows Sandbox, hidden/repeated/concurrent Run activation, GUI helper, stopped-process error and a real rendered Zebar click pass. Direct-Caps config generation passes. The final bar interaction required networking because the current bar still uses CDNs. D1 Glaze 6bc83d1 dialog/reload results remain accepted. Daily Glaze remains deployed 9c8e93b; no cutover.",
-  "stage": "V1 builder plans reviewed; runtime remains P0 with D1/I1 and the unwired ancestry prototype accepted",
+  "updatedAt": "2026-09-16T12:52:43Z",
+  "planBaseCommit": "5969051",
+  "lastVerifiedBuild": "Winmakase 0.1.9 source on build/f0-s0: F0 passes 159 library tests, 33 keymap tests, all-target check and scoped strict Clippy; S0 passes clean npm install, deterministic build, TypeScript and remote-runtime-reference checks. The latest accepted desktop runtime remains 0.1.8 I1 with D1 Glaze 6bc83d1. The 0.1.9 bar has not passed disconnected startup/rendered interaction; daily Glaze remains deployed 9c8e93b and no cutover occurred.",
+  "stage": "F0 shared interfaces and S0 offline assets accepted in source; runtime remains P0 with D1/I1 accepted",
   "planning": {
     "sourceBaseCommit": "1f47d497069b69a627f9b8c8598d21b4b55f4aa9",
-    "observedRemoteMain": "ff91369b11e8ce6f51e913954613ce93d1a94d55",
+    "observedRemoteMain": "5969051089c528da01f4eb5048df3c56ba0ca17c",
     "branch": "docs/v1-sol-build-plans",
     "contracts": "build-contracts.md",
     "dispatch": "builders/README.md",
     "review": "../../verification/v1/2026-09-16-planning/README.md",
     "platformResearch": "../../research/layouts-powertoys-2026-09-16.md",
-    "scope": "Chris confirmed detailed remaining v1 and later roadmap only. No implementation, publication or deployment in this planning pass.",
-    "nextSourceBatch": "After accepted baseline publication and build authorization, dispatch F0 shared interfaces and S0 offline assets to two isolated Sol builders. Keep P0.I2 as a separately authorized physical/runtime acceptance lane.",
+    "scope": "Chris confirmed the detailed remaining v1 and later roadmap. The reviewed baseline and plans are published; F0 and S0 are implemented on build/f0-s0 without deployment.",
+    "nextSourceBatch": "Start W0 role identity proof/schema and L0 singleton/request mechanics from the frozen F0 contracts. Keep P0.I2 as a separately prepared physical/runtime acceptance lane.",
     "defaults": "Dynamic tiling remains default. Ship optional main/side/lower recipe with unassigned roles; personal app/profile assignments belong to local opt-in preview. Windows app/system theme mutation off unless opted in. Caps+grave terminal proposal requires translation/collision proof and interaction checkpoint."
   },
   "currentSlice": {
-    "id": "P0.I2",
-    "status": "D1 and I1 accepted; physical input/context acceptance next",
-    "title": "Decide direct Caps adoption across real input contexts",
-    "nextAction": "Exercise literal physical Caps through the patched Glaze candidate on authorized daily hardware; synthetic protected-leader events are diagnostic only and cannot satisfy acceptance. Use the disposable guest for the bounded fullscreen, elevated, focus/monitor, reload and teardown cases it can represent, then decide whether Kanata can retire. Keep P2 offline-bar packaging and remaining R0 provider/admission/classification proofs separate."
+    "id": "F0/S0",
+    "status": "Accepted in source; runtime acceptance pending",
+    "title": "Freeze v1 interfaces and bundle the offline bar runtime",
+    "nextAction": "Dispatch W0 role identity proof/schema and L0 singleton/request mechanics from the frozen interfaces. Separately retain P0.I2 physical Caps/context acceptance and disconnected Zebar startup/rendered interaction as open runtime gates."
   },
-  "nextCheckpoint": "Review the v1 planning handoff, then publish the accepted baseline and instantiate F0/S0 when building is authorized. Runtime R0 interaction proof still covers tray/calendar, split controls, role identity and terminal toggle; physical Caps requires its prepared hardware packet.",
+  "nextCheckpoint": "Review the F0/S0 source evidence and dispatch W0/L0 from the frozen interfaces. Runtime R0 still needs physical Caps, disconnected bar startup/rendering, popup/provider, classification and admission proofs before its gates move.",
   "decisions": [],
   "blockers": [
-    "Direct-Caps rendering and explicit Run activation pass, but physical Caps/fullscreen/elevated/focused-monitor acceptance still determines whether Kanata can retire. The bar still needs network-free production assets in P2.",
+    "Direct-Caps rendering and explicit Run activation pass, but physical Caps/fullscreen/elevated/focused-monitor acceptance still determines whether Kanata can retire. Bar assets are bundled locally; disconnected startup and rendered interaction remain unproved.",
     "R0 remains open: real provider/admission/background input, popup/tray/calendar/split and recovery proofs remain incomplete."
   ],
   "recentDecisions": [
+    {
+      "title": "Accept F0 and S0 as source foundations",
+      "detail": "Winmakase 0.1.9 freezes versioned role/action/health/lifecycle/journal interfaces and literal fixtures, with Kanata as the migration default and one pure Glaze composition path. Zebar now builds deterministic local assets from pinned dependencies with no runtime CDN or status subprocess loop. Health is deliberately unknown until S3. No desktop/runtime gate closed; disconnected rendering and physical input remain open."
+    },
     {
       "title": "Make v1 work dispatchable without closing runtime gates",
       "detail": "Eight shared contracts and scoped work orders retain P0–P5/R0–R6. Astra owns composition, paired changes and the ledger; at most two Sol builders own disjoint worktrees/files, with a fresh reviewer. Offline assets and pure lifecycle work need not wait for physical Caps. Journal ownership precedes theme/install writers; popup/provider and identity/admission primitives remain proof-gated. Dogfood prerelease and public v1 are separate evidence/authority milestones."
@@ -71,6 +75,11 @@
     }
   ],
   "evidence": [
+    {
+      "label": "F0 shared contracts and S0 offline assets",
+      "href": "../../verification/v1/2026-09-16-f0-s0/README.md",
+      "detail": "Baseline 5969051 published; F0 contracts/fixtures and reviewed S0 assets integrated on build/f0-s0 as Winmakase 0.1.9. Rust, keymap, scoped strict Clippy, TypeScript, deterministic asset and remote-reference checks pass. Host commit pressure blocks supervisor integration and no disconnected Zebar runtime was claimed."
+    },
     {
       "label": "V1 contracts and Sol dispatch plans",
       "href": "builders/README.md",
@@ -148,6 +157,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-16T12:52:43Z",
+      "summary": "Published reviewed baseline/plans at 5969051. Integrated F0 shared contracts and literal schema fixtures plus reviewed S0 local Zebar assets on build/f0-s0; bumped Winmakase to 0.1.9. F0 passes 159 library tests, 33 keymap tests, all-target check and scoped strict Clippy. S0 passes clean pinned dependency install, deterministic build, TypeScript and remote-reference scanning. Existing host commit pressure prevented a valid supervisor integration result; disconnected bar startup/rendering remains unrun. No desktop mutation, deployment or P/R gate closure."
+    },
     {
       "at": "2026-09-16T11:59:35Z",
       "summary": "Planning accepted after fresh Astra recheck: installer IDs made unambiguous, theme frontend ownership explicit, stale lease-write recovery race added. Chris confirmed v1 detailed/later roadmap only; optional recipe roles remain unassigned. Current primary-source PowerToys/Omarchy/Whim research recorded, with geometry interop and Command Palette/Dock extensions kept on the later roadmap. All 120 local links resolve; JSON and progress agree; no runtime gate changed. Documentation-only local commit; no push, product implementation or machine action."

@@ -14,6 +14,8 @@ Updated 2026-09-16. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata an
 
 These checks do not imply clean installation, dialog safety, focus-or-launch, complete theming or hardened recovery.
 
+Source checkpoint `build/f0-s0`: the v1 shared interfaces and committed schema fixtures are implemented, and the Zebar runtime is locally bundled with deterministic offline-asset checks. [Evidence](verification/v1/2026-09-16-f0-s0/README.md). No runtime round closes: disconnected Zebar startup/rendering, physical Caps and the remaining window/popup/lifecycle proofs are still required.
+
 Targeted recovery: [2026-09-10 placement-denied hotfix](verification/v1/2026-09-10-placement-denied.md) implements permission-denied tile release on the deployed Glaze source base. Source review, seven recovery tests, four error tests and elevated/ordinary native component checks pass. Delivery status is recorded in the evidence; P0/P1 gates remain open.
 
 ## Active packages
