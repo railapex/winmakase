@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "launcher": {
+    "program": "C:/Users/chris/.winmakase/bin/winmakase-run.exe"
+  },
+  "monitor": {
+    "trayMode": "primary-at-origin"
+  },
+  "clock": {
+    "format": "EEE d MMM HH:mm"
+  }
+}

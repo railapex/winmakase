@@ -1,0 +1,223 @@
+:root {
+  color-scheme: light dark;
+  --text-size: 12px;
+  --icon-size: 15px;
+  --text-color-light: rgb(0 0 0 / 95%);
+  --text-color-dark: rgb(255 255 255 / 95%);
+  --icon-color-light: steelblue;
+  --icon-color-dark: rgb(115 130 175 / 95%);
+  --background-color-light: rgb(238 238 238 / 90%);
+  --background-color-dark: linear-gradient(rgb(0 0 0 / 90%), rgb(5 2 20 / 85%));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  font-size: var(--text-size);
+}
+
+button {
+  font: inherit;
+}
+
+div,
+span {
+  cursor: default;
+  user-select: none;
+}
+
+#root {
+  border-bottom: 1px solid rgb(255 255 255 / 5%);
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  height: 100%;
+  padding: 4px 1.5vw;
+}
+
+.left,
+.center,
+.right,
+.workspaces,
+.systray,
+.metric {
+  display: flex;
+  align-items: center;
+}
+
+.center {
+  justify-self: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.right {
+  justify-self: end;
+}
+
+.icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex: 0 0 auto;
+  fill: currentColor;
+}
+
+.metric,
+.binding-mode,
+.tiling-direction,
+.paused-button {
+  margin-right: 20px;
+}
+
+.metric .icon {
+  margin-right: 7px;
+  color: var(--icon-color-dark);
+}
+
+.workspace,
+.binding-mode,
+.tiling-direction,
+.paused-button,
+.launcher-button,
+.tray-expander {
+  border: 0;
+  border-radius: 2px;
+  color: inherit;
+  background: rgb(255 255 255 / 8%);
+  cursor: pointer;
+}
+
+.workspace {
+  margin-right: 4px;
+  padding: 4px 8px;
+}
+
+.workspace.displayed {
+  background: rgb(255 255 255 / 15%);
+}
+
+.workspace.focused,
+.workspace:hover,
+.launcher-button:hover {
+  background: rgb(75 115 255 / 50%);
+}
+
+.binding-mode,
+.tiling-direction,
+.paused-button {
+  line-height: 1;
+  padding: 4px 8px;
+  background: rgb(255 255 255 / 15%);
+}
+
+.binding-mode {
+  margin-right: 4px;
+}
+
+.tiling-direction .icon,
+.launcher-button .icon {
+  display: block;
+}
+
+.high-usage {
+  color: #e05656;
+}
+
+.launcher-button {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  padding: 4px;
+}
+
+.launcher-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.launcher-error {
+  background: rgb(224 86 86 / 70%);
+}
+
+.health-dot {
+  width: 8px;
+  height: 8px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.health-unknown {
+  background: rgb(255 255 255 / 25%);
+}
+
+.unavailable {
+  opacity: 0.65;
+}
+
+.systray-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.systray-icon:hover {
+  filter: brightness(1.3);
+}
+
+.tray-expander {
+  margin-left: 8px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.tray-expander:hover {
+  background: rgb(255 255 255 / 18%);
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    color: var(--text-color-light);
+  }
+
+  #root {
+    background: var(--background-color-light);
+  }
+
+  .metric .icon {
+    color: var(--icon-color-light);
+  }
+
+  .workspace,
+  .binding-mode,
+  .tiling-direction,
+  .paused-button,
+  .launcher-button,
+  .tray-expander {
+    background: rgb(0 0 0 / 7%);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    color: var(--text-color-dark);
+  }
+
+  #root {
+    background: var(--background-color-dark);
+  }
+}
