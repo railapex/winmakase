@@ -5,6 +5,7 @@ All notable changes to Winmakase. Format follows [Keep a Changelog](https://keep
 ## [Unreleased]
 
 ### Documentation
+- Added an Astra/Sol build handoff covering the four cuts to daily dogfood, Glaze patch and upstream-PR strategy, repository hygiene, the path from dogfood to v1, and the v2+ product arc.
 - Started P0 with a read-only artifact/config/task/display inventory, pinned upstream payload comparisons, and a recovered direct-Caps adoption gate. Ordinary bounded desktop checks remain on the rig; disruptive shell/failure tests use disposable Windows. No keyboard or shell cutover was performed.
 - Selected Caps+Ctrl+J as the planned insertion-direction addition while preserving Caps+J, and added one stable NEXT.md entry point for repeatable build-session continuation. No binding was deployed.
 - Specified dropdown tray overflow, persistent user pinning and a month calendar; restored W3 float recovery/W4's first layout and W5's measured switcher decision. Added current split/scratch/pin behavior, bounded build handoffs and a generated progress report. Product implementation remains pending.
