@@ -1,6 +1,6 @@
 # Winmakase build handoff
 
-- **Audience:** Astra lead, Sol builders
+- **Audience:** Sol build lead, Astra reviewers, Sol helpers
 - **State date:** 2026-09-16
 - **Source checkpoint inspected for builder planning:** `1f47d497069b69a627f9b8c8598d21b4b55f4aa9` on `main` (before the planning branch)
 - **Workspace version:** `0.1.8` (development version; no release tag)
@@ -81,11 +81,11 @@ Exit:
 - Focus-or-launch never creates a duplicate when a matching usable window exists; launch-new always creates a new instance when the application supports it.
 - Failure paths return a useful error and leave the current desktop intact.
 
-Suggested parallel lanes after Astra freezes the role/action contracts:
+Suggested lanes after the lead freezes the role/action contracts:
 
 - **Sol A:** app-role schema, identity, focus-or-launch, launch-new.
 - **Sol B:** float recovery, terminal toggle, split-next, first layout.
-- **Astra:** agent-window admission policy, shared interface review, paired integration.
+- **Lead/Astra review:** agent-window admission policy, shared interface review, paired integration.
 
 ### Cut 3: Make the visible shell work offline
 
@@ -107,11 +107,11 @@ Exit:
 - A failed or missing bar does not strand the session.
 - Multi-monitor and DPI changes converge without manual cleanup.
 
-Suggested lanes after Astra fixes the popup/focus/provider contracts:
+Suggested lanes after the lead fixes the popup/focus/provider contracts:
 
 - **Sol A:** asset vendoring, packaging, offline verification.
 - **Sol B:** popup, tray order, calendar, and native actions.
-- **Astra:** focus/provider lifetime, monitor composition, integration review.
+- **Lead/Astra review:** focus/provider lifetime, monitor composition, integration review.
 
 ### Cut 4: Prove lifecycle, installation, and rollback
 
@@ -133,23 +133,26 @@ Exit:
 - An interrupted install can resume or roll back from its journal.
 - The release candidate can be installed and removed on a clean disposable Windows instance.
 
-Suggested lanes after Astra freezes lifecycle states and the journal schema:
+Suggested lanes after the lead freezes lifecycle states and the journal schema:
 
 - **Sol A:** lifecycle owner, request routing, readiness, recovery.
 - **Sol B:** installer, artifact verification, journal, rollback/uninstall.
-- **Astra:** failure semantics, security review, destructive-case review, integration.
+- **Lead/Astra review:** failure semantics, security review, destructive-case review, integration.
 
 ## Orchestration rules
 
-Use Astra as the lead and reviewer for shared contracts, platform-sensitive behavior, and the final composition. Use Sol builders for bounded implementation slices whose inputs and exit tests are already clear.
+The Astra planning pass is complete. Do not keep Astra running as a standing coordinator while Sol repeats the same reasoning. Use one top-level Sol as the normal builder and integration lead. Bring Astra back for a disputed contract, a high-risk review, or a cut/release gate.
 
-- Run at most two implementation lanes at once. Preserve the fourth slot for review or a targeted investigation.
+- Run one implementation lane by default. Open a second only when saving wall time matters and its files and dependencies are disjoint. Preserve a slot for review.
 - Give each builder its own branch/worktree and a disjoint write set.
 - Freeze shared schemas and public interfaces before parallel work starts.
-- Require each handoff to name base commit, changed files, exact checks run, evidence produced, remaining risk, and the next dependency.
+- Start fresh workers without conversation history. Give them the exact work order, contract sections, base commit, owned paths, acceptance cases, and stopping point. They do not need the planning transcript or every v1 document.
+- Reuse the same worker for repairs and at most one adjacent slice in the same package. At a package boundary or after two accepted slices, checkpoint to files and start clean.
+- Require each return to name base and commits, changed behavior/files, checks run, evidence, remaining risk, and next dependency. Keep it short; the diff and evidence carry the detail.
 - Accept behavior into `main` only after the execution ledger, evidence, changelog, and contract docs agree.
 - Keep implementation commits about one behavior. A docs-only correction may stand alone when it changes acceptance truth rather than product behavior.
 - Review Glaze and Winmakase as a pair whenever an IPC DTO, match field, rule lifecycle, or generated config changes.
+- Use fresh Astra review for input hooks, window identity/ownership, paired Glaze behavior, lifecycle authority, privileged installation, rollback, and release gates. Use fresh Sol review for ordinary UI/rendering changes. Let the Sol lead self-review low-risk mechanical changes backed by deterministic tests.
 
 The detailed delegation mechanics and handoff fields are in [`docs/plans/v1/execution.md`](docs/plans/v1/execution.md) and [`docs/plans/v1/handoff-template.md`](docs/plans/v1/handoff-template.md).
 

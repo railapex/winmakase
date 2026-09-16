@@ -1,6 +1,6 @@
 # Sol build dispatch
 
-Reader: the Astra lead who dispatches work and the Sol builders receiving it. Prepared 2026-09-16; planning only. No implementation or machine cutover starts from reading this file.
+Reader: the Sol build lead, Astra reviewers and any Sol helper receiving a bounded lane. Prepared 2026-09-16; planning only. No implementation or machine cutover starts from reading this file.
 
 Start at [NEXT](../NEXT.md). [DESIGN](../../../DESIGN.md) and its [contract annex](../build-contracts.md) own behavior; P0–P5 own scope; [TODO](../../../TODO.md) owns completion; execution-state.json owns active work and evidence. These work orders refine those sources rather than add another status ledger.
 
@@ -16,15 +16,27 @@ Every later builder branches from a named accepted remote commit. Never use this
 
 | Owner | Responsibility |
 |---|---|
-| Astra lead | Shared contracts, dependency decisions, paired Glaze changes, integration, acceptance and the single ledger writer |
-| Sol A, high effort | One bounded implementation slice in its own branch/worktree |
-| Sol B, high effort | A second slice only when its write set and dependencies are independent |
-| Fresh reviewer | Fourth slot; Astra for identity/window/lifecycle/privileged changes, Sol for ordinary UI/rendering |
+| Sol lead, high effort | Normal implementation, integration, acceptance and the single ledger writer after contracts are frozen |
+| Sol helper, high effort | A second slice only when saving wall time matters and its write set and dependencies are independent |
+| Astra | Disputed shared contracts, paired Glaze decisions and fresh review of identity/window/lifecycle/privileged/release changes |
+| Fresh Sol reviewer | Ordinary UI/rendering review when the change is too broad for lead self-review |
 | Chris | Product taste, physical input, prepared daily-machine cutover, external publication and final release decisions |
 
-Use native agents and follow-up on the same builder for repairs. No nested delegation or new orchestrator service. A fresh reviewer gets requirements, diff and actual evidence without the builder's suggested verdict. The lead reviews the return, integrates through a reviewable feature PR, and reruns affected composition checks. Chris does not carry prompts between workers.
+The completed Astra planning pass is the contract pass. Do not retain Astra as a standing narrator while a Sol builder rereads the same material. One top-level Sol should build and integrate by default. Use native agents only for a second independent lane or a fresh review. Follow up with the same builder for repairs and one adjacent slice in the same package. No nested delegation or new orchestrator service. Chris does not carry prompts between workers.
 
-At most two implementation lanes. Do not open a third lane for Glaze ports; a port occupies an available builder slot or waits. Guest experiments serialize under `env:winmakase-uat`. Code parallelism does not authorize two owners of the same desktop. At handoff release the environment only after cleanup and state capture.
+Fresh workers start without conversation history. Their prompt names this work order, exact contract sections, base commit, owned paths, acceptance cases and stopping point. They do not reread the planning transcript, every plan or unrelated evidence. A return stays compact: base and commits, behavior/files, commands/results, evidence, risks and next dependency. The diff and evidence hold the detail.
+
+Review depth follows risk:
+
+| Risk | Required review |
+|---|---|
+| Input hooks, window identity/ownership, paired Glaze, lifecycle authority, privileged install/rollback, release | Fresh Astra review of requirements, diff and evidence |
+| Broad UI/rendering, focus/provider behavior, installer UX | Fresh Sol review unless the lead escalates a contract question to Astra |
+| Mechanical asset, fixture, documentation or deterministic renderer change | Sol lead self-review plus applicable checks; no fresh agent by default |
+
+A fresh reviewer gets requirements, diff and actual evidence without the builder's suggested verdict. The lead integrates through a reviewable feature PR and reruns affected composition checks.
+
+One implementation lane is the token-efficient default. At most two may run when elapsed time matters. Do not open a third lane for Glaze ports; a port occupies an available builder slot or waits. Guest experiments serialize under `env:winmakase-uat`. Code parallelism does not authorize two owners of the same desktop. At handoff release the environment only after cleanup and state capture.
 
 Builders own their implementation paths and a slice-specific evidence directory. The lead alone edits NEXT, execution-state.json, TODO, DESIGN/annex, shared package manifests/lockfiles, changelog and progress at integration, unless a handoff explicitly transfers a shared file to one builder. Workers return proposed documentation deltas. A slice touching `main.rs`, `lib.rs`, `config.rs`, keymap `lib.rs`, supervisor or package locks is not independent of another writer of that file merely because the features differ.
 
@@ -74,7 +86,7 @@ Arrows from P0 mean the relevant proof, not all of R0. Offline assets need no Ca
 | 8 | T1 theme application and UI | Remaining isolated cut evidence | S3/INST1 integrated before recovery takeover proof; S2 transfers theme view |
 | 9 | REL0 dogfood/release evidence | Optional bounded Glaze upstream port | Cutover only when prepared evidence and Chris's decision exist |
 
-Waves are a safe default schedule, not mandatory idle time. The lead may pull a ready independent slice forward, including pure L1 reducer work, after checking actual files and accepted dependencies. It must not let a builder code against an unproved popup/identity/admission capability. If two nominal lanes need the same file, integrate the first or transfer that file; do not resolve concurrent design by cherry-pick roulette.
+Waves are a safe dependency schedule, not a command to run two agents. For token efficiency, execute Slot A and Slot B sequentially unless the lead deliberately trades more tokens for less elapsed time. The lead may pull a ready independent slice forward, including pure L1 reducer work, after checking actual files and accepted dependencies. It must not let a builder code against an unproved popup/identity/admission capability. If two nominal lanes need the same file, integrate the first or transfer that file; do not resolve concurrent design by cherry-pick roulette.
 
 ## Work orders and coverage
 
@@ -88,7 +100,7 @@ Waves are a safe default schedule, not mandatory idle time. The lead may pull a 
 
 ## Return, review and acceptance
 
-A return names base and commits, actual changed files/behavior, commands and counts, environment/build hashes, case-level artifacts, unverified/failing cases, remaining risk and next dependency. An unresolved required case means implementation complete / acceptance pending, never accepted. Test stubs and mocks cannot close Windows behavior gates.
+A return names base and commits, actual changed files/behavior, commands and counts, environment/build hashes, case-level artifacts, unverified/failing cases, remaining risk and next dependency. Target 300 words unless a failure needs more evidence. An unresolved required case means implementation complete / acceptance pending, never accepted. Test stubs and mocks cannot close Windows behavior gates.
 
 Run changed-crate tests plus applicable integration tests; full required Windows CI at integration/release. The existing CI's `continue-on-error` ignored desktop run is diagnostic, not R4/R5 acceptance. Record baseline lint failures explicitly and resolve or scope them before release. Avoid needless whole-workspace reruns after unrelated documentation-only corrections.
 

@@ -1,6 +1,6 @@
 # Foundation and remaining proofs
 
-Reader: Astra lead and the Sol assigned a foundation/proof slice. Follow [dispatch](README.md) and [contracts C1–C8](../build-contracts.md). Source baseline is recorded in dispatch; active handoffs supply the accepted remote base and paired artifacts.
+Reader: the Sol build lead and any fresh Astra reviewer assigned to a foundation/proof slice. Follow [dispatch](README.md) and [contracts C1–C8](../build-contracts.md). Source baseline is recorded in dispatch; active handoffs supply the accepted remote base and paired artifacts.
 
 ## F0 — Freeze and expose shared types
 
