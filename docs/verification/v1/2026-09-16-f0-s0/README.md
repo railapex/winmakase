@@ -7,7 +7,7 @@
 - Baseline: `5969051` (`main`, published to `origin/main`).
 - F0 contracts: `74586c6`; frozen serialized fixtures: `a97d24d`.
 - S0 offline bar assets: `2e2bc2f` (reviewed cherry-pick of builder commit `2402fa0`), with integration corrections `eee678b` removing checked-in host paths and `cb2555b` fixing deterministic checks across Windows line-ending checkout.
-- Integration branch: `build/f0-s0`.
+- Integration branch: `build/f0-s0`, published to `origin` with implementation checkpoint `8ddde77`.
 - Environment: Windows host; Rust 1.98 toolchain; pinned Node dependencies from `zebar/package-lock.json`.
 - No desktop process, hook, task, Explorer state, installed configuration or daily deployment was changed.
 
@@ -49,3 +49,5 @@ Cold-cache disconnected Zebar startup, rendered controls, monitor/tray behavior 
 ## Disposition
 
 F0 is ready for W0/L0/J0 importers. S0 is ready for later S1/S3 wiring. No P0-P5 package or R0-R6 round closes here. The next source wave is W0 role identity proof/schema and L0 singleton/request mechanics; P0.I2 physical Caps remains a separately prepared hardware gate.
+
+Friday's GitHub token can publish repository contents but GitHub rejected `createPullRequest` with `Resource not accessible by personal access token`. The review branch is available at `build/f0-s0`; PR creation remains an identity/permission step rather than a source defect.

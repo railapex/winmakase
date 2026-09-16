@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-16T12:52:43Z",
+  "updatedAt": "2026-09-16T12:59:59Z",
   "planBaseCommit": "5969051",
   "lastVerifiedBuild": "Winmakase 0.1.9 source on build/f0-s0: F0 passes 159 library tests, 33 keymap tests, all-target check and scoped strict Clippy; S0 passes clean npm install, deterministic build, TypeScript and remote-runtime-reference checks. The latest accepted desktop runtime remains 0.1.8 I1 with D1 Glaze 6bc83d1. The 0.1.9 bar has not passed disconnected startup/rendered interaction; daily Glaze remains deployed 9c8e93b and no cutover occurred.",
   "stage": "F0 shared interfaces and S0 offline assets accepted in source; runtime remains P0 with D1/I1 accepted",
@@ -15,6 +15,12 @@
     "scope": "Chris confirmed the detailed remaining v1 and later roadmap. The reviewed baseline and plans are published; F0 and S0 are implemented on build/f0-s0 without deployment.",
     "nextSourceBatch": "Start W0 role identity proof/schema and L0 singleton/request mechanics from the frozen F0 contracts. Keep P0.I2 as a separately prepared physical/runtime acceptance lane.",
     "defaults": "Dynamic tiling remains default. Ship optional main/side/lower recipe with unassigned roles; personal app/profile assignments belong to local opt-in preview. Windows app/system theme mutation off unless opted in. Caps+grave terminal proposal requires translation/collision proof and interaction checkpoint."
+  },
+  "publication": {
+    "main": "5969051089c528da01f4eb5048df3c56ba0ca17c",
+    "reviewBranch": "build/f0-s0",
+    "implementationCheckpoint": "8ddde77dc5efbd4e2c363ab62a8dc4ae552b50df",
+    "pullRequest": "blocked: Friday token lacks createPullRequest permission"
   },
   "currentSlice": {
     "id": "F0/S0",
@@ -157,6 +163,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-16T12:59:59Z",
+      "summary": "Published build/f0-s0 to origin at implementation checkpoint 8ddde77 after final verification. GitHub rejected PR creation because Friday's token lacks createPullRequest permission; no identity switch was made. Source remains reviewable on the published branch and no desktop/deployment state changed."
+    },
     {
       "at": "2026-09-16T12:52:43Z",
       "summary": "Published reviewed baseline/plans at 5969051. Integrated F0 shared contracts and literal schema fixtures plus reviewed S0 local Zebar assets on build/f0-s0; bumped Winmakase to 0.1.9. F0 passes 159 library tests, 33 keymap tests, all-target check and scoped strict Clippy. S0 passes clean pinned dependency install, deterministic build, TypeScript and remote-reference scanning. Existing host commit pressure prevented a valid supervisor integration result; disconnected bar startup/rendering remains unrun. No desktop mutation, deployment or P/R gate closure."
