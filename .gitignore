@@ -7,3 +7,5 @@ target/
 Thumbs.db
 spike/tools/
 spike/powertoys-settings-backup.json
+spike/f13-keylog.txt
+spike/f13-results.json
