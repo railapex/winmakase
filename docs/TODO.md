@@ -22,10 +22,10 @@ Targeted recovery: [2026-09-10 placement-denied hotfix](verification/v1/2026-09-
 
 Each slice lands on the desk within a day, with rollback.
 
-- [ ] 1 — F13 keymap render target, native rows bound where a real action exists. Source done in 0.1.10 (`input_mode = "f13"`, `--super-key f13`; lock, capture and pause chords); live render pending.
-- [ ] 2 — Supervisor input mode without Kanata; never start Kanata over a Caps remap. Source done in 0.1.10; supervisor not yet re-enabled on the desk.
-- [ ] 3 — Registry `Scancode Map` (Caps→F13, ScrLk→Caps) on desk and laptop, replacing PowerToys KBM. Admin plus reboot; Chris runs it.
-- [ ] 4 — Supervisor back on the F13 config, Glaze redraw after the bar re-docks, pause chord. Redraw and chord source done in 0.1.10; live pending.
+- [x] 1 — F13 keymap render target, native rows bound where a real action exists. Live on the desk 2026-09-28 (0.1.10; lock, capture and pause chords pass Chris's physical checks).
+- [x] 2 — Supervisor input mode without Kanata; never start Kanata over a Caps remap. Live on the desk 2026-09-28: the `WinmakaseSupervisor` task runs GlazeWM and Zebar in f13 mode.
+- [ ] 3 — Registry `Scancode Map` (Caps→F13, ScrLk→Caps) on desk and laptop, replacing PowerToys KBM. Desk done 2026-09-28 (`installer/enable-f13.ps1`; KBM key rules removed); laptop pending.
+- [ ] 4 — Supervisor back on the F13 config, Glaze redraw after the bar re-docks, pause chord. Live on the desk 2026-09-28; the redraw fired at logon and the pause chord passes. The Parsec connect/disconnect re-dock check is pending.
 - [ ] 5 — Agents workspace first cut, then Command Palette. (`build/f0-s0` merge done 09-27.)
 - [ ] Before signing anything: test official GlazeWM 3.10.1 (`uiAccess=true`) for admin-window chords and elevated placement.
 
