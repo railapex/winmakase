@@ -48,8 +48,15 @@ bounce_on_display_change = false
 # Mouse the bottom edge to peek.
 hide_taskbar = true
 
-# The rendered kanata config (`winmakase kanata render`): which physical key
-# carries the WM chord.
+# input_mode — who turns Caps into the WM chord key:
+#   kanata      — kanata maps Caps to right-Win; GlazeWM binds rwin chords.
+#   f13         — a remap below every hook (registry Scancode Map, PowerToys
+#                 Keyboard Manager or keyboard firmware) sends F13; GlazeWM
+#                 binds f13 chords and kanata is not run. Works over remote
+#                 desktop input, which kanata ignores.
+#   direct_caps — patched GlazeWM owns Caps as its leader (parked candidate).
+# The rest is the rendered kanata config (`winmakase kanata render`): which
+# physical key carries the WM chord.
 #   caps — Caps Lock = right-Win modifier; scrlk = raw-CapsLock escape hatch.
 #   apps — menu key: tap = context menu, hold = WM chord; Caps stays native.
 # tap_ms/hold_ms: the apps-mode tap-hold decision window (caps mode has no tap).
@@ -62,6 +69,9 @@ hold_ms = 200
 # kanata and GlazeWM are a LINKED PAIR: both healthy or both down.
 # GlazeWM dying with kanata alive leaves raw Win+letter chords firing OS
 # shortcuts at a desktop nobody can tile. Start order is kanata first.
+# The section is read only when input_mode = "kanata"; the other modes run
+# GlazeWM alone and may omit it. The supervisor never starts kanata while
+# Caps is already remapped by the registry or PowerToys Keyboard Manager.
 #
 # `adopt = true`: a component whose exact executable is already running is
 # adopted (watched by pid) instead of started again — the supervisor can take
@@ -136,7 +146,9 @@ pub struct Config {
     /// is how the component is *hosted*.
     #[serde(default)]
     pub keyboard: KeyboardConfig,
-    pub kanata: ComponentConfig,
+    /// Required only in `input_mode = "kanata"`; see [`Config::parse_from`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kanata: Option<ComponentConfig>,
     pub glazewm: ComponentConfig,
     /// Optional: a missing `[zebar]` section means no bar in the set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -335,6 +347,34 @@ pub enum InputMode {
     #[default]
     Kanata,
     DirectCaps,
+    /// Caps arrives as F13 from a remap outside Winmakase; no kanata.
+    F13,
+}
+
+impl InputMode {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            InputMode::Kanata => "kanata",
+            InputMode::DirectCaps => "direct_caps",
+            InputMode::F13 => "f13",
+        }
+    }
+
+    /// The physical key the generated GlazeWM bindings use for `SUPER`. The
+    /// one mapping from mode to keymap, so the rendered chords and the
+    /// supervised set cannot disagree about who owns Caps.
+    pub fn super_key(self) -> winmakase_keymap::SuperKey {
+        match self {
+            InputMode::Kanata => winmakase_keymap::SuperKey::RightWin,
+            InputMode::DirectCaps => winmakase_keymap::SuperKey::CapsLock,
+            InputMode::F13 => winmakase_keymap::SuperKey::F13,
+        }
+    }
+
+    /// Whether kanata is part of the supervised set in this mode.
+    pub fn runs_kanata(self) -> bool {
+        self == InputMode::Kanata
+    }
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -487,12 +527,14 @@ impl Default for Config {
         Self {
             supervisor: SupervisorConfig::default(),
             keyboard: KeyboardConfig::default(),
-            kanata: ComponentConfig::new(
-                "D:/dev/winmakase/spike/tools/kanata/kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
-                &[],
-            )
-            .hosted_by_task("WinmakaseKanata")
-            .adopting(),
+            kanata: Some(
+                ComponentConfig::new(
+                    "D:/dev/winmakase/spike/tools/kanata/kanata_windows_gui_winIOv2_cmd_allowed_x64.exe",
+                    &[],
+                )
+                .hosted_by_task("WinmakaseKanata")
+                .adopting(),
+            ),
             glazewm: ComponentConfig::new("C:/Program Files/glzr.io/GlazeWM/glazewm.exe", &[])
                 .adopting()
                 .with_stop(
@@ -527,6 +569,11 @@ impl Config {
 
     pub fn parse_from(text: &str, source: &str) -> Result<Self, String> {
         let config: Self = toml::from_str(text).map_err(|error| format!("{source}: {error}"))?;
+        if config.keyboard.input_mode.runs_kanata() && config.kanata.is_none() {
+            return Err(format!(
+                "{source}: input_mode = \"kanata\" needs a [kanata] section; set input_mode = \"f13\" to run without kanata"
+            ));
+        }
         for (name, app) in &config.apps {
             app.validate(name)
                 .map_err(|error| format!("{source}: {error}"))?;
@@ -580,9 +627,10 @@ mod tests {
         )
         .unwrap();
         assert_eq!(cfg.supervisor, SupervisorConfig::default());
-        assert!(cfg.kanata.args.is_empty());
-        assert_eq!(cfg.kanata.task, None);
-        assert!(!cfg.kanata.adopt, "adoption is opt-in");
+        let kanata = cfg.kanata.as_ref().expect("kanata mode keeps its section");
+        assert!(kanata.args.is_empty());
+        assert_eq!(kanata.task, None);
+        assert!(!kanata.adopt, "adoption is opt-in");
         assert_eq!(cfg.glazewm.stop_command, None);
         assert_eq!(cfg.zebar, None, "the bar is optional");
     }
@@ -648,6 +696,32 @@ mod tests {
         )
         .unwrap();
         assert_eq!(cfg.keyboard.input_mode, InputMode::DirectCaps);
+
+        let cfg = Config::parse(
+            r#"
+            [keyboard]
+            input_mode = "f13"
+            [glazewm]
+            command = "g.exe"
+            "#,
+        )
+        .unwrap();
+        assert_eq!(cfg.keyboard.input_mode, InputMode::F13);
+        assert_eq!(cfg.kanata, None, "f13 mode needs no [kanata] section");
+        assert_eq!(
+            cfg.keyboard.input_mode.super_key(),
+            winmakase_keymap::SuperKey::F13
+        );
+
+        // Omitting the mode still means kanata, so the section stays required.
+        let err = Config::parse(
+            r#"
+            [glazewm]
+            command = "g.exe"
+            "#,
+        )
+        .unwrap_err();
+        assert!(err.contains("needs a [kanata] section"), "got: {err}");
 
         // An unknown mode is a loud parse error, not a silent caps fallback.
         let err = Config::parse(

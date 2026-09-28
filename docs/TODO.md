@@ -1,6 +1,6 @@
 # Winmakase work state
 
-Updated 2026-09-16. **Active milestone: coherent v1 on GlazeWM, Zebar, Kanata and PowerToys.** Plans are accepted direction; implementation gates below remain open. The previous M0–M4 ledger is [archived](plans/archive/2026-09-08/TODO.md); its completed evidence remains useful, its unchecked sequence is superseded. [Builder contracts and work orders](plans/v1/builders/README.md) now define the remaining execution; planning closes no product gate.
+Updated 2026-09-27. **Active milestone: coherent v1 on GlazeWM, Zebar and PowerToys, landed desk-first.** The [2026-09-27 input recut](research/2026-09-27-input-remote-recut.md) retires Kanata for a Caps→F13 remap and defers installer, taskbar retirement, the second theme and the R0–R6 ceremony. Plans are accepted direction; implementation gates below remain open. The previous M0–M4 ledger is [archived](plans/archive/2026-09-08/TODO.md); its completed evidence remains useful, its unchecked sequence is superseded. [Builder contracts and work orders](plans/v1/builders/README.md) now define the remaining execution; planning closes no product gate.
 
 ## Already present
 
@@ -17,6 +17,17 @@ These checks do not imply clean installation, dialog safety, focus-or-launch, co
 Source checkpoint `build/f0-s0`: the v1 shared interfaces and committed schema fixtures are implemented, and the Zebar runtime is locally bundled with deterministic offline-asset checks. [Evidence](verification/v1/2026-09-16-f0-s0/README.md). No runtime round closes: disconnected Zebar startup/rendering, physical Caps and the remaining window/popup/lifecycle proofs are still required.
 
 Targeted recovery: [2026-09-10 placement-denied hotfix](verification/v1/2026-09-10-placement-denied.md) implements permission-denied tile release on the deployed Glaze source base. Source review, seven recovery tests, four error tests and elevated/ordinary native component checks pass. Delivery status is recorded in the evidence; P0/P1 gates remain open.
+
+## Desk-first recut (target: slices 1, 2 and 4 live before Fri 2026-10-02)
+
+Each slice lands on the desk within a day, with rollback.
+
+- [ ] 1 — F13 keymap render target, native rows bound where a real action exists. Source done in 0.1.10 (`input_mode = "f13"`, `--super-key f13`; lock, capture and pause chords); live render pending.
+- [ ] 2 — Supervisor input mode without Kanata; never start Kanata over a Caps remap. Source done in 0.1.10; supervisor not yet re-enabled on the desk.
+- [ ] 3 — Registry `Scancode Map` (Caps→F13, ScrLk→Caps) on desk and laptop, replacing PowerToys KBM. Admin plus reboot; Chris runs it.
+- [ ] 4 — Supervisor back on the F13 config, Glaze redraw after the bar re-docks, pause chord. Redraw and chord source done in 0.1.10; live pending.
+- [ ] 5 — Agents workspace first cut, then Command Palette. (`build/f0-s0` merge done 09-27.)
+- [ ] Before signing anything: test official GlazeWM 3.10.1 (`uiAccess=true`) for admin-window chords and elevated placement.
 
 ## Active packages
 

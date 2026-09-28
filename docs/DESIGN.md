@@ -6,7 +6,7 @@ Accepted v1 direction, 2026-09-08. **Target contracts below are not claims that 
 
 ## Product boundary
 
-A coherent Windows desktop for launching, tiling, controls and appearance. Keep GlazeWM, Zebar, Kanata LLHOOK and PowerToys Run. Follow Omarchy's interaction patterns and exact bindings where the stack supports them; unsupported operations remain explicit gaps with future convergence routes.
+A coherent Windows desktop for launching, tiling, controls and appearance. Keep GlazeWM (pinned, thin fork), Zebar and PowerToys Run. Kanata LLHOOK is retiring: the 2026-09-27 [input recut](research/2026-09-27-input-remote-recut.md) moves Caps to an F13 remap below every hook and moves the launcher toward Command Palette. Follow Omarchy's interaction patterns and exact bindings where the stack supports them; unsupported operations remain explicit gaps with future convergence routes.
 
 V1 does not include a packaged app catalog, general webapp installer, replacement WM/shell, community-theme guarantee or broad editor configuration. Existing apps can be assigned personal roles. Future platforms are [parked](plans/future-desktop-platforms.md).
 
@@ -14,17 +14,17 @@ V1 does not include a packaged app catalog, general webapp installer, replacemen
 
 | Area | Present today | Remaining v1 work |
 |---|---|---|
-| Input | Caps → right Win; Glaze native chords; left Win native; generated grammar/local overrides | Update comparison against pinned Omarchy 4; test native collisions and held/repeated chords |
+| Input | Caps → right Win via Kanata (deployed); `input_mode = "f13"` renders `f13+` chords for a Caps→F13 remap and runs no Kanata (source, 0.1.10); left Win native; generated grammar/local overrides | Deploy F13 on the desk with a registry Scancode Map; update comparison against pinned Omarchy 4; test native collisions and held/repeated chords |
 | Windows | Current-state float/tile, reflow, scratchpads, generated typed app homes; patched window_app_id | Dialog-safe classification, deliberate reconciliation, reliable focus-or-launch |
 | Launch | PowerToys Run and direct launch strings | One app-role source, shared command entries, explicit profile launch/focus |
 | Bar | Per-monitor workspaces/stats/tray/health | Offline production assets, real monitor identity, controls and accessible popup |
 | Themes | Palette parsing and Terminal scheme rendering; two fixture themes | Apply/rollback, core surfaces, dark/light visual verification |
-| Lifecycle | User-level supervisor; elevated Kanata task; recovery/status/reload; taskbar hover controller | Durable restoration, symmetric pair failure contract, correct readiness and request ownership |
+| Lifecycle | User-level supervisor; elevated Kanata task in kanata mode only; recovery/status/reload; Glaze redraw after the bar re-docks; taskbar hover controller | Durable restoration, symmetric pair failure contract, correct readiness and request ownership |
 | Distribution | Dogfood task-registration scripts | Protected install, owned settings manifest, update/rollback/uninstall |
 
 ## Ownership
 
-Kanata emits the modifier; Glaze owns tiling and keybindings. Winmakase owns generated policy, finite action commands, configuration and lifecycle. Zebar displays state and invokes fixed actions. PowerToys owns app search. Explorer remains the Windows shell and recovery desktop.
+A Caps→F13 remap below every hook (registry Scancode Map, PowerToys Keyboard Manager or firmware) supplies the chord key; in the older kanata mode, Kanata emits a right-Win modifier instead. Glaze owns tiling and keybindings. Winmakase owns generated policy, finite action commands, configuration and lifecycle. Zebar displays state and invokes fixed actions. PowerToys owns app search. Explorer remains the Windows shell and recovery desktop.
 
 Use ordinary bounded CLI calls for app actions. Do not put browser selection or general UI dispatch in the supervisor. A small shared command catalog supplies IDs, labels, availability and action arguments to shortcuts, key help and bar controls; it is metadata, not a plugin framework.
 
@@ -32,9 +32,11 @@ The existing Rust CLI and windowless supervisor entry point remain. Install scri
 
 ## Input and Omarchy fidelity
 
-Keep Caps as a pure right-Win modifier, Caps+Space as launcher, physical left Win native and ScrLk as a raw Caps escape. Tap-Caps launching is deferred. Current Apps-key mode needs its own live validation before being advertised.
+Caps is the chord key, Caps+Space the launcher, physical left Win stays native and ScrLk is a raw Caps escape. Tap-Caps launching is deferred. Current Apps-key mode needs its own live validation before being advertised.
 
-P0 reassessment: the direct-Caps Glaze spike passed automated/injected A/B tests but was not adopted. Winmakase 0.1.8 now renders the candidate from the same abstract grammar with `caps_lock` as Glaze's owned leader; the default right-Win/Kanata output remains unchanged. The shared guarded launcher action passes in a disposable guest. Physical Caps, fullscreen/elevation and display acceptance still decides whether Kanata can retire. [I1 evidence](verification/v1/2026-09-13-p0-i1/README.md) and the earlier [migration findings](verification/v1/2026-09-08-p0/direct-caps.md) distinguish generated acceptance from the deployed path. Lifecycle removal follows successful input acceptance; existing Kanata-dependent contracts still describe the current stack until then.
+**F13 input (2026-09-27 recut).** `[keyboard] input_mode` selects who turns Caps into the chord key, and the rendered chords, the supervised set and the restart group all derive from it. In `f13` mode a remap below every hook sends F13; stock Glaze matches any held key as a chord prefix, so the keymap renders `SUPER` as `f13+…` and the supervisor runs Glaze alone. No Windows shortcut uses F13, so unbound Caps chords never reach a Win-key feature (Caps+L no longer locks; an unbound Caps+letter types the letter). It works over Parsec, whose input arrives injected, where Kanata and the parked direct-Caps leader both refuse injected input. The supervisor never starts a Caps-taking Kanata while Caps is remapped by the registry or PowerToys, and it reports `caps_f13_remap_not_detected` when f13 mode cannot see its remap (a firmware remap is invisible). Omarchy's SUPER+CTRL+L and SUPER+CTRL+C now bind to LockWorkStation and the Snipping Tool URI; the clipboard, emoji and dictation rows stay native because they would need key synthesis. SUPER+SHIFT+P toggles Glaze's pause, which keeps only that binding live, for remote sessions and display churn. Admin-window chords need a `uiAccess` Glaze build, which the current self-built Glaze lacks (recut note).
+
+P0 reassessment: the direct-Caps Glaze spike passed automated/injected A/B tests but was not adopted. Winmakase 0.1.8 now renders the candidate from the same abstract grammar with `caps_lock` as Glaze's owned leader; the default right-Win/Kanata output remains unchanged. The shared guarded launcher action passes in a disposable guest. Physical Caps, fullscreen/elevation and display acceptance still decides whether Kanata can retire. [I1 evidence](verification/v1/2026-09-13-p0-i1/README.md) and the earlier [migration findings](verification/v1/2026-09-08-p0/direct-caps.md) distinguish generated acceptance from the deployed path. Lifecycle removal follows successful input acceptance; existing Kanata-dependent contracts still describe the current stack until then. The recut parks this leader (patches kept on `winmakase-v1-input`) in favour of F13.
 
 A versioned correspondence table distinguishes exact, same-pattern Windows equivalent, unavailable and deferred bindings. Preserve workspace/focus/move/resize/float/fullscreen/launcher families; do not substitute an unrelated action merely to fill a chord. Existing deviations, including the fullscreen focus escape, need explicit review rather than silently becoming the target.
 

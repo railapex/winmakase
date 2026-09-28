@@ -12,11 +12,12 @@ use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
 use winmakase::component::Component;
-use winmakase::config::{ComponentConfig, Config, SupervisorConfig};
+use winmakase::config::{ComponentConfig, Config, InputMode, KeyboardMode, SupervisorConfig};
 use winmakase::control;
 use winmakase::health::{Health, Status, SupervisorHealth};
+use winmakase::input_remap::{CapsRemap, RemapSource};
 use winmakase::paths::Paths;
-use winmakase::supervisor::{StopReason, Supervisor};
+use winmakase::supervisor::{CAPS_F13_REMAP_NOT_DETECTED, HostHooks, StopReason, Supervisor};
 use winmakase::testutil::{FakeHandle, FakePoll, TempDir};
 
 // Generous on purpose: these tests run alongside a full workspace build on
@@ -52,11 +53,36 @@ fn pair_config() -> Config {
     Config {
         supervisor: fast_supervisor(),
         keyboard: Default::default(),
-        kanata: stub(&["--tick-ms", "150"]),
+        kanata: Some(stub(&["--tick-ms", "150"])),
         glazewm: stub(&["--tick-ms", "150"]),
         zebar: None,
         apps: Default::default(),
         scratchpad: Default::default(),
+    }
+}
+
+/// The same set in f13 mode. The `[kanata]` section stays, to prove the mode
+/// and not the section's absence keeps kanata out.
+fn f13_config() -> Config {
+    let mut cfg = pair_config();
+    cfg.keyboard.input_mode = InputMode::F13;
+    cfg
+}
+
+/// A supervisor that cannot see this machine's keyboard remaps, monitors or
+/// window manager. The developer running the tests may well have Caps
+/// remapped, which would otherwise refuse every kanata stub.
+fn inert_supervisor(cfg: Config, paths: Paths) -> io::Result<Supervisor> {
+    let mut sup = Supervisor::new(cfg, paths)?;
+    sup.set_host_hooks(HostHooks::inert());
+    Ok(sup)
+}
+
+fn caps_remap_to_f13() -> CapsRemap {
+    CapsRemap {
+        source: RemapSource::KeyboardManager,
+        to_f13: true,
+        target: "F13 (VK 124)".into(),
     }
 }
 
@@ -68,10 +94,18 @@ struct Harness {
 
 impl Harness {
     fn start(label: &str, cfg: Config) -> Self {
+        Self::start_with(label, cfg, HostHooks::inert)
+    }
+
+    fn start_with(label: &str, cfg: Config, hooks: fn() -> HostHooks) -> Self {
         let dir = TempDir::new(label);
         let paths = Paths::at(dir.path());
         let thread_paths = paths.clone();
-        let handle = thread::spawn(move || Supervisor::new(cfg, thread_paths)?.run());
+        let handle = thread::spawn(move || {
+            let mut sup = Supervisor::new(cfg, thread_paths)?;
+            sup.set_host_hooks(hooks());
+            sup.run()
+        });
         Self {
             paths,
             handle: Some(handle),
@@ -273,7 +307,7 @@ fn kanata_dying_restarts_kanata_alone_and_leaves_glazewm_be() {
 fn repeated_crashes_back_off_and_then_cap() {
     let mut cfg = pair_config();
     // kanata that dies the moment it starts, so restarts pile up on their own.
-    cfg.kanata = stub(&["--exit-after-ms", "0", "--code", "3"]);
+    cfg.kanata = Some(stub(&["--exit-after-ms", "0", "--code", "3"]));
     let h = Harness::start("backoff", cfg);
 
     let log = wait_for("four restart attempts", || {
@@ -305,7 +339,10 @@ fn repeated_crashes_back_off_and_then_cap() {
 #[test]
 fn a_component_that_will_not_start_never_brings_up_its_partner() {
     let mut cfg = pair_config();
-    cfg.kanata = ComponentConfig::new("winmakase-no-such-binary-9f3c.exe", &[]);
+    cfg.kanata = Some(ComponentConfig::new(
+        "winmakase-no-such-binary-9f3c.exe",
+        &[],
+    ));
     let h = Harness::start("start-failure", cfg);
 
     let log = wait_for("the failed start to be reported", || {
@@ -318,7 +355,10 @@ fn a_component_that_will_not_start_never_brings_up_its_partner() {
         "glazewm must never come up without kanata"
     );
     assert!(log.contains("retrying the whole set in 120ms"));
-    assert_eq!(h.component(Component::Glazewm).unwrap().pid, None);
+    // The retry loop rewrites health.json every 120ms; a read that lands on
+    // the replace can fail, so wait for a readable entry.
+    let glazewm = wait_for("glazewm health", || h.component(Component::Glazewm));
+    assert_eq!(glazewm.pid, None);
 }
 
 #[test]
@@ -380,7 +420,7 @@ fn a_half_started_pair_is_rolled_back_instead_of_leaving_an_orphan() {
 #[test]
 fn child_output_lands_in_the_components_own_log() {
     let mut cfg = pair_config();
-    cfg.kanata = stub(&["--tick-ms", "30", "--stderr"]);
+    cfg.kanata = Some(stub(&["--tick-ms", "30", "--stderr"]));
     let mut h = Harness::start("child-logs", cfg);
     wait_for("both components to start", || h.both_running());
 
@@ -568,6 +608,238 @@ fn a_config_without_zebar_runs_a_two_component_set() {
     );
 }
 
+// -- input modes ---------------------------------------------------------------
+
+#[test]
+fn f13_mode_runs_glazewm_alone_and_restarts_it_alone() {
+    let mut h = Harness::start("f13-alone", f13_config());
+    let glazewm1 = wait_for("glazewm to start", || h.running_pid(Component::Glazewm));
+
+    let state = h.health().unwrap();
+    assert_eq!(state.input_mode, InputMode::F13);
+    assert!(
+        !state.components.contains_key("kanata"),
+        "kanata is not part of an f13 set: {:?}",
+        state.components.keys()
+    );
+
+    kill(glazewm1);
+    wait_for("glazewm to come back", || {
+        h.running_pid(Component::Glazewm).filter(|p| *p != glazewm1)
+    });
+    h.stop();
+
+    let log = h.supervisor_log();
+    assert!(log.contains("restarting glazewm in"), "{log}");
+    assert!(
+        !log.contains("kanata started") && !log.contains("stopping kanata"),
+        "nothing may start or stop kanata in f13 mode:\n{log}"
+    );
+}
+
+#[test]
+fn f13_mode_reports_a_missing_caps_remap_as_degraded() {
+    let mut h = Harness::start("f13-no-remap", f13_config());
+    wait_for("glazewm to start", || h.running_pid(Component::Glazewm));
+    let state = h.health().unwrap();
+    assert!(
+        state
+            .degraded_reasons
+            .iter()
+            .any(|r| r == CAPS_F13_REMAP_NOT_DETECTED),
+        "{:?}",
+        state.degraded_reasons
+    );
+    h.stop();
+
+    let mut h = Harness::start_with("f13-remap", f13_config(), || HostHooks {
+        caps_remaps: Box::new(|| vec![caps_remap_to_f13()]),
+        ..HostHooks::inert()
+    });
+    wait_for("glazewm to start", || h.running_pid(Component::Glazewm));
+    let state = h.health().unwrap();
+    assert!(
+        !state
+            .degraded_reasons
+            .iter()
+            .any(|r| r == CAPS_F13_REMAP_NOT_DETECTED),
+        "{:?}",
+        state.degraded_reasons
+    );
+    h.stop();
+    assert!(
+        h.supervisor_log()
+            .contains("input: f13 — PowerToys Keyboard Manager sends Caps as F13"),
+        "{}",
+        h.supervisor_log()
+    );
+}
+
+#[test]
+fn kanata_is_never_started_over_a_caps_remap() {
+    let mut h = Harness::start_with("kanata-over-remap", pair_config(), || HostHooks {
+        caps_remaps: Box::new(|| vec![caps_remap_to_f13()]),
+        ..HostHooks::inert()
+    });
+    wait_for("the refusal and its retry", || {
+        (h.supervisor_log().matches("kanata NOT started").count() >= 2).then_some(())
+    });
+    let state = h.health().unwrap();
+    assert_ne!(state.components["kanata"].status, Status::Running);
+    assert_ne!(
+        state.components["glazewm"].status,
+        Status::Running,
+        "the pair starts together or not at all"
+    );
+    h.stop();
+    let log = h.supervisor_log();
+    assert!(!log.contains("kanata started"), "{log}");
+    assert!(!log.contains("glazewm started"), "{log}");
+}
+
+#[test]
+fn a_caps_remap_does_not_block_kanata_in_apps_mode() {
+    // The apps template maps only the Menu key, so a Caps remap (Caps→Ctrl is
+    // common) shares nothing with it.
+    let mut cfg = pair_config();
+    cfg.keyboard.mode = KeyboardMode::Apps;
+    let mut h = Harness::start_with("apps-mode-remap", cfg, || HostHooks {
+        caps_remaps: Box::new(|| vec![caps_remap_to_f13()]),
+        ..HostHooks::inert()
+    });
+    wait_for("both running", || h.both_running());
+    h.stop();
+    let log = h.supervisor_log();
+    assert!(!log.contains("kanata NOT started"), "{log}");
+}
+
+#[test]
+fn a_running_kanata_over_a_caps_remap_is_stopped_not_left_unwatched() {
+    let bin_dir = TempDir::new("stray-kanata-bin");
+    let exe = copy_of_our_binary(bin_dir.path(), "winmakase-stray-kanata.exe");
+    let stray = KillOnDrop::spawn(&exe);
+    let stray_pid = stray.0.id();
+
+    let mut cfg = pair_config();
+    cfg.kanata = Some(
+        ComponentConfig::new(exe.to_str().unwrap(), &["_stub", "--tick-ms", "100"]).adopting(),
+    );
+    let mut h = Harness::start_with("stray-kanata", cfg, || HostHooks {
+        caps_remaps: Box::new(|| vec![caps_remap_to_f13()]),
+        ..HostHooks::inert()
+    });
+    wait_for("the stray kanata to be stopped", || {
+        (winmakase::proc_alive::is_alive(stray_pid) == Some(false)).then_some(())
+    });
+    h.stop();
+    let log = h.supervisor_log();
+    assert!(
+        log.contains(&format!(
+            "kanata was already running (pid {stray_pid}) — stopping it"
+        )),
+        "{log}"
+    );
+    assert!(!log.contains("adopted"), "{log}");
+    assert!(!log.contains("glazewm started"), "{log}");
+}
+
+#[test]
+fn reload_into_kanata_over_a_remap_says_kanata_will_not_start() {
+    let mut h = Harness::start_with("reload-kanata-over-remap", f13_config(), || HostHooks {
+        caps_remaps: Box::new(|| vec![caps_remap_to_f13()]),
+        ..HostHooks::inert()
+    });
+    let glazewm = wait_for("glazewm to start", || h.running_pid(Component::Glazewm));
+
+    write_config(&h.paths, &pair_config());
+    let report = reload_and_report(&h.paths);
+    assert!(
+        report.contains("kanata joins the set but will not start while Caps is remapped"),
+        "{report}"
+    );
+    assert!(!report.contains("starting it"), "{report}");
+    wait_for("the refusal", || {
+        h.supervisor_log()
+            .contains("kanata NOT started")
+            .then_some(())
+    });
+    assert_eq!(h.running_pid(Component::Glazewm), Some(glazewm));
+    h.stop();
+}
+
+#[test]
+fn a_kanata_whose_log_cannot_open_stays_out_of_the_set() {
+    let mut h = Harness::start("unseedable-kanata", f13_config());
+    let glazewm = wait_for("glazewm to start", || h.running_pid(Component::Glazewm));
+
+    // A directory where the log file goes: the open fails, the seed fails.
+    fs::create_dir_all(h.paths.log_for("kanata")).unwrap();
+    write_config(&h.paths, &pair_config());
+    let report = reload_and_report(&h.paths);
+    assert!(
+        report.contains("kanata: its log could not be opened"),
+        "{report}"
+    );
+
+    // The recovery and shutdown paths walk the linked group; a kanata the
+    // config names but the set never took must not be reached.
+    kill(glazewm);
+    wait_for("glazewm to come back", || {
+        h.running_pid(Component::Glazewm).filter(|p| *p != glazewm)
+    });
+    h.stop();
+    let log = h.supervisor_log();
+    assert!(log.contains("restarting glazewm in"), "{log}");
+}
+
+#[test]
+fn reload_into_f13_retires_kanata_and_leaves_glazewm_running() {
+    let mut h = Harness::start("reload-to-f13", pair_config());
+    let (kanata, glazewm) = wait_for("both running", || h.both_running());
+
+    write_config(&h.paths, &f13_config());
+    let report = reload_and_report(&h.paths);
+    assert!(report.contains("kanata leaves the set"), "{report}");
+    assert!(report.contains("input_mode kanata → f13"), "{report}");
+    wait_for("kanata gone from health", || {
+        h.component(Component::Kanata).is_none().then_some(())
+    });
+    assert_eq!(winmakase::proc_alive::is_alive(kanata), Some(false));
+    assert_eq!(
+        h.running_pid(Component::Glazewm),
+        Some(glazewm),
+        "a mode change must not bounce the tiler"
+    );
+
+    write_config(&h.paths, &pair_config());
+    let report = reload_and_report(&h.paths);
+    assert!(report.contains("kanata joins the set"), "{report}");
+    wait_for("kanata back", || h.running_pid(Component::Kanata));
+    assert_eq!(h.running_pid(Component::Glazewm), Some(glazewm));
+    h.stop();
+}
+
+#[test]
+fn a_display_change_in_f13_mode_bounces_glazewm_alone() {
+    let dir = TempDir::new("display-bounce-f13");
+    let mut cfg = f13_config();
+    cfg.supervisor.bounce_on_display_change = true;
+    let mut sup = inert_supervisor(cfg, Paths::at(dir.path())).unwrap();
+    sup.start_now();
+
+    let old = sup.snapshot().components["glazewm"].pid.unwrap();
+    sup.simulate_display_change();
+    sup.tick();
+    sup.tick();
+
+    let log = fs::read_to_string(Paths::at(dir.path()).log_for("supervisor")).unwrap();
+    assert!(log.contains("display change: bouncing glazewm"), "{log}");
+    let after = sup.snapshot();
+    assert_ne!(after.components["glazewm"].pid.unwrap(), old);
+    assert!(!after.components.contains_key("kanata"));
+    sup.shutdown_now();
+}
+
 // -- adoption and external processes ----------------------------------------
 
 /// A copy of our binary under a unique name and directory, so full-image-path
@@ -578,6 +850,29 @@ fn copy_of_our_binary(dir: &Path, name: &str) -> PathBuf {
     dest
 }
 
+/// A stub started outside any supervisor, the way a live desktop's component
+/// runs before takeover. Killed on drop, so a failed assertion cannot leave
+/// it holding cargo's output pipe open.
+struct KillOnDrop(std::process::Child);
+
+impl KillOnDrop {
+    fn spawn(exe: &Path) -> Self {
+        Self(
+            std::process::Command::new(exe)
+                .args(["_stub", "--tick-ms", "100"])
+                .spawn()
+                .expect("start the external stub"),
+        )
+    }
+}
+
+impl Drop for KillOnDrop {
+    fn drop(&mut self) {
+        let _ = self.0.kill();
+        let _ = self.0.wait();
+    }
+}
+
 #[test]
 fn a_running_component_is_adopted_not_started_again() {
     let bin_dir = TempDir::new("adopt-bin");
@@ -585,14 +880,11 @@ fn a_running_component_is_adopted_not_started_again() {
     let adoptee_str = adoptee.to_str().unwrap().to_string();
 
     // Running before the supervisor exists — the live-desktop takeover case.
-    let mut external = std::process::Command::new(&adoptee)
-        .args(["_stub", "--tick-ms", "100"])
-        .spawn()
-        .expect("start the adoptee");
-    let external_pid = external.id();
+    let external = KillOnDrop::spawn(&adoptee);
+    let external_pid = external.0.id();
 
     let mut cfg = pair_config();
-    cfg.kanata = ComponentConfig::new(adoptee_str, &["_stub", "--tick-ms", "100"]).adopting();
+    cfg.kanata = Some(ComponentConfig::new(adoptee_str, &["_stub", "--tick-ms", "100"]).adopting());
     let mut h = Harness::start("adopt", cfg);
 
     let (kanata, _) = wait_for("both components to start", || h.both_running());
@@ -611,7 +903,6 @@ fn a_running_component_is_adopted_not_started_again() {
     // Shutdown owns the adopted process like any other: it dies with the set.
     h.stop();
     assert_eq!(winmakase::proc_alive::is_alive(external_pid), Some(false));
-    let _ = external.wait();
 }
 
 #[test]
@@ -626,7 +917,7 @@ fn a_second_supervisor_against_the_same_home_is_refused() {
         .spawn()
         .unwrap();
 
-    let mut sup = Supervisor::new(pair_config(), paths.clone()).unwrap();
+    let mut sup = inert_supervisor(pair_config(), paths.clone()).unwrap();
     Health::new(
         SupervisorHealth {
             running: true,
@@ -655,7 +946,7 @@ fn an_unreadable_component_is_written_off_after_the_retry_budget() {
     // Backoff so long the scheduled recovery can never fire mid-test.
     cfg.supervisor.backoff_initial_ms = 600_000;
     cfg.supervisor.backoff_max_ms = 600_000;
-    let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+    let mut sup = inert_supervisor(cfg, Paths::at(dir.path())).unwrap();
 
     sup.inject_running(
         Component::Kanata,
@@ -696,7 +987,7 @@ fn glazewm_becoming_unreadable_still_triggers_the_linked_pair_rule() {
     let mut cfg = pair_config();
     cfg.supervisor.backoff_initial_ms = 600_000;
     cfg.supervisor.backoff_max_ms = 600_000;
-    let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+    let mut sup = inert_supervisor(cfg, Paths::at(dir.path())).unwrap();
 
     sup.inject_running(
         Component::Kanata,
@@ -731,7 +1022,7 @@ fn a_display_change_bounces_the_pair_only_when_configured() {
     let dir = TempDir::new("display-bounce");
     let mut cfg = pair_config();
     cfg.supervisor.bounce_on_display_change = true;
-    let mut sup = Supervisor::new(cfg, Paths::at(dir.path())).unwrap();
+    let mut sup = inert_supervisor(cfg, Paths::at(dir.path())).unwrap();
     sup.start_now();
 
     let before = sup.snapshot();
@@ -754,7 +1045,7 @@ fn a_display_change_bounces_the_pair_only_when_configured() {
 #[test]
 fn a_display_change_without_the_flag_changes_nothing() {
     let dir = TempDir::new("display-quiet");
-    let mut sup = Supervisor::new(pair_config(), Paths::at(dir.path())).unwrap();
+    let mut sup = inert_supervisor(pair_config(), Paths::at(dir.path())).unwrap();
     sup.start_now();
 
     let before = sup.snapshot().components["kanata"].pid;
@@ -803,7 +1094,8 @@ fn a_task_hosted_component_is_started_watched_and_stopped_through_its_task() {
 
     let result = std::panic::catch_unwind(|| {
         let mut cfg = pair_config();
-        cfg.kanata = ComponentConfig::new(hosted.to_str().unwrap(), &[]).hosted_by_task(&task);
+        cfg.kanata =
+            Some(ComponentConfig::new(hosted.to_str().unwrap(), &[]).hosted_by_task(&task));
         let mut h = Harness::start("task-hosted", cfg);
 
         let (kanata1, _) = wait_for("both components to start", || h.both_running());
@@ -838,7 +1130,7 @@ fn a_stale_stop_request_does_not_kill_the_next_supervisor() {
 
     let cfg = pair_config();
     let thread_paths = paths.clone();
-    let handle = thread::spawn(move || Supervisor::new(cfg, thread_paths)?.run());
+    let handle = thread::spawn(move || inert_supervisor(cfg, thread_paths)?.run());
 
     // It must come up and stay up despite the request that predates it.
     let started = wait_for("the supervisor to come up", || {
@@ -881,7 +1173,7 @@ fn reload_bounces_the_pair_when_its_config_changes() {
     let mut h = Harness::start("reload-pair", pair_config());
     let (k1, g1) = wait_for("both running", || h.both_running());
     let mut cfg2 = pair_config();
-    cfg2.kanata = stub(&["--tick-ms", "151"]);
+    cfg2.kanata = Some(stub(&["--tick-ms", "151"]));
     write_config(&h.paths, &cfg2);
     let report = reload_and_report(&h.paths);
     assert!(report.contains("bouncing the pair"), "{report}");

@@ -16,6 +16,10 @@
 //!   restart both, kanata first.
 //! - **kanata exits** → restart kanata alone; GlazeWM is untouched.
 //!
+//! The pair exists only in `input_mode = "kanata"`. In the other modes nothing
+//! synthesizes a Win key, so the group is GlazeWM alone and kanata is never
+//! started ([`Component::linked_group`]).
+//!
 //! Every transition is logged and lands in `health.json` before the next tick.
 
 use std::collections::BTreeMap;
@@ -27,10 +31,12 @@ use std::time::{Duration, Instant, SystemTime};
 use crate::backoff::Backoff;
 use crate::commit_pressure;
 use crate::component::Component;
-use crate::config::{ComponentConfig, Config};
+use crate::config::{ComponentConfig, Config, InputMode, KeyboardMode};
 use crate::control;
 use crate::display_watch::DisplayWatch;
+use crate::glazewm;
 use crate::health::{ComponentHealth, Health, Status, SupervisorHealth};
+use crate::input_remap::{self, CapsRemap};
 use crate::monitors;
 use crate::paths::Paths;
 use crate::proc_alive;
@@ -95,6 +101,11 @@ const DOCK_BOUNCE_LIMIT: u32 = 3;
 /// Windows startup/wake allocation spike that makes 3.10.1 fail-fast.
 const COMMIT_PRESSURE_RETRY_MS: u64 = 1_000;
 
+/// The post-dock redraw runs inside the poll loop, so its handshake and reply
+/// get this instead of the CLI's five seconds. A GlazeWM too wedged to answer
+/// a redraw in two seconds is a GlazeWM the next ticks will be dealing with.
+const REDRAW_REPLY_MS: u64 = 2_000;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StopReason {
     /// `winmakase down`.
@@ -153,6 +164,53 @@ fn wait_error_action(consecutive: u32) -> WaitErrorAction {
     }
 }
 
+/// Health reason while f13 mode runs without a visible Caps→F13 remap.
+pub const CAPS_F13_REMAP_NOT_DETECTED: &str = "caps_f13_remap_not_detected";
+
+/// Machine state the supervisor reads or changes outside its own children.
+/// Tests swap in [`HostHooks::inert`]: a developer's real keyboard remaps must
+/// not decide a test's outcome, and a test must never redraw the developer's
+/// real window manager.
+pub struct HostHooks {
+    /// Caps remaps configured outside Winmakase.
+    pub caps_remaps: HostRead<Vec<CapsRemap>>,
+    /// Whether Windows commit is too high to launch GlazeWM safely.
+    pub commit_pressure: HostRead<bool>,
+    /// Each monitor's reserved top edge, the bar-dock evidence.
+    pub top_reserves: HostRead<Vec<i32>>,
+    /// Ask the running GlazeWM to re-apply every window's position.
+    pub redraw_wm: WmCommand,
+}
+
+/// A read of machine state.
+pub type HostRead<T> = Box<dyn Fn() -> T + Send>;
+/// An action against the running window manager.
+pub type WmCommand = Box<dyn Fn(&Config) -> io::Result<()> + Send>;
+
+impl HostHooks {
+    pub fn live() -> Self {
+        Self {
+            caps_remaps: Box::new(input_remap::detect),
+            commit_pressure: Box::new(commit_pressure::is_under_pressure),
+            top_reserves: Box::new(monitors::top_reserves),
+            redraw_wm: Box::new(|cfg| {
+                glazewm::Client::connect_within(cfg, Duration::from_millis(REDRAW_REPLY_MS))?
+                    .command(&["wm-redraw"])
+            }),
+        }
+    }
+
+    /// No remaps, no commit pressure, no monitors, redraw does nothing.
+    pub fn inert() -> Self {
+        Self {
+            caps_remaps: Box::new(Vec::new),
+            commit_pressure: Box::new(|| false),
+            top_reserves: Box::new(Vec::new),
+            redraw_wm: Box::new(|_| Ok(())),
+        }
+    }
+}
+
 struct PendingRestart {
     at: Instant,
     /// Started in this order; a failure part-way through reschedules the whole
@@ -197,6 +255,9 @@ pub struct Supervisor {
     dock_check_at: Option<Instant>,
     /// Consecutive bar bounces spent on a lost dock race.
     dock_bounces: u32,
+    /// Set by the latest input report; published in health.json.
+    input_degraded: Option<&'static str>,
+    host: HostHooks,
     started_at: SystemTime,
     shutting_down: bool,
 }
@@ -260,6 +321,8 @@ impl Supervisor {
             taskbar_peek: None,
             dock_check_at: None,
             dock_bounces: 0,
+            input_degraded: None,
+            host: HostHooks::live(),
             started_at: SystemTime::now(),
             shutting_down: false,
         };
@@ -272,6 +335,72 @@ impl Supervisor {
     /// Point `reload` at a non-default config file (`supervise --config`).
     pub fn set_config_path(&mut self, path: std::path::PathBuf) {
         self.config_path = path;
+    }
+
+    /// Replace the machine-facing hooks, for tests.
+    #[doc(hidden)]
+    pub fn set_host_hooks(&mut self, host: HostHooks) {
+        self.host = host;
+    }
+
+    /// Log which input mode runs and what Caps remaps are visible, and record
+    /// whether f13 mode is missing the remap it depends on.
+    fn report_input(&mut self) {
+        let mode = self.cfg.keyboard.input_mode;
+        let remaps = (self.host.caps_remaps)();
+        let seen = if remaps.is_empty() {
+            "no Caps remap visible".to_string()
+        } else {
+            remaps
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join("; ")
+        };
+        self.log(format!("input: {} — {seen}", mode.as_str()));
+        self.input_degraded = None;
+        match mode {
+            InputMode::F13 if !remaps.iter().any(|r| r.to_f13) => {
+                self.log(
+                    "input: f13 mode binds F13 chords but no Caps→F13 remap is visible; Caps chords work only if the keyboard firmware sends F13",
+                );
+                self.input_degraded = Some(CAPS_F13_REMAP_NOT_DETECTED);
+            }
+            InputMode::Kanata if self.kanata_takes_caps() && !remaps.is_empty() => self.log(
+                "input: kanata will not be started while Caps is remapped; remove the remap or set [keyboard] input_mode = \"f13\"",
+            ),
+            _ => {}
+        }
+        // Outside kanata mode nothing here stops a kanata left running from
+        // before, and it would contest Caps with the remap this mode relies on.
+        if !mode.runs_kanata()
+            && let Some(k) = &self.cfg.kanata
+            && let Ok(pids) = procs::pids_for_image_path(&k.command)
+            && !pids.is_empty()
+        {
+            self.log(format!(
+                "input: kanata is running (pid {pids:?}) but {} mode does not supervise it; stop it, or it will fight the Caps remap",
+                mode.as_str()
+            ));
+        }
+    }
+
+    /// Whether the configured kanata takes Caps itself. The `caps` template
+    /// maps `caps slck`; the `apps` template maps only the Menu key and leaves
+    /// Caps to whatever else remaps it. Trusts `[keyboard] mode` to describe
+    /// the config kanata loads, as `winmakase kanata render` writes it.
+    fn kanata_takes_caps(&self) -> bool {
+        self.cfg.keyboard.mode == KeyboardMode::Caps
+    }
+
+    /// Caps remaps that keep kanata from starting: none unless kanata would
+    /// take Caps too.
+    fn remaps_blocking_kanata(&self) -> Vec<CapsRemap> {
+        if self.kanata_takes_caps() {
+            (self.host.caps_remaps)()
+        } else {
+            Vec::new()
+        }
     }
 
     /// Start the set and watch it until told to stop. Returns why it stopped.
@@ -302,6 +431,7 @@ impl Supervisor {
         ));
         // Anything left in the control file predates us and is not our order.
         control::clear(&self.paths)?;
+        self.report_input();
 
         match DisplayWatch::start() {
             Ok(w) => self.display_watch = Some(w),
@@ -348,10 +478,10 @@ impl Supervisor {
     }
 
     fn tick_taskbar_peek(&mut self) {
-        if let Some(peek) = self.taskbar_peek.as_mut() {
-            if let Some(msg) = peek.tick() {
-                self.log(msg);
-            }
+        if let Some(peek) = self.taskbar_peek.as_mut()
+            && let Some(msg) = peek.tick()
+        {
+            self.log(msg);
         }
     }
 
@@ -397,7 +527,7 @@ impl Supervisor {
             return;
         }
 
-        let reserves = monitors::top_reserves();
+        let reserves = (self.host.top_reserves)();
         match monitors::dock_verdict(&reserves) {
             monitors::DockVerdict::Consistent => {
                 if self.dock_bounces > 0 {
@@ -407,6 +537,7 @@ impl Supervisor {
                     ));
                 }
                 self.dock_bounces = 0;
+                self.redraw_wm_after_dock(&reserves);
             }
             monitors::DockVerdict::Unknown => {
                 self.log("zebar dock could not be checked — no monitors were enumerated");
@@ -438,6 +569,26 @@ impl Supervisor {
                 self.force_stop(Component::Zebar);
                 self.plan_recovery(Component::Zebar);
             }
+        }
+    }
+
+    /// A dock check runs only after the bar (re)started or a display change
+    /// settled, and either can move the reserved edge under windows GlazeWM
+    /// already placed. GlazeWM does not reliably re-lay out on its own
+    /// (2026-09-27: after a Parsec disconnect, the bar re-docked at 40px but
+    /// tiles stayed at y=0 until `wm-redraw`). So a consistent dock ends with a
+    /// redraw.
+    fn redraw_wm_after_dock(&mut self, reserves: &[i32]) {
+        if !self.children.contains_key(&Component::Glazewm) {
+            return;
+        }
+        match (self.host.redraw_wm)(&self.cfg) {
+            Ok(()) => self.log(format!(
+                "zebar dock consistent (reserves {reserves:?}) — glazewm redrawn"
+            )),
+            Err(e) => self.log(format!(
+                "zebar dock consistent (reserves {reserves:?}) but the glazewm redraw failed: {e}"
+            )),
         }
     }
 
@@ -475,8 +626,22 @@ impl Supervisor {
 
         // Diffs against the running config, and any crash-restarts already
         // pending — taken now so reload folds every outstanding recovery in.
-        let pair_changed = self.cfg.kanata != new_cfg.kanata || self.cfg.glazewm != new_cfg.glazewm;
-        let bar_was = self.cfg.zebar.clone();
+        // The input mode decides kanata's membership; a mode change adds or
+        // retires kanata alone, the direction the pair rule allows while
+        // GlazeWM keeps running.
+        let mode_was = self.cfg.keyboard.input_mode;
+        let mode_now = new_cfg.keyboard.input_mode;
+        let kanata_was = self.active.contains(&Component::Kanata);
+        let kanata_now = Component::Kanata.config(&new_cfg).is_some();
+        let pair_changed = self.cfg.glazewm != new_cfg.glazewm
+            || (kanata_was && kanata_now && self.cfg.kanata != new_cfg.kanata);
+        // A bar the config named but an earlier reload could not seed counts
+        // as absent, so this reload adds it rather than stopping it.
+        let bar_was = self
+            .cfg
+            .zebar
+            .clone()
+            .filter(|_| self.active.contains(&Component::Zebar));
         let bar_now = new_cfg.zebar.clone();
         let pending_order: Vec<Component> = std::mem::take(&mut self.pending)
             .into_iter()
@@ -495,11 +660,33 @@ impl Supervisor {
         let mut bounce: Vec<Component> = Vec::new();
         let mut is_restart = !pending_order.is_empty();
         if pair_changed {
-            report.push("kanata/glazewm configuration changed — bouncing the pair".into());
-            self.force_stop(Component::Kanata);
+            if kanata_was {
+                report.push("kanata/glazewm configuration changed — bouncing the pair".into());
+                self.force_stop(Component::Kanata);
+            } else {
+                report.push("glazewm configuration changed — bouncing it".into());
+            }
             self.stop_gracefully(Component::Glazewm, None);
-            bounce.extend([Component::Kanata, Component::Glazewm]);
+            bounce.push(Component::Glazewm);
             is_restart = true;
+        }
+        if mode_was != mode_now {
+            report.push(format!(
+                "input_mode {} → {}: re-render the GlazeWM config (`winmakase keymap render --base …`) and reload it so its chords match",
+                mode_was.as_str(),
+                mode_now.as_str()
+            ));
+        }
+        if kanata_was && !kanata_now {
+            report.push(format!(
+                "input_mode {} — kanata leaves the set; stopping it",
+                mode_now.as_str()
+            ));
+            self.force_stop(Component::Kanata);
+            self.health.remove(&Component::Kanata);
+            self.child_logs.remove(&Component::Kanata);
+            self.backoff.remove(&Component::Kanata);
+            self.wait_errors.remove(&Component::Kanata);
         }
         let bar_change = match (&bar_was, &bar_now) {
             (None, Some(_)) => Some("zebar added to the set — starting it"),
@@ -572,11 +759,34 @@ impl Supervisor {
             report.push(format!("supervisor: {} applied", simple.join(", ")));
         }
 
-        // The added bar is seeded after the config swap so its log and
-        // backoff pick up the new settings.
+        // Joining components are seeded after the config swap so their logs
+        // and backoff pick up the new settings. One that cannot be seeded
+        // leaves the active set: every path that walks the set expects its
+        // entries, and the next reload tries it again.
+        if !kanata_was && kanata_now {
+            if !self.seed_component(Component::Kanata) {
+                report.push("kanata: its log could not be opened — not starting it".into());
+                self.active.retain(|c| *c != Component::Kanata);
+            } else {
+                let blocking = self.remaps_blocking_kanata();
+                if blocking.is_empty() {
+                    report.push("input_mode kanata — kanata joins the set; starting it".into());
+                } else {
+                    let found: Vec<String> = blocking.iter().map(ToString::to_string).collect();
+                    report.push(format!(
+                        "input_mode kanata — kanata joins the set but will not start while Caps is remapped ({})",
+                        found.join("; ")
+                    ));
+                }
+                bounce.push(Component::Kanata);
+            }
+        } else if pair_changed && kanata_now {
+            bounce.push(Component::Kanata);
+        }
         if let Some(msg) = bar_change {
             if self.active.contains(&Component::Zebar) && !self.seed_component(Component::Zebar) {
                 report.push("zebar: its log could not be opened — not starting it".into());
+                self.active.retain(|c| *c != Component::Zebar);
             } else {
                 report.push(msg.into());
                 bounce.push(Component::Zebar);
@@ -594,6 +804,9 @@ impl Supervisor {
         if report.is_empty() {
             report.push("no changes".into());
         }
+        // Remaps can change without a config change (PowerToys edited); the
+        // reload is the moment to look again.
+        self.report_input();
         if !bounce.is_empty() {
             self.schedule(bounce, Duration::ZERO, is_restart);
         }
@@ -690,6 +903,28 @@ impl Supervisor {
             return false;
         };
 
+        // Checked before adoption too: supervising a kanata that shares Caps
+        // with another remapper means restarting it into the same landmine.
+        // One already running is that landmine live, and refusing the set
+        // would leave it running with no GlazeWM watched to consume its Win
+        // presses. With `adopt` on the supervisor would have owned it, so it
+        // stops it; without, instances of the image are not its business.
+        if c == Component::Kanata {
+            let remaps = self.remaps_blocking_kanata();
+            if !remaps.is_empty() {
+                let found: Vec<String> = remaps.iter().map(ToString::to_string).collect();
+                self.log(format!(
+                    "kanata NOT started: Caps is already remapped ({}). kanata on a remapped Caps can latch keys; remove the remap or set [keyboard] input_mode = \"f13\"",
+                    found.join("; ")
+                ));
+                if ccfg.adopt {
+                    self.stop_unowned(c, &ccfg);
+                }
+                self.health_mut(c).set(Status::Stopped, None);
+                return false;
+            }
+        }
+
         // Adopt-first: the exact executable already running means the desktop
         // is already using it — starting a second instance or bouncing the
         // first is precisely what taking over a live machine must not do.
@@ -738,7 +973,7 @@ impl Supervisor {
         // Recheck after adoption: an observed process may have exited between
         // the set's preflight and this scan. Never turn that race into a new
         // Glaze launch while the startup pressure guard is active.
-        if c == Component::Glazewm && commit_pressure::is_under_pressure() {
+        if c == Component::Glazewm && (self.host.commit_pressure)() {
             self.log("GlazeWM is not adoptable and commit pressure blocks a fresh launch");
             self.health_mut(c).set(Status::Stopped, None);
             return false;
@@ -968,15 +1203,23 @@ impl Supervisor {
             // without waiting: every millisecond it outlives GlazeWM is a
             // millisecond of raw Win+letter reaching Windows.
             Component::Glazewm => {
-                self.log(
-                    "linked-pair: glazewm is down — stopping kanata now (raw Win-shortcut guard)",
-                );
-                self.force_stop(Component::Kanata);
+                let group = self.linked_group();
+                let with_kanata = group.contains(&Component::Kanata);
+                if with_kanata {
+                    self.log(
+                        "linked-pair: glazewm is down — stopping kanata now (raw Win-shortcut guard)",
+                    );
+                    self.force_stop(Component::Kanata);
+                }
                 let delay = self.backoff_mut(Component::Glazewm).next_delay();
-                self.schedule(vec![Component::Kanata, Component::Glazewm], delay, true);
-                self.log(format!(
-                    "restarting the pair in {delay:?} (kanata, then glazewm)"
-                ));
+                self.schedule(group, delay, true);
+                if with_kanata {
+                    self.log(format!(
+                        "restarting the pair in {delay:?} (kanata, then glazewm)"
+                    ));
+                } else {
+                    self.log(format!("restarting glazewm in {delay:?}"));
+                }
             }
             // kanata alone: GlazeWM keeps tiling, chords come back in seconds.
             // The bar likewise restarts alone — a missing bar is cosmetic.
@@ -1050,7 +1293,8 @@ impl Supervisor {
     /// `children.insert` drops the old handle, and `Child`'s drop does not
     /// kill, leaving a second kanata holding the keyboard forever.
     fn start_set(&mut self, order: Vec<Component>, is_restart: bool) {
-        self.start_set_with_pressure(order, is_restart, commit_pressure::is_under_pressure());
+        let under_pressure = (self.host.commit_pressure)();
+        self.start_set_with_pressure(order, is_restart, under_pressure);
     }
 
     /// Applies the startup guard to new allocation, not to adopting a live WM.
@@ -1150,6 +1394,36 @@ impl Supervisor {
                 "{c} healthy for {} — backoff reset",
                 timefmt::human_duration(threshold)
             ));
+        }
+    }
+
+    /// Stop running instances of a component's executable that the supervisor
+    /// has not started or adopted. A task-hosted instance is ended through
+    /// its task, as an adopted one would be.
+    fn stop_unowned(&mut self, c: Component, ccfg: &ComponentConfig) {
+        let pids = match procs::pids_for_image_path(&ccfg.command) {
+            Ok(pids) => pids,
+            Err(e) => {
+                self.log(format!(
+                    "{c}: could not look for running instances to stop: {e}"
+                ));
+                return;
+            }
+        };
+        for pid in pids {
+            match ExternalProcess::open(pid, ccfg.task.clone()) {
+                Ok(ext) => {
+                    self.log(format!("{c} was already running (pid {pid}) — stopping it"));
+                    let running = RunningChild {
+                        handle: Box::new(ext),
+                        started: Instant::now(),
+                    };
+                    self.kill_and_record(c, running, Duration::from_millis(KILL_PATIENCE_MS));
+                }
+                Err(e) => self.log(format!(
+                    "{c} is running (pid {pid}) but cannot be stopped: {e}"
+                )),
+            }
         }
     }
 
@@ -1277,26 +1551,39 @@ impl Supervisor {
         if !self.cfg.supervisor.bounce_on_display_change {
             return;
         }
-        if self.is_scheduled(Component::Kanata) || self.is_scheduled(Component::Glazewm) {
+        let group = self.linked_group();
+        if group.iter().any(|c| self.is_scheduled(*c)) {
             self.log("display change: a restart is already scheduled — leaving it be");
             return;
         }
-        self.log("display change: bouncing the pair (bounce_on_display_change is on)");
+        self.log(if group.contains(&Component::Kanata) {
+            "display change: bouncing the pair (bounce_on_display_change is on)"
+        } else {
+            "display change: bouncing glazewm (bounce_on_display_change is on)"
+        });
         // Down in the safe order — kanata first, so it never outlives GlazeWM
         // synthesizing Win presses nothing consumes — then GlazeWM politely, so
         // its watcher restores window positions. The bar is not bounced
         // eagerly: the delayed dock check above decides from live reserves.
-        self.force_stop(Component::Kanata);
+        if group.contains(&Component::Kanata) {
+            self.force_stop(Component::Kanata);
+        }
         self.stop_gracefully(Component::Glazewm, None);
-        self.schedule(
-            vec![Component::Kanata, Component::Glazewm],
-            Duration::ZERO,
-            true,
-        );
+        self.schedule(group, Duration::ZERO, true);
         self.write_health();
     }
 
     // -- state -------------------------------------------------------------
+
+    /// The components GlazeWM goes down and comes back with, limited to the
+    /// active set: a kanata the config names but a reload could not seed has
+    /// no entries to stop or restart.
+    fn linked_group(&self) -> Vec<Component> {
+        Component::linked_group(&self.cfg)
+            .into_iter()
+            .filter(|c| self.active.contains(c))
+            .collect()
+    }
 
     fn health_mut(&mut self, c: Component) -> &mut ComponentHealth {
         self.health
@@ -1326,6 +1613,9 @@ impl Supervisor {
             components,
         );
         snapshot.input_mode = self.cfg.keyboard.input_mode;
+        if let Some(reason) = self.input_degraded {
+            snapshot.degraded_reasons.push(reason.into());
+        }
         snapshot
     }
 
@@ -1415,6 +1705,71 @@ mod tests {
             sup.dock_check_at.is_some(),
             "a later monitor rebuild needs a fresh dock check"
         );
+    }
+
+    /// A supervisor with scripted reserves whose redraws are counted, and a
+    /// bar and tiler already running, with the dock check due now.
+    fn due_dock_check(
+        label: &str,
+        reserves: Vec<i32>,
+    ) -> (
+        Supervisor,
+        std::sync::Arc<std::sync::atomic::AtomicUsize>,
+        TempDir,
+    ) {
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let dir = TempDir::new(label);
+        let mut sup = Supervisor::new(Config::default(), Paths::at(dir.path())).unwrap();
+        let redraws = Arc::new(AtomicUsize::new(0));
+        let counter = Arc::clone(&redraws);
+        sup.set_host_hooks(HostHooks {
+            top_reserves: Box::new(move || reserves.clone()),
+            redraw_wm: Box::new(move |_| {
+                counter.fetch_add(1, Ordering::SeqCst);
+                Ok(())
+            }),
+            ..HostHooks::inert()
+        });
+        sup.inject_running(
+            Component::Glazewm,
+            Box::new(FakeHandle::new(222, vec![FakePoll::Running])),
+        );
+        sup.inject_running(
+            Component::Zebar,
+            Box::new(FakeHandle::new(333, vec![FakePoll::Running])),
+        );
+        sup.dock_check_at = Some(Instant::now() - Duration::from_millis(DOCK_CHECK_DELAY_MS + 1));
+        (sup, redraws, dir)
+    }
+
+    #[test]
+    fn a_consistent_dock_redraws_the_wm() {
+        use std::sync::atomic::Ordering;
+
+        let (mut sup, redraws, _dir) = due_dock_check("dock-redraw", vec![40, 40, 40]);
+        sup.tick();
+        assert_eq!(redraws.load(Ordering::SeqCst), 1);
+        assert!(sup.dock_check_at.is_none(), "one check, one redraw");
+        sup.tick();
+        assert_eq!(redraws.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn a_lost_dock_bounces_the_bar_before_any_redraw() {
+        use std::sync::atomic::Ordering;
+
+        // The 2026-09-27 Parsec disconnect: every reserve dropped to zero.
+        let (mut sup, redraws, _dir) = due_dock_check("dock-lost", vec![0, 0, 0]);
+        sup.tick();
+        assert_eq!(
+            redraws.load(Ordering::SeqCst),
+            0,
+            "redrawing onto a lost dock would tile under the bar"
+        );
+        assert_eq!(sup.dock_bounces, 1);
+        assert!(sup.is_scheduled(Component::Zebar));
     }
 
     #[test]

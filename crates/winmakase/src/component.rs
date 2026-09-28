@@ -34,14 +34,29 @@ impl Component {
         }
     }
 
-    /// `None` means the component is not configured (only possible for the
-    /// optional ones) and simply is not part of this supervisor's set.
+    /// `None` means the component is not part of this supervisor's set: the
+    /// bar is optional, and kanata belongs only to `input_mode = "kanata"`.
+    /// The input mode, never a live kanata process, decides.
     pub fn config(self, cfg: &Config) -> Option<&ComponentConfig> {
         match self {
-            Component::Kanata => Some(&cfg.kanata),
+            Component::Kanata => cfg
+                .keyboard
+                .input_mode
+                .runs_kanata()
+                .then_some(cfg.kanata.as_ref())
+                .flatten(),
             Component::Glazewm => Some(&cfg.glazewm),
             Component::Zebar => cfg.zebar.as_ref(),
         }
+    }
+
+    /// The failure group of the input/tiler: kanata plus GlazeWM when the
+    /// mode runs kanata, GlazeWM alone otherwise. In start order.
+    pub fn linked_group(cfg: &Config) -> Vec<Component> {
+        [Component::Kanata, Component::Glazewm]
+            .into_iter()
+            .filter(|c| c.config(cfg).is_some())
+            .collect()
     }
 }
 
@@ -62,6 +77,27 @@ mod tests {
             down,
             vec![Component::Zebar, Component::Glazewm, Component::Kanata]
         );
+    }
+
+    #[test]
+    fn the_input_mode_decides_whether_kanata_is_in_the_set() {
+        use crate::config::InputMode;
+
+        let mut cfg = Config::default();
+        assert!(Component::Kanata.config(&cfg).is_some());
+        assert_eq!(
+            Component::linked_group(&cfg),
+            vec![Component::Kanata, Component::Glazewm]
+        );
+
+        for mode in [InputMode::F13, InputMode::DirectCaps] {
+            cfg.keyboard.input_mode = mode;
+            assert!(
+                Component::Kanata.config(&cfg).is_none(),
+                "{mode:?} must not run kanata even with a [kanata] section"
+            );
+            assert_eq!(Component::linked_group(&cfg), vec![Component::Glazewm]);
+        }
     }
 
     #[test]

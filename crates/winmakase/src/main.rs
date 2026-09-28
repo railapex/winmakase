@@ -218,6 +218,8 @@ enum SuperKeyArg {
     RightWin,
     /// Patched GlazeWM owns Caps directly as its leader.
     CapsLock,
+    /// A registry, PowerToys or firmware remap sends F13 for Caps.
+    F13,
 }
 
 impl From<SuperKeyArg> for InputMode {
@@ -225,6 +227,7 @@ impl From<SuperKeyArg> for InputMode {
         match value {
             SuperKeyArg::RightWin => Self::Kanata,
             SuperKeyArg::CapsLock => Self::DirectCaps,
+            SuperKeyArg::F13 => Self::F13,
         }
     }
 }
@@ -567,8 +570,8 @@ fn keymap_cmd(paths: &Paths, action: KeymapAction) -> io::Result<()> {
                     })
                     .map_err(invalid)?
                 }
-                None if roles.is_empty() && input_mode == InputMode::Kanata => {
-                    winmakase_keymap::render_glazewm(&expanded)
+                None if roles.is_empty() && input_mode != InputMode::DirectCaps => {
+                    winmakase_keymap::render_glazewm_with_super(&expanded, input_mode.super_key())
                 }
                 None if input_mode == InputMode::DirectCaps => {
                     return Err(invalid(

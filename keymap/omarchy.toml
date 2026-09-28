@@ -548,7 +548,7 @@ chord = "SUPER + CTRL + V"
 desc = "Clipboard manager"
 src = "clipboard"
 status = "native"
-note = "Win+V clipboard history."
+note = "Win+V clipboard history. It has no URI or command, so binding it would mean synthesizing Win+V while Ctrl is physically held (Win+Ctrl+V is the sound-output flyout). With the F13 super key, an unbound Caps+Ctrl+V reaches the app as Ctrl+V."
 
 # ============================================================ utilities.lua
 
@@ -574,15 +574,15 @@ chord = "SUPER + CTRL + E"
 desc = "Emojis"
 src = "utilities"
 status = "native"
-note = "Win+. emoji panel."
+note = "Win+. emoji panel. No URI or command opens it; binding it would need key synthesis, as with the clipboard manager."
 
 [[bind]]
 id = "capture-menu"
 chord = "SUPER + CTRL + C"
 desc = "Capture menu"
 src = "utilities"
-status = "native"
-note = "Win+Shift+S snipping."
+map = ["shell-exec ms-screenclip:"]
+note = "The Snipping Tool overlay that Win+Shift+S opens, reached through its URI so no key is synthesized."
 
 [[bind]]
 id = "omarchy-menus"
@@ -810,8 +810,8 @@ id = "lock"
 chord = "SUPER + CTRL + L"
 desc = "Lock system"
 src = "utilities"
-status = "native"
-note = "Win+L is winlogon-level and fires regardless of extra modifiers."
+map = ["shell-exec rundll32.exe user32.dll,LockWorkStation"]
+note = "Same lock as Win+L. Needed with the F13 super key, where an unbound Caps+Ctrl+L would reach the app as Ctrl+L. With the right-Win key, Win+L still fires at winlogon first."
 
 # ============================================================ media.lua
 
@@ -872,3 +872,15 @@ desc = "Dictation (toggle / push-to-talk)"
 src = "voxtype"
 status = "native"
 note = "Win+H voice typing — stay-stock cut list."
+
+# ============================================================ winmakase controls
+# Not omarchy binds. Controls Winmakase owns that omarchy has no counterpart
+# for; each takes a chord the omarchy grammar leaves free.
+
+[[bind]]
+id = "wm-pause"
+chord = "SUPER + SHIFT + P"
+desc = "Pause / resume tiling"
+src = "winmakase"
+map = ["wm-toggle-pause"]
+note = "While paused, GlazeWM ignores window events and every binding except this one, so the same chord resumes. For remote sessions and display churn."

@@ -222,6 +222,9 @@ keybindings:
   # launcher — Open or focus PowerToys Run
   - commands: ['shell-exec --hide-window winmakase-run']
     bindings: ['rwin+space']
+  # capture-menu — Capture menu
+  - commands: ['shell-exec ms-screenclip:']
+    bindings: ['rwin+ctrl+c']
   # wm-cycle-focus — Cycle focus across tiling/floating/fullscreen layers
   - commands: ['wm-cycle-focus']
     bindings: ['rwin+escape']
@@ -231,3 +234,9 @@ keybindings:
   # activity — Activity monitor
   - commands: ['shell-exec taskmgr']
     bindings: ['rwin+ctrl+t']
+  # lock — Lock system
+  - commands: ['shell-exec rundll32.exe user32.dll,LockWorkStation']
+    bindings: ['rwin+ctrl+l']
+  # wm-pause — Pause / resume tiling
+  - commands: ['wm-toggle-pause']
+    bindings: ['rwin+shift+p']

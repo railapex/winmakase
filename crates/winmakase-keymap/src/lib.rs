@@ -99,6 +99,11 @@ pub enum SuperKey {
     RightWin,
     /// Patched GlazeWM owns Caps directly as its dual-role leader.
     CapsLock,
+    /// Caps arrives as F13 from a remap below every hook (registry Scancode
+    /// Map, PowerToys Keyboard Manager or keyboard firmware). No Windows
+    /// shortcut uses F13, so unbound chords never reach a Win-key feature,
+    /// and stock GlazeWM matches any held key as a chord prefix.
+    F13,
 }
 
 pub fn parse(text: &str) -> Result<KeymapFile, String> {
@@ -1004,7 +1009,8 @@ fn expand(bind: &Bind, apps: &BTreeMap<String, String>) -> Result<Vec<Expanded>,
 ///
 /// SUPER defaults to rwin: kanata maps Caps to right-Win and GlazeWM binds
 /// rwin chords, leaving physical left Win fully native. Direct-Caps rendering
-/// instead uses the patched GlazeWM leader. Key
+/// instead uses the patched GlazeWM leader, and F13 rendering binds the key an
+/// external Caps remap sends. Key
 /// spellings verified against GlazeWM's own parser (wm-platform/src/models/key.rs).
 /// Only mapped entries are translated, so the table covers exactly the keys the
 /// mapped grammar uses; an unknown key is an error, never a guess.
@@ -1066,6 +1072,7 @@ fn assemble(has: &[bool; 4], key: &str, super_key: SuperKey) -> String {
         match super_key {
             SuperKey::RightWin => "rwin",
             SuperKey::CapsLock => "caps_lock",
+            SuperKey::F13 => "f13",
         },
         "ctrl",
         "alt",
@@ -1155,6 +1162,36 @@ mod tests {
             "caps_lock+shift+space"
         );
         assert_eq!(translate_chord("SUPER + SPACE").unwrap(), "rwin+space");
+    }
+
+    #[test]
+    fn f13_translation_binds_the_remapped_key() {
+        for (omarchy, glazewm) in [
+            ("SUPER + W", "f13+w"),
+            ("SUPER + SHIFT + ALT + 3", "f13+alt+shift+3"),
+            ("SUPER + CTRL + L", "f13+ctrl+l"),
+            ("SUPER + SPACE", "f13+space"),
+        ] {
+            assert_eq!(
+                translate_chord_with_super(omarchy, SuperKey::F13).unwrap(),
+                glazewm
+            );
+        }
+    }
+
+    #[test]
+    fn f13_config_leaves_the_base_untouched_and_needs_no_leader() {
+        let file = one_bind(
+            "[[bind]]\nid='launcher'\nchord='SUPER + SPACE'\ndesc='Launcher'\nsrc='x'\nmap=['shell-exec winmakase-run.exe']\n",
+        );
+        let (expanded, _) = check(&file).unwrap();
+        let base = "general:\n  # kept verbatim\n  focus_follows_cursor: false\n";
+        let rendered =
+            render_glazewm_config_with_super(base, &expanded, &[], SuperKey::F13).unwrap();
+        assert!(rendered.contains("  # kept verbatim\n"), "{rendered}");
+        assert!(!rendered.contains("keybinding_leader"), "{rendered}");
+        assert!(rendered.contains("bindings: ['f13+space']"), "{rendered}");
+        assert!(!rendered.contains("rwin"), "{rendered}");
     }
 
     #[test]

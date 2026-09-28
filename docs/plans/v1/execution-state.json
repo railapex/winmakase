@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-16T12:59:59Z",
-  "planBaseCommit": "5969051",
-  "lastVerifiedBuild": "Winmakase 0.1.9 source on build/f0-s0: F0 passes 159 library tests, 33 keymap tests, all-target check and scoped strict Clippy; S0 passes clean npm install, deterministic build, TypeScript and remote-runtime-reference checks. The latest accepted desktop runtime remains 0.1.8 I1 with D1 Glaze 6bc83d1. The 0.1.9 bar has not passed disconnected startup/rendered interaction; daily Glaze remains deployed 9c8e93b and no cutover occurred.",
-  "stage": "F0 shared interfaces and S0 offline assets accepted in source; runtime remains P0 with D1/I1 accepted",
+  "updatedAt": "2026-09-28T03:45:00Z",
+  "planBaseCommit": "471456a",
+  "lastVerifiedBuild": "Winmakase 0.1.10 source on main: 261 workspace tests pass on three consecutive runs (171 library, 31 supervisor integration, 36 keymap, plus theme) after the fresh-review fixes; cargo fmt --check and workspace Clippy (all targets, -D warnings) clean. Nothing deployed: the desk still runs standalone Glaze 9c8e93b on the hand-edited F13 test config with PowerToys KBM Caps->F13, no supervisor, CLI 0.1.6.",
+  "stage": "Desk-first recut: slices 1 and 2 plus the source half of 4 done in 0.1.10; live cutover pending Chris's go",
   "planning": {
     "sourceBaseCommit": "1f47d497069b69a627f9b8c8598d21b4b55f4aa9",
     "observedRemoteMain": "5969051089c528da01f4eb5048df3c56ba0ca17c",
@@ -23,18 +23,28 @@
     "pullRequest": "blocked: Friday token lacks createPullRequest permission"
   },
   "currentSlice": {
-    "id": "F0/S0",
-    "status": "Accepted in source; runtime acceptance pending",
-    "title": "Freeze v1 interfaces and bundle the offline bar runtime",
-    "nextAction": "Dispatch W0 role identity proof/schema and L0 singleton/request mechanics from the frozen interfaces. Separately retain P0.I2 physical Caps/context acceptance and disconnected Zebar startup/rendered interaction as open runtime gates."
+    "id": "Recut 1+2+4",
+    "status": "Done in source (0.1.10); live cutover pending",
+    "title": "F13 input mode without Kanata, Glaze redraw after re-dock, pause chord",
+    "nextAction": "With Chris's go: deploy winmakase-run.exe and the F13 render (backups first), reload Glaze in place, then swap CLI/supervisor to 0.1.10, set [keyboard] input_mode = \"f13\", start the supervisor and have Chris enable WinmakaseSupervisor elevated. Deploy notes are in NEXT.md. Slice 3: Chris runs installer/caps-remap.ps1 -Apply elevated, reboots, then removes the KBM Caps/ScrLk rules."
   },
-  "nextCheckpoint": "Review the F0/S0 source evidence and dispatch W0/L0 from the frozen interfaces. Runtime R0 still needs physical Caps, disconnected bar startup/rendering, popup/provider, classification and admission proofs before its gates move.",
-  "decisions": [],
+  "nextCheckpoint": "Chris: authorize the live cutover (slices 1, 2, 4) and run the elevated steps: enable WinmakaseSupervisor; Scancode Map for slice 3. Physical checks after cutover: Caps+Space opens Run, Caps+Shift+P pauses and resumes, Caps+Ctrl+C opens the snip overlay, Caps+Ctrl+L locks, a Parsec connect/disconnect ends with the bar docked and tiles below it.",
+  "decisions": [
+    {
+      "title": "Authorize the live cutover of recut slices 1, 2 and 4",
+      "detail": "Source is ready and reversible (backups of binaries, config.yaml, local.toml; rollback = kill winmakased, restore files, wm-reload-config). The auto-mode classifier blocked agent-side deploy steps as persistence, so this needs Chris's explicit go in-session or Chris running the steps."
+    }
+  ],
   "blockers": [
+    "Live deploy steps on the desk were blocked by the Claude Code auto-mode classifier (Unauthorized Persistence) on 2026-09-27; they need Chris's explicit authorization in-session.",
     "Direct-Caps rendering and explicit Run activation pass, but physical Caps/fullscreen/elevated/focused-monitor acceptance still determines whether Kanata can retire. Bar assets are bundled locally; disconnected startup and rendered interaction remain unproved.",
     "R0 remains open: real provider/admission/background input, popup/tray/calendar/split and recovery proofs remain incomplete."
   ],
   "recentDecisions": [
+    {
+      "title": "Accept recut slices 1, 2 and the source half of 4 (0.1.10)",
+      "detail": "input_mode = f13 derives the rendered chords, supervised set and restart group (C1 amended). Kanata is refused over any registry/KBM Caps remap. A consistent dock ends with wm-redraw. Lock, capture and pause chords added. HostHooks makes the supervisor suite deterministic on the desk. Fresh independent review of the lifecycle diff requested before push."
+    },
     {
       "title": "Accept F0 and S0 as source foundations",
       "detail": "Winmakase 0.1.9 freezes versioned role/action/health/lifecycle/journal interfaces and literal fixtures, with Kanata as the migration default and one pure Glaze composition path. Zebar now builds deterministic local assets from pinned dependencies with no runtime CDN or status subprocess loop. Health is deliberately unknown until S3. No desktop/runtime gate closed; disconnected rendering and physical input remain open."
@@ -163,6 +173,10 @@
     }
   ],
   "checkpoints": [
+    {
+      "at": "2026-09-28T03:45:00Z",
+      "summary": "Winmakase 0.1.10 on main (base 471456a): F13 input mode, Kanata remap guard, per-mode linked group and reload mode switch, redraw after consistent dock, lock/capture/pause chords, HostHooks for deterministic supervisor tests, taskbar Clippy drift cleared. Fresh Opus review: no Critical/High; fixed both Mediums (unbounded Glaze IPC handshake in the poll loop; guard stranding a running Kanata) and the Lows (unseeded component panic, reload report, profile-name allowlist, KBM text/missing-settings detection), and scoped the guard to keyboard.mode = caps. 261 tests x3, fmt and Clippy -D warnings clean. installer/caps-remap.ps1 written, not run. No desktop state changed; live cutover awaits Chris."
+    },
     {
       "at": "2026-09-16T12:59:59Z",
       "summary": "Published build/f0-s0 to origin at implementation checkpoint 8ddde77 after final verification. GitHub rejected PR creation because Friday's token lacks createPullRequest permission; no identity switch was made. Source remains reviewable on the published branch and no desktop/deployment state changed."

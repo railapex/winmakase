@@ -17,6 +17,7 @@ pub mod control;
 pub mod display_watch;
 pub mod glazewm;
 pub mod health;
+pub mod input_remap;
 pub mod kanata_kbd;
 pub mod launcher;
 pub mod lifecycle;

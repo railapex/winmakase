@@ -14,12 +14,12 @@
 
 use std::cell::RefCell;
 use std::io;
-use std::net::TcpStream;
+use std::net::{SocketAddr, TcpStream};
 use std::time::Duration;
 
 use serde::Deserialize;
 use tungstenite::stream::MaybeTlsStream;
-use tungstenite::{Message, WebSocket, connect};
+use tungstenite::{Message, WebSocket};
 
 use crate::config::Config;
 
@@ -28,6 +28,10 @@ const PORT: u16 = 6123;
 
 /// A reply must arrive within this or the WM is wedged, not busy.
 const READ_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// Localhost answers a TCP connect in microseconds when GlazeWM listens.
+/// Windows retries a refused localhost connect for about two seconds.
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
 
 pub struct Client {
     socket: RefCell<WebSocket<MaybeTlsStream<TcpStream>>>,
@@ -143,17 +147,30 @@ pub fn windows_under(children: &[Node]) -> Vec<&Node> {
 impl Client {
     /// Connect to the running GlazeWM. The config parameter reserves the seam
     /// for a configurable port; today the port is GlazeWM's default.
-    pub fn from_config(_cfg: &Config) -> io::Result<Self> {
+    pub fn from_config(cfg: &Config) -> io::Result<Self> {
+        Self::connect_within(cfg, READ_TIMEOUT)
+    }
+
+    /// Connect with every step bounded: the TCP connect by `CONNECT_TIMEOUT`,
+    /// the WebSocket handshake and each later reply by `reply_timeout`.
+    /// `tungstenite::connect` bounds neither the connect nor the handshake,
+    /// and the kernel still accepts connections for a frozen GlazeWM, so an
+    /// unbounded handshake read would wait forever.
+    pub fn connect_within(_cfg: &Config, reply_timeout: Duration) -> io::Result<Self> {
         let url = format!("ws://127.0.0.1:{PORT}");
-        let (socket, _response) = connect(&url).map_err(|e| {
+        let unreachable = |e: &dyn std::fmt::Display| {
             io::Error::new(
                 io::ErrorKind::ConnectionRefused,
                 format!("cannot reach GlazeWM's IPC at {url} — is it running? ({e})"),
             )
-        })?;
-        if let MaybeTlsStream::Plain(stream) = socket.get_ref() {
-            let _ = stream.set_read_timeout(Some(READ_TIMEOUT));
-        }
+        };
+        let addr = SocketAddr::from(([127, 0, 0, 1], PORT));
+        let stream =
+            TcpStream::connect_timeout(&addr, CONNECT_TIMEOUT).map_err(|e| unreachable(&e))?;
+        stream.set_read_timeout(Some(reply_timeout))?;
+        stream.set_write_timeout(Some(reply_timeout))?;
+        let (socket, _response) = tungstenite::client(url.as_str(), MaybeTlsStream::Plain(stream))
+            .map_err(|e| unreachable(&e))?;
         Ok(Self {
             socket: RefCell::new(socket),
         })

@@ -236,10 +236,7 @@ pub fn compose_glazewm(input: CompositionInput<'_>) -> Result<String, String> {
         base,
         input.keymap,
         &rules,
-        match input.input_mode {
-            InputMode::Kanata => winmakase_keymap::SuperKey::RightWin,
-            InputMode::DirectCaps => winmakase_keymap::SuperKey::CapsLock,
-        },
+        input.input_mode.super_key(),
     )
 }
 
@@ -313,10 +310,7 @@ mod tests {
         assert_eq!(CanonicalIdentity::from_json(&text).unwrap(), identity);
         let toml = include_str!("../tests/fixtures/contracts/role-identity.toml");
         assert!(toml.contains("schema = 1"));
-        assert_eq!(
-            toml::from_str::<CanonicalIdentity>(toml).unwrap(),
-            identity
-        );
+        assert_eq!(toml::from_str::<CanonicalIdentity>(toml).unwrap(), identity);
 
         let text = text.replace("\"schema\":1", "\"schema\":2");
         assert!(
