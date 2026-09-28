@@ -22,8 +22,10 @@ $ErrorActionPreference = 'Stop'
 
 $keyPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout'
 $valueName = 'Scancode Map'
-# Source scancode -> target scancode.
-$ours = [ordered]@{ 0x003A = 0x0064; 0x0046 = 0x003A }
+# Source scancode -> target scancode. A plain hashtable on purpose: an
+# [ordered] one reads an integer index as a position, not a key, so
+# $ours[0x3A] came back $null and wrote both keys as disabled.
+$ours = @{ 0x003A = 0x0064; 0x0046 = 0x003A }
 $names = @{ 0x003A = 'Caps'; 0x0046 = 'ScrLk'; 0x0064 = 'F13'; 0x0000 = 'disabled' }
 
 function Get-KeyName([int]$code) {
@@ -91,7 +93,9 @@ if ($null -ne $current) {
     }
 }
 if ($Apply) {
-    foreach ($from in $ours.Keys) { $next.Add([pscustomobject]@{ From = $from; To = $ours[$from] }) }
+    foreach ($from in ($ours.Keys | Sort-Object)) {
+        $next.Add([pscustomobject]@{ From = $from; To = $ours[$from] })
+    }
 }
 
 Show-Entries 'Current map' $current
