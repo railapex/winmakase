@@ -27,15 +27,15 @@ use std::time::{Duration, Instant};
 
 use windows_sys::Win32::Foundation::{GetLastError, HWND, POINT, RECT};
 use windows_sys::Win32::System::Threading::{
-    OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+    OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
 };
 use windows_sys::Win32::UI::Shell::{
     ABM_GETSTATE, ABM_SETSTATE, ABS_AUTOHIDE, APPBARDATA, SHAppBarMessage,
 };
 use windows_sys::Win32::UI::WindowsAndMessaging::{
     FindWindowExW, GetClassNameW, GetCursorPos, GetForegroundWindow, GetWindowRect,
-    GetWindowThreadProcessId, IsWindowVisible, SetWindowPos, HWND_TOPMOST, SWP_HIDEWINDOW,
-    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW,
+    GetWindowThreadProcessId, HWND_TOPMOST, IsWindowVisible, SWP_HIDEWINDOW, SWP_NOACTIVATE,
+    SWP_NOMOVE, SWP_NOSIZE, SWP_SHOWWINDOW, SetWindowPos,
 };
 
 use crate::monitors;
@@ -195,7 +195,11 @@ impl View {
     }
 
     fn lagging(&self) -> Vec<Tray> {
-        self.trays.iter().copied().filter(|t| !t.fully_shown()).collect()
+        self.trays
+            .iter()
+            .copied()
+            .filter(|t| !t.fully_shown())
+            .collect()
     }
 }
 
@@ -223,6 +227,7 @@ fn decide(view: &View, outside_since: Option<Instant>, now: Instant) -> (Action,
 }
 
 /// Poll-loop peek controller. Collapse on leave; show on the bottom edge.
+#[derive(Default)]
 pub struct Peek {
     outside_since: Option<Instant>,
     /// One "re-shown" line per hold-open episode, not one per tick.
@@ -231,10 +236,7 @@ pub struct Peek {
 
 impl Peek {
     pub fn new() -> Self {
-        Self {
-            outside_since: None,
-            lag_logged: false,
-        }
+        Self::default()
     }
 
     /// Apply one decision. Returns a log line only when visibility changes.
@@ -331,7 +333,12 @@ fn tray_windows() -> Vec<Tray> {
         let mut hwnd: HWND = std::ptr::null_mut();
         loop {
             hwnd = unsafe {
-                FindWindowExW(std::ptr::null_mut(), hwnd, wclass.as_ptr(), std::ptr::null())
+                FindWindowExW(
+                    std::ptr::null_mut(),
+                    hwnd,
+                    wclass.as_ptr(),
+                    std::ptr::null(),
+                )
             };
             if hwnd.is_null() {
                 break;
@@ -390,24 +397,17 @@ fn foreground_holds_open() -> bool {
         return false;
     }
     let class = class_name(hwnd);
-    if HOLD_CLASSES
-        .iter()
-        .any(|c| class.eq_ignore_ascii_case(c))
-    {
+    if HOLD_CLASSES.iter().any(|c| class.eq_ignore_ascii_case(c)) {
         return true;
     }
-    if class.eq_ignore_ascii_case("Windows.UI.Core.CoreWindow") {
-        if let Some(name) = process_file_name(hwnd) {
-            return HOLD_PROCESSES
-                .iter()
-                .any(|p| name.eq_ignore_ascii_case(p))
-                || name.eq_ignore_ascii_case("explorer.exe");
-        }
+    if class.eq_ignore_ascii_case("Windows.UI.Core.CoreWindow")
+        && let Some(name) = process_file_name(hwnd)
+    {
+        return HOLD_PROCESSES.iter().any(|p| name.eq_ignore_ascii_case(p))
+            || name.eq_ignore_ascii_case("explorer.exe");
     }
     if let Some(name) = process_file_name(hwnd) {
-        return HOLD_PROCESSES
-            .iter()
-            .any(|p| name.eq_ignore_ascii_case(p));
+        return HOLD_PROCESSES.iter().any(|p| name.eq_ignore_ascii_case(p));
     }
     false
 }
@@ -599,7 +599,11 @@ mod tests {
         // here and left the primary hidden for the whole Start session.
         let now = Instant::now();
         let (action, since) = decide(
-            &view(Pt { x: 100, y: 800 }, vec![shown_tray(), hidden_tray()], true),
+            &view(
+                Pt { x: 100, y: 800 },
+                vec![shown_tray(), hidden_tray()],
+                true,
+            ),
             None,
             now,
         );
